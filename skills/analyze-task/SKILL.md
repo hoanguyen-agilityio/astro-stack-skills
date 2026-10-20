@@ -79,7 +79,9 @@ Use `references/analysis-template.md`. For `normal` and `high-risk` lanes, save 
   source.
 - **Plan:** modules with Kind `exists | extend | new`, build order, and what is explicitly **not
   covered**. For `feature`, decide `.astro` or React island for each UI piece and which
-  hydration directive to use.
+  hydration directive to use. Each component is a folder `src/components/<feature>/<Name>/`;
+  list its `index.astro`/`index.tsx`, its `<Name>.stories.tsx` with the states it shows, and its
+  `__test__/index.test.tsx` when it is React.
 
 ## 4. Gate
 

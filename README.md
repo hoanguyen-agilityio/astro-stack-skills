@@ -88,6 +88,8 @@ exists. It includes:
 - shadcn/ui on Tailwind v4
 - ESLint, which bans `any` and `@ts-ignore`
 - Vitest with Testing Library, plus a smoke island and its test
+- Storybook 10 through `@storybook-astro/framework`, so `.astro` and React components both get
+  stories; light/dark toggle, a11y addon, the oRPC client mocked; the smoke island has a story
 - `DESIGN.md`: design context for agents (tokens, components, island rules, states, anti-slop
   rules), filled from the installed theme, with `TODO(design)` sections for the brand
 
@@ -95,8 +97,8 @@ exists. It includes:
 /web-dev-stack:code-skeleton Create project lunch-order, oRPC pointing to http://localhost:8787/rpc
 ```
 
-Verified on Astro 5, Effect 3, oRPC 1, Tailwind 4, Vite 6, Vitest 3 and shadcn CLI 4. Requires
-Node ≥ 22.12. The skill's step 2 table lists the full set.
+Verified on Astro 5, Effect 3, oRPC 1, Tailwind 4, Vite 6, Vitest 3, shadcn CLI 4 and Storybook 10.
+Requires Node ≥ 22.19. The skill's step 2 table lists the full set.
 
 ### `integrate-api`
 
@@ -112,8 +114,9 @@ islands never handle Effect errors themselves.
 ### `develop-feature`
 
 Turns a ticket into criteria, an Astro page that loads data on the server, React islands only
-for the interactive parts, empty/error/pending states, and tests for helpers, islands and the
-page (Astro Container API).
+for the interactive parts, empty/error/pending states, a Storybook story per state for every
+component (`.astro` stories render on the server, React ones in the browser), and tests for
+helpers, islands and the page (Astro Container API).
 
 ```text
 /web-dev-stack:develop-feature /orders lists orders with a status filter; pending orders have a Cancel button
@@ -130,7 +133,8 @@ through the `/rpc` proxy.
 | oRPC client factory and procedure types | `src/libs/orpcClient.ts` |
 | Services (one per API namespace, return `Effect`) | `src/services/<name>.ts` |
 | Schema types (wire format + domain type) | `src/types/<resource>.ts` |
-| Outcome helpers, islands, feature helpers, their tests | `src/components/<resource>/` (+ `__tests__/`) |
+| Components, one folder each (`index.astro`/`index.tsx`, `<Name>.stories.tsx`, `__test__/`) | `src/components/<resource>/<Name>/` |
+| Outcome helpers and feature helpers, their tests | `src/components/<resource>/` (+ `__test__/`) |
 | shadcn primitives | `src/components/ui/` |
 
 - Read `package.json` first and match the project's Astro, Effect, Tailwind and oRPC versions.

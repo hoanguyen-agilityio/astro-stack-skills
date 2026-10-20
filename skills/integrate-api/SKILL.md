@@ -70,7 +70,7 @@ outcome helpers.
    read (returns a state union, error channel `never`) and `run<Action>` per mutation (returns
    `{ ok: true }` or `{ ok: false, message }`). Handle every error tag with `Effect.catchTags`.
    → `references/calling.md`
-6. **Tests** in `__tests__/` next to the code: each service for success, 401, 404, a bad response
+6. **Tests** in `__test__/` next to the code: each service for success, 401, 404, a bad response
    shape and a network failure (with the retry count), plus a type test that each
    `load<Resource>` has error type `never`. → `references/calling.md`
 7. **Check against the backend.** `curl` each read procedure and make sure the response decodes

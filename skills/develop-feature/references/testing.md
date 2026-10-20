@@ -1,18 +1,19 @@
 # Testing a feature
 
-Each layer mocks the one below it. Tests live in `__tests__/` next to the code: the skeleton's
+Each layer mocks the one below it. Tests live in `__test__/` next to the code (a component's in
+`<Name>/__test__/index.test.tsx`, a helper's in the feature folder's `__test__/`): the skeleton's
 Vitest config only collects `src/**/*.test.{ts,tsx}`, and its default environment is jsdom.
 
 | Layer | Tool | Mock |
 |---|---|---|
 | Helpers (`format.ts`) | Vitest | nothing |
-| Islands (`CancelOrderButton.tsx`) | Testing Library | the outcome helper (`runCancel`) |
+| Islands (`CancelOrderButton/index.tsx`) | Testing Library | the outcome helper (`runCancel`) |
 | Page (`orders.astro`) | Astro Container API | the loader (`loadOrders`) |
 | Services | see `integrate-api` | a fake oRPC client |
 
 All tests below pass on the skeleton's set (Vitest 3, Astro 5.18, React 19).
 
-## src/components/orders/__tests__/format.test.ts
+## src/components/orders/__test__/format.test.ts
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -32,17 +33,17 @@ describe('formatMoney', () => {
 });
 ```
 
-## src/components/orders/__tests__/CancelOrderButton.test.tsx
+## src/components/orders/CancelOrderButton/__test__/index.test.tsx
 
 ```tsx
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CancelOrderButton } from '../CancelOrderButton';
-import { runCancel } from '../loadOrders';
+import { CancelOrderButton } from '..';
+import { runCancel } from '../../loadOrders';
 
-vi.mock('../loadOrders', () => ({ runCancel: vi.fn() }));
+vi.mock('../../loadOrders', () => ({ runCancel: vi.fn() }));
 
 describe('CancelOrderButton', () => {
   it('shows Cancelled after a successful cancel', async () => {
@@ -70,7 +71,7 @@ describe('CancelOrderButton', () => {
 Query by role and visible text, the way a user finds things. Mock the outcome helper, not
 `fetch`: the island's job is turning outcomes into UI.
 
-## src/components/orders/__tests__/orders-page.test.ts
+## src/components/orders/__test__/orders-page.test.ts
 
 ```ts
 // @vitest-environment node

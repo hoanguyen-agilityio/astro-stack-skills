@@ -32,16 +32,20 @@ confirm scope after the analysis. Open questions are asked, never guessed.
 | Services, one per API namespace, returning `Effect` | `src/services/<name>.ts` |
 | Effect Schemas and the types derived from them | `src/types/<name>.ts` |
 | shadcn primitives (generated, then owned) | `src/components/ui/` |
-| Feature components and islands, tests in `__tests__/` | `src/components/<feature>/` |
+| One folder per component: `index.astro`/`index.tsx`, `<Name>.stories.tsx`, `__test__/` | `src/components/<feature>/<Name>/` |
+| Feature helpers (`format.ts`, `load<Resource>.ts`) and their `__test__/` | `src/components/<feature>/` |
+| Fixtures for stories and tests, in the API's wire format | `src/mocks/<resource>.ts` |
 | Design tokens and UI rules | `DESIGN.md` → `src/styles/global.css` |
 | Analyses | `docs/analysis/<slug>.md` |
 
 - No `any` and no `@ts-ignore`. API responses are decoded with Effect `Schema` before use.
 - Match the versions in `package.json`. New projects pin Astro 5, Effect 3, oRPC 1, Vite 6 and
-  need Node ≥ 22.12.
+  need Node ≥ 22.19.
 - UI uses tokens from `DESIGN.md`: no raw hex and no `[15px]`. Use shadcn before hand-rolled
   markup, and respect the island boundary (serialisable props, smallest island).
 - Tests use Vitest + Testing Library and query by role and accessible name.
+- Every component, `.astro` or React, has a Storybook story per state (`@storybook-astro/framework`).
+  React stories set `parameters: { renderer: 'react' }`.
 - `pnpm` only.
 
 ## Safety
