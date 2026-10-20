@@ -1,7 +1,7 @@
 {
   "name": "web-dev-stack",
   "version": "0.1.0",
-  "description": "Project-agnostic skills for the Astro + React islands + strict TypeScript + Effect (Schema) + oRPC + shadcn/ui stack. Ships code-skeleton: scaffold a runnable project with lint, typecheck, tests and build passing.",
+  "description": "Project-agnostic skills for the Astro + React islands + strict TypeScript + Effect (Schema) + oRPC + shadcn/ui stack. Ships analyze-task (request to acceptance criteria and plan) and code-skeleton (scaffold a project with lint, typecheck, tests and build passing), which runs analyze-task first.",
   "author": {
     "name": "Granbull Team"
   }

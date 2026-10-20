@@ -4,10 +4,19 @@ Starting contents for every file `code-skeleton` writes. Adapt names, the adapte
 to the repo; keep the behavior. If the repo already has one of these files, merge the missing
 parts in rather than overwriting it.
 
-## `package.json` scripts
+## `package.json`
+
+Dependencies are added by the `pnpm add` commands in step 2.
 
 ```json
 {
+  "name": "<project-name>",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -17,6 +26,12 @@ parts in rather than overwriting it.
     "test": "vitest run"
   }
 }
+```
+
+`.nvmrc`:
+
+```text
+22
 ```
 
 ## `tsconfig.json`
