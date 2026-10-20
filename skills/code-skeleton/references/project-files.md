@@ -6,7 +6,7 @@ parts in rather than overwriting it.
 
 ## `package.json`
 
-Dependencies are added by the `pnpm add` commands in step 2.
+Dependencies are added by the `pnpm add` commands of each layer in step 2a.
 
 ```json
 {
@@ -34,6 +34,41 @@ Dependencies are added by the `pnpm add` commands in step 2.
 
 ```text
 22
+```
+
+## `.gitignore`
+
+```text
+node_modules/
+dist/
+.astro/
+storybook-static/
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+.DS_Store
+*.log
+```
+
+In retrofit mode, add only the lines that are missing.
+
+## `pnpm-workspace.yaml`
+
+Lets exactly the two build scripts Astro needs run. pnpm 11 (verified):
+
+```yaml
+allowBuilds:
+  esbuild: true
+  sharp: true
+```
+
+pnpm 10:
+
+```yaml
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
 ```
 
 ## `tsconfig.json`

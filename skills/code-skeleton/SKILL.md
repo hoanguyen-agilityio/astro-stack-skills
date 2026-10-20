@@ -44,29 +44,45 @@ What this skill needs back from the analysis (kind `setup`):
 
 - project name and target directory
 - API base URL (the user often writes `…/rpc`; see step 4)
-- deploy target (decides the adapter), shadcn preset, and whether the project already exists
+- deploy target (decides the adapter), shadcn preset, and the mode from step 1 (`init` for an
+  empty directory, `retrofit` for an existing Astro repo)
 - acceptance criteria: at least "all four gates pass", "API URL comes from env", "the island
   renders", "`DESIGN.md` matches the installed theme", "Storybook builds and shows the island's
   story"
 
 Defaults the analysis may record as assumptions rather than open questions: `pnpm`,
-`@astrojs/node`, shadcn preset `nova`. Continue only once its gate passes. For a `high-risk`
+`@astrojs/node`, shadcn preset `nova`, and for `init` mode also the project name (the
+directory's name) and the API base URL (placeholder `http://localhost:8787`, written only to
+`.env` and `.env.example`; the report tells the user to change it). So `/code-skeleton` with no
+arguments in an empty directory initialises a project without asking. Continue only once its gate passes. For a `high-risk`
 lane (for example, retrofitting a large existing repo), that means the user has confirmed the
 plan.
 
-## 1. Ground yourself in the target
+## 1. Ground yourself and pick the mode
 
-1. If a `package.json` exists, read it first. **Match the versions already there** (Astro,
-   React, Effect, Tailwind, oRPC). Do not upgrade majors as a side effect.
-2. Detect the package manager from the lockfile (`pnpm-lock.yaml` → pnpm, etc.). Use `pnpm` for a
-   new project.
-3. Note what is already present (Tailwind v3 vs v4, an adapter, an existing `components.json`),
-   and add only what is missing.
-4. Check `node -v`. This skill needs Node ≥ 22.19 (see step 2). If the default Node is older,
+1. List the target directory and pick the mode:
+
+   | What is there | Mode | Continue in |
+   |---------------|------|-------------|
+   | Nothing, or only `.claude/`, `.git/`, `.vscode/`, `.idea/`, `README.md`, `LICENSE`, `docs/` | **init**: create the project from zero | 2a |
+   | A `package.json` that depends on `astro` | **retrofit**: add only the missing pieces | 2b |
+   | A `package.json` without `astro`, or other source code | none | stop and ask: this skill does not convert other frameworks |
+
+2. Check `node -v`. This skill needs Node ≥ 22.19 (see step 2). If the default Node is older,
    look for a newer installed one (`nvm ls`, `fnm list`) and run every command with it. If there
    is none, stop and ask the user to install it.
+3. Check `pnpm -v` (init mode, or a repo with `pnpm-lock.yaml`). The commands here are verified
+   on pnpm 8 and 11 (10 is documented). If `pnpm -v` fails, a broken shim (nvm, Volta) may come
+   first on `PATH`: list the others (`which -a pnpm`, `where pnpm` on Windows) and run a working
+   one by its full path. If none works or the version is below 8, stop and ask the user to
+   install it (`npm install -g pnpm@10` or `corepack enable pnpm`). Do not change global tools
+   yourself.
+4. Retrofit mode only: read `package.json` first and **match the versions already there**
+   (Astro, React, Effect, Tailwind, oRPC). Do not upgrade majors as a side effect. Detect the
+   package manager from the lockfile (`pnpm-lock.yaml` → pnpm, etc.), and note what is already
+   present (Tailwind v3 vs v4, an adapter, an existing `components.json`, Storybook).
 
-## 2. Create the project with pinned majors
+## 2. Create or complete the project with pinned majors
 
 The code in these skills is verified against this set (lint, typecheck, tests, build, and an SSR
 request against a stub oRPC server all pass):
@@ -93,52 +109,113 @@ Requires **Node ≥ 22.19**. `astro check` and current jsdom `require()` ES modu
 Node fails with `ERR_REQUIRE_ESM`), and `@storybook-astro/framework` needs 22.19. Record the requirement in the project so the next person
 gets it too: `"engines": { "node": ">=22.19" }` in `package.json` and a `.nvmrc` containing `22`.
 
-Write `package.json` yourself from `references/project-files.md` instead of running
-`pnpm init`. On pnpm 11, `pnpm init` adds a `devEngines` block that makes the next `pnpm add`
-fail.
+Do not use `pnpm create astro`, `astro add` or `storybook init`. They install `latest` (past the
+set above), ask interactive questions and add example files. Init mode builds the same result
+by hand, one layer at a time, with the majors pinned.
 
-```bash
-pnpm add astro@^5 @astrojs/react@^4 @astrojs/node@^9 react@^19 react-dom@^19 \
-  tailwindcss@^4 @tailwindcss/vite@^4 effect@^3 @orpc/client@^1
-pnpm add -D vite@^6 typescript@^5 @types/node @types/react@^19 @types/react-dom@^19 @astrojs/check \
-  vitest@^3 jsdom@^26 @testing-library/react @testing-library/jest-dom @testing-library/user-event \
-  eslint@^9 @eslint/js@^9 typescript-eslint eslint-plugin-astro@^1 eslint-plugin-react-hooks \
-  storybook@^10 @storybook/builder-vite@^10 @storybook/react@^10 @storybook-astro/framework@^1 \
-  @vitejs/plugin-react@^5 @storybook/addon-docs@^10 @storybook/addon-a11y@^10 @storybook/addon-themes@^10
-```
+### 2a. Init mode: a new project, layer by layer
 
-- pnpm ≥ 10 skips dependency build scripts unless they are allowed, and Astro needs `esbuild`
-  and `sharp`. Allow exactly those two in `pnpm-workspace.yaml`: on pnpm 11 an `allowBuilds:`
-  map (`esbuild: true`, `sharp: true`, verified), on pnpm 10 an `onlyBuiltDependencies:` list.
-  Mention it in the report.
-- Pin `vite` to Astro's major. Without it, `@tailwindcss/vite`'s peer range pulls the newest
-  Vite next to Astro's, and the config fails to load.
-- Swap `@astrojs/node` for the deploy target's adapter (cloudflare, vercel, …) when known.
-- Write the configs from step 4 **before** running shadcn: it needs the `@/*` alias and the
-  Tailwind CSS file.
+Work through the layers in order. Each one installs its packages and writes its files from
+`references/project-files.md`. Gates run once at the end (step 5), not between layers.
+
+1. **Repository and package.** Run `git init` if there is no `.git/` (do not commit). Write
+   `package.json`, `.nvmrc`, `.gitignore`, `CLAUDE.md` (from `references/claude-md-template.md`)
+   and, on pnpm ≥ 10, `pnpm-workspace.yaml`. Write `package.json`
+   yourself instead of running `pnpm init`: on pnpm 11, `pnpm init` adds a `devEngines` block
+   that makes the next `pnpm add` fail. pnpm ≥ 10 skips dependency build scripts unless they are
+   allowed, and Astro needs `esbuild` and `sharp` (pnpm 8 runs them without asking). Allow exactly those two: on pnpm 11 an
+   `allowBuilds:` map (`esbuild: true`, `sharp: true`, verified), on pnpm 10 an
+   `onlyBuiltDependencies:` list. Mention it in the report.
+2. **Astro with React islands (SSR).**
+
+   ```bash
+   pnpm add astro@^5 @astrojs/react@^4 @astrojs/node@^9 react@^19 react-dom@^19
+   pnpm add -D vite@^6 @types/react@^19 @types/react-dom@^19 @types/node
+   ```
+
+   Write `astro.config.mjs`. Swap `@astrojs/node` for the deploy target's adapter (cloudflare,
+   vercel, …) when known. Pin `vite` to Astro's major: without it, `@tailwindcss/vite`'s peer
+   range pulls the newest Vite next to Astro's, and the config fails to load.
+3. **TypeScript (strictest).**
+
+   ```bash
+   pnpm add -D typescript@^5 @astrojs/check
+   ```
+
+   Write `tsconfig.json` (with the `@/*` alias) and `src/env.d.ts`.
+4. **Tailwind CSS v4.**
+
+   ```bash
+   pnpm add tailwindcss@^4 @tailwindcss/vite@^4
+   ```
+
+   Write `src/styles/global.css` and `src/layouts/BaseLayout.astro`. The Vite plugin is already
+   in `astro.config.mjs` from layer 2.
+5. **Effect and oRPC.**
+
+   ```bash
+   pnpm add effect@^3 @orpc/client@^1
+   ```
+
+   Write `src/libs/orpcClient.ts` and `.env.example`, then copy `.env.example` to `.env`
+   (gitignored; it holds only the placeholder or the URL the user gave). Store the base without
+   `/rpc` (see step 4).
+6. **shadcn/ui.** Needs the `@/*` alias and `global.css` from layers 3 and 4.
+
+   ```bash
+   pnpm dlx shadcn@4 init -t astro -b radix -p nova --no-monorepo -y   # components.json, src/lib/utils.ts, theme CSS, button
+   ```
+
+   Always pass `-p <preset>`: without it, `init` stops at an interactive preset prompt, even with
+   `-y`. Use the preset the user names. Otherwise use `nova` (Lucide icons, Geist font) and say
+   so in the report. `init` with a preset also adds `button`. Add other primitives later with
+   `pnpm dlx shadcn@4 add <name> -y`. Do not hand-write `components.json`. shadcn 4 imports `cn`
+   from the `cn` package and generates `src/lib/utils.ts` as a re-export, so keep its default
+   aliases.
+7. **ESLint.**
+
+   ```bash
+   pnpm add -D eslint@^9 @eslint/js@^9 typescript-eslint eslint-plugin-astro@^1 eslint-plugin-react-hooks
+   ```
+
+   Write `eslint.config.js`.
+8. **Vitest and Testing Library.**
+
+   ```bash
+   pnpm add -D vitest@^3 jsdom@^26 @testing-library/react @testing-library/jest-dom @testing-library/user-event
+   ```
+
+   Write `vitest.config.ts` and `vitest.setup.ts`.
+9. **Storybook.**
+
+   ```bash
+   pnpm add -D storybook@^10 @storybook/builder-vite@^10 @storybook/react@^10 @storybook-astro/framework@^1 \
+     @vitejs/plugin-react@^5 @storybook/addon-docs@^10 @storybook/addon-a11y@^10 @storybook/addon-themes@^10
+   ```
+
+   Write `.storybook/main.ts` and `.storybook/preview.ts`. `@storybook-astro/framework` renders
+   `.astro` and React stories in one Storybook. pnpm's warning about the framework's `vitest@^4`
+   peer is expected (optional integration).
+10. **Folders and `DESIGN.md`.** Create the layout from step 3, with a `.gitkeep` in each folder
+    that starts empty (`src/services/`, `src/types/`, `src/mocks/`). Write `DESIGN.md` from
+    `references/design-md-template.md` now, after shadcn, so its values match `global.css`.
+11. **Smoke island, test and story**: step 5.
+
+### 2b. Retrofit mode: complete an existing Astro repo
+
+Go through the same layers as 2a, in the same order, and skip every layer that is already
+there. Where a file exists, merge the missing parts in rather than overwriting it.
+
+- Keep the repo's majors. Install a missing package at the major that fits them, and stop and
+  ask if none of the verified set fits.
 - On `effect` < 3.10, Schema comes from `@effect/schema`. Follow what the repo uses, and do not
   mix the two.
 - A repo on Tailwind v3 (`@astrojs/tailwind`) stays on v3.
-- Install Storybook by hand as above and write its two config files from step 4. Do not run
-  `storybook init`: it does not recognise Astro, asks questions and adds example stories.
-  `@storybook-astro/framework` renders `.astro` and React stories in one Storybook. A repo that
-  already has Storybook keeps its major and its config; check only that `global.css` is loaded in
-  the preview. pnpm's warning about the framework's `vitest@^4` peer is expected (optional
-  integration).
-
-Then initialise shadcn and let it write its own files:
-
-```bash
-pnpm dlx shadcn@4 init -t astro -b radix -p nova --no-monorepo -y   # components.json, src/lib/utils.ts, theme CSS, button
-```
-
-Always pass `-p <preset>`: without it, `init` stops at an interactive preset prompt, even with
-`-y`. Use the preset the user names. Otherwise use `nova` (Lucide icons, Geist font) and say so in
-the report. `init` with a preset also adds `button`. Add other primitives later with
-`pnpm dlx shadcn@4 add <name> -y`.
-
-Do not hand-write `components.json`. shadcn 4 imports `cn` from the `cn` package and generates
-`src/lib/utils.ts` as a re-export, so keep its default aliases.
+- A repo that already has Storybook keeps its major and its config; check only that
+  `global.css` is loaded in the preview.
+- Add `esbuild` and `sharp` to the allowed builds only if the repo's pnpm skips build scripts.
+- No `CLAUDE.md` at the root: write it from `references/claude-md-template.md`. One already
+  there: leave it as it is, and list in the report the template's rules it does not cover.
 
 ## 3. Lay out the folders
 
@@ -181,10 +258,14 @@ the component with `from '..'`, stories with `from '.'` or `'./index.astro'`. Te
 
 ## 4. Write the configs and plumbing
 
-Copy the files from `references/project-files.md`, adapting names and versions:
+Every file the layers in step 2 write, all in `references/project-files.md`. Adapt names and
+versions:
 
 | File | Purpose |
 |------|---------|
+| `package.json`, `.nvmrc`, `pnpm-workspace.yaml` | pinned Node, scripts, allowed build scripts (`esbuild`, `sharp`) |
+| `.gitignore` | `node_modules`, `dist`, `.astro`, `.env`, `storybook-static` |
+| `CLAUDE.md` | the stack's working contract for every later session, from `references/claude-md-template.md`; it loads whether the skills are installed as a plugin or copied |
 | `tsconfig.json` | `astro/tsconfigs/strictest`, React JSX, `@/*` alias |
 | `astro.config.mjs` | React integration, Tailwind Vite plugin, adapter, dev proxy `/rpc` → API |
 | `src/styles/global.css`, `src/layouts/BaseLayout.astro` | Tailwind entry (shadcn adds its theme) and the HTML shell |
@@ -192,7 +273,7 @@ Copy the files from `references/project-files.md`, adapting names and versions:
 | `vitest.config.ts` + `vitest.setup.ts` | `getViteConfig`, jsdom, jest-dom |
 | `.storybook/main.ts` + `.storybook/preview.ts` | `@storybook-astro/framework` with the `react()` integration (reads `astro.config.mjs`, so Tailwind and `@/` just work); `global.css`, light/dark toggle on the `.dark` class, a11y addon, `createOrpcClient` mocked so stories never call an API |
 | `src/libs/orpcClient.ts` | client factory: `RPCLink` to `${PUBLIC_API_URL}/rpc`, auth header |
-| `.env.example`, `src/env.d.ts` | `PUBLIC_API_URL` placeholder and its type |
+| `.env.example`, `.env`, `src/env.d.ts` | `PUBLIC_API_URL` placeholder, the local copy (init mode, gitignored) and its type |
 | `package.json` scripts | `dev build preview lint typecheck test storybook build-storybook` |
 | `DESIGN.md` | design context for agents, from `references/design-md-template.md`, written **after** shadcn init so its values match `global.css` |
 
@@ -231,9 +312,9 @@ Report in this shape:
 
 ```markdown
 ## Result
-Did:         <what was created, versions installed, preset and adapter chosen>
+Did:         <mode (init or retrofit), layers added, versions installed, preset and adapter chosen>
 Saw:         <each gate and its result, e.g. "pnpm test — 1/1 passed">
-Not done:    <anything skipped, e.g. "not opened in a browser">
+Not done:    <anything skipped, e.g. "not opened in a browser", "nothing committed">
 Blocked by:  <open questions still waiting, or "none">
 Next:        integrate-api (API services) or develop-feature (pages)
 
@@ -252,3 +333,4 @@ services go (`src/services/<name>.ts`), and where the client type lives
 |------|-----|
 | `references/project-files.md` | Full contents of every config and plumbing file above |
 | `references/design-md-template.md` | The `DESIGN.md` written into the project, and how to keep it true |
+| `references/claude-md-template.md` | The `CLAUDE.md` written into the project: the stack's working contract |
