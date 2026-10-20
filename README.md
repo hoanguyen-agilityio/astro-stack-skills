@@ -6,7 +6,21 @@ Schema) · **oRPC** · **shadcn/ui**.
 
 ## Install
 
-### Into a project (recommended)
+### One command (recommended)
+
+In the project's root, even an empty directory:
+
+```bash
+npx git+ssh://git@gitlab.asoft-python.com/hoa.nguyen/astro-stack-skills.git init
+```
+
+It runs the two `claude plugin` commands below with `--scope project`, then prints the next
+step. Options: `--scope user|local`, `--source <path>` (try a local checkout), and `--copy`
+(copy the skills into `.claude/skills/` instead; `--force` overwrites). It needs Node ≥ 18, SSH
+access to the GitLab, and the `claude` CLI on `PATH` (for `--copy`, only Node and git).
+`bin/cli.mjs` is the whole installer.
+
+### Into a project, by hand
 
 Run these in the project's root, even an empty directory:
 
@@ -66,6 +80,8 @@ As project skills, invoke them without the plugin prefix: `/code-skeleton` inste
 
 ```
 CLAUDE.md, spec.md, DESIGN.md
+package.json          # only for the npx installer: bin + files
+bin/cli.mjs           # `npx … init`: plugin install (default) or --copy
 .claude-plugin/
 ├── marketplace.json   # marketplace "astro-stack", lists the plugin at ./
 └── plugin.json        # plugin "web-dev-stack"
