@@ -18,15 +18,16 @@ astro-stack-skills/                 one repo = marketplace "astro-stack" = plugi
 │   │   └── references/{analysis-template,design-input}.md
 │   └── code-skeleton/              part 1 of the brief
 │       ├── SKILL.md
-│       └── references/{project-files,design-md-template}.md
+│       └── references/{project-files,design-md-template,claude-md-template}.md
 ```
 
 The repo root has the same layout as a `.claude/` folder, so it works two ways:
 
 | Install | How | Skill names |
 |---------|-----|-------------|
-| Plugin | `claude plugin marketplace add <repo>`, then `claude plugin install web-dev-stack@astro-stack` | `/web-dev-stack:code-skeleton` |
-| Project folder | clone into `.claude/`, or copy `skills/` into `.claude/skills/` | `/code-skeleton` |
+| Plugin, project scope (recommended) | `claude plugin marketplace add <repo> --scope project`, then `claude plugin install web-dev-stack@astro-stack --scope project`; both land in the project's `.claude/settings.json` | `/web-dev-stack:code-skeleton` |
+| Plugin, user scope | the same two commands without `--scope project` | `/web-dev-stack:code-skeleton` |
+| Project folder (fallback) | clone into `.claude/`, or copy `skills/` into `.claude/skills/` | `/code-skeleton` |
 | Development | `claude --plugin-dir <repo>` in an empty directory | `/web-dev-stack:code-skeleton` |
 
 ## Workflow
@@ -70,6 +71,9 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | Write `package.json` by hand, not with `pnpm init` | pnpm 11 adds a `devEngines` block that breaks the next `pnpm add` |
 | oRPC procedure output typed `unknown` | Forces every response through Effect `Schema` before the app uses it |
 | Skeleton has no batching, errors or retry | Those belong to `integrate-api`. The skeleton stays the smallest thing that runs |
+| Project-scope plugin install is the recommended path, not a copy or an install script | Claude Code already records it in `.claude/settings.json`, so the team shares one versioned skill set that updates in place. A copy goes stale, and a clone into `.claude/` nests a git repo and a second `DESIGN.md` |
+| `code-skeleton` writes the project's `CLAUDE.md` from a template | A plugin does not load this repo's `CLAUDE.md`. Writing the contract into the project makes it hold in every later session, whatever the install mode, and lets the project own and extend it |
+| `code-skeleton` has an init mode for empty directories, layer by layer | `pnpm create astro`, `astro add` and `storybook init` install `latest` and ask questions. Building each layer by hand keeps the verified majors, and with defaults for the name and the API URL an empty directory needs no arguments |
 | `DESIGN.md` generated after shadcn init | Its token, radius and font values are read from the installed theme, so they match the code |
 | Storybook through `@storybook-astro/framework` (Storybook 10) | Renders `.astro` (server, Container API) and React (browser) stories in one Storybook, reading `astro.config.mjs`, so `.astro` components keep their story without a React rewrite. The team's in-house `@storybook/astro` in `space` is Storybook 8 and kitchen's `.astro` stories are excluded from its config. Needs Node ≥ 22.19 |
 | One folder per component (`index.astro`/`index.tsx`, `<Name>.stories.tsx`, `__test__/index.test.tsx`) | The layout of the team's `space` apps (kitchen: 49 `__test__` folders to 3 `__tests__`, `<Name>.stories.tsx` everywhere), so code moves between repos without renaming. Feature helpers stay one level up, beside the component folders |

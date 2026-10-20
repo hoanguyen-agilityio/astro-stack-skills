@@ -6,17 +6,39 @@ Schema) · **oRPC** · **shadcn/ui**.
 
 ## Install
 
+### Into a project (recommended)
+
+Run these in the project's root, even an empty directory:
+
 ```bash
-claude plugin marketplace add git@gitlab.asoft-python.com:hoa.nguyen/astro-stack-skills.git
-claude plugin install web-dev-stack@astro-stack
+claude plugin marketplace add git@gitlab.asoft-python.com:hoa.nguyen/astro-stack-skills.git --scope project
+claude plugin install web-dev-stack@astro-stack --scope project
 ```
+
+They write the marketplace and the plugin into the project's `.claude/settings.json`. Commit
+that file: everyone who opens the project in Claude Code is offered the same skills, and an
+update of the plugin reaches them all. Then start a session and run:
+
+```text
+/web-dev-stack:code-skeleton
+```
+
+In an empty directory, that creates the whole project, including a `CLAUDE.md` with the stack's
+working contract (a plugin does not load this repo's own `CLAUDE.md`).
+
+### For yourself only
+
+Without `--scope project` (or with `--scope user`), the plugin is installed for your user and
+works in every project on your machine, but teammates do not get it.
 
 To try local changes without installing, start Claude Code with `claude --plugin-dir <path to this repo>`.
 
-### Or import it as a project `.claude` folder
+### Or copy it as a project `.claude` folder
 
 The repo root uses the same layout as `.claude/`, so `skills/<name>/SKILL.md` lands where Claude
-Code looks for project skills. Use this when you do not want a plugin install.
+Code looks for project skills. Use this only when a plugin install is not possible: the copy
+does not update, and a clone into `.claude/` nests a second git repo and puts this repo's
+`DESIGN.md` next to the project's.
 
 ```bash
 # Project with no .claude/ yet: clone straight into it
@@ -37,7 +59,7 @@ As project skills, invoke them without the plugin prefix: `/code-skeleton` inste
 |------|------------|
 | `spec.md` | Intent: the mentor's brief, goals, non-goals, each skill's input, output and done-criteria |
 | `DESIGN.md` | How the skill set is built: workflow, hand-off contracts, decisions and why |
-| `CLAUDE.md` | Always-on contract for projects using the skills (loads when cloned as `.claude/`) |
+| `CLAUDE.md` | Always-on contract for projects using the skills (loads when cloned as `.claude/`; `code-skeleton` writes the same contract into each new project from `references/claude-md-template.md`) |
 | [`astro-stack-playground`](https://gitlab.asoft-python.com/hoa.nguyen/astro-stack-playground) | Separate repo that installs this plugin through `.claude/settings.json`; holds the project `code-skeleton` generated, plus the headless transcript, gate logs and screenshots |
 
 ## Layout
@@ -49,7 +71,7 @@ CLAUDE.md, spec.md, DESIGN.md
 └── plugin.json        # plugin "web-dev-stack"
 skills/
 ├── analyze-task/      # SKILL.md + references/{analysis-template,design-input}.md
-├── code-skeleton/     # SKILL.md + references/{project-files,design-md-template}.md
+├── code-skeleton/     # SKILL.md + references/{project-files,design-md-template,claude-md-template}.md
 ├── integrate-api/     # SKILL.md + references/{client,service,calling}.md
 └── develop-feature/   # SKILL.md + references/{page-and-island,testing}.md
 ```
@@ -80,7 +102,11 @@ before anything is built.
 ### `code-skeleton`
 
 Produces a project that passes `lint`, `typecheck`, `test` and `build` before any feature code
-exists. It includes:
+exists. In an empty directory (only `.claude/`, `.git/` and the like) it runs in **init** mode
+and creates the project layer by layer: package and git, Astro + React, TypeScript, Tailwind,
+Effect + oRPC, shadcn, ESLint, Vitest, Storybook. Called with no arguments there, it takes the
+directory name as the project name and a placeholder API URL. In an existing Astro repo it runs
+in **retrofit** mode and adds only the missing layers. It includes:
 
 - Astro with React islands and an SSR adapter
 - strict TypeScript and the `@/` alias

@@ -50,7 +50,7 @@ that starts with written acceptance criteria.
 | Skill | Input | Output | Done when |
 |-------|-------|--------|-----------|
 | `analyze-task` | ticket, design (image/Figma) or loose request | kind, lane, ACs, edge cases, open questions, plan; `docs/analysis/<slug>.md` for normal and high-risk | every AC has a Given, every unknown is a question, the plan names files |
-| `code-skeleton` | project name, API URL | runnable project, `src/libs/orpcClient.ts`, `DESIGN.md`, Storybook, smoke island + test + story | 4 gates green, Storybook builds, URL only in env, `DESIGN.md` matches `global.css` |
+| `code-skeleton` | project name, API URL (both defaulted in an empty directory) | runnable project, `src/libs/orpcClient.ts`, `DESIGN.md`, `CLAUDE.md`, Storybook, smoke island + test + story | 4 gates green, Storybook builds, URL only in env, `DESIGN.md` matches `global.css` |
 | `integrate-api` | procedures | `src/types/<name>.ts`, `src/services/<name>.ts` returning `Effect` with typed errors and retry | service tests cover success, decode error, API error, retry |
 | `develop-feature` | ticket or design | Astro page + React island with shadcn, loading/empty/error states, a story per state for each component, tests | one test per AC, a story per state, 4 gates green |
 
