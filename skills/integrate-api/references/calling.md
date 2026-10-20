@@ -75,7 +75,7 @@ For an island that loads data after hydration, run the Effect inside `useEffect`
 `AbortController` and pass `{ signal }` to `Effect.runPromise`, so an unmount or a fast filter
 change interrupts the earlier request.
 
-## Tests — src/services/__tests__/orders.test.ts
+## Tests — src/services/__test__/orders.test.ts
 
 ```ts
 import { ORPCError } from '@orpc/client';
@@ -129,7 +129,7 @@ describe('listOrders', () => {
 });
 ```
 
-## Tests — src/components/orders/__tests__/loadOrders.test.ts
+## Tests — src/components/orders/__test__/loadOrders.test.ts
 
 ```ts
 import { Effect } from 'effect';

@@ -27,7 +27,8 @@ Where the code breaks a rule, the deviation is marked **`debt`**, which means "d
 
 **Stack:** Astro 5 in SSR mode (`output: 'server'`) · React 19 islands · TypeScript (strictest) ·
 **Tailwind CSS v4** (CSS-first, no `tailwind.config.*`) · **shadcn/ui** (style `radix-nova`, Radix
-primitives from `radix-ui`) · `lucide-react` icons · `tw-animate-css` · Vitest + Testing Library.
+primitives from `radix-ui`) · `lucide-react` icons · `tw-animate-css` · Vitest + Testing Library ·
+Storybook 10 (`@storybook-astro/framework`, `.astro` and React stories).
 
 ## Where design lives
 
@@ -38,7 +39,7 @@ primitives from `radix-ui`) · `lucide-react` icons · `tw-animate-css` · Vites
 | shadcn config and aliases | `components.json` |
 | shadcn primitives (generated, then owned) | `src/components/ui/` |
 | Class merger `cn()` | the `cn` package (re-exported by `src/lib/utils.ts`) |
-| Feature components and islands | `src/components/<feature>/` |
+| Feature components and islands, one folder each | `src/components/<feature>/<Name>/` |
 | Layout shell | `src/layouts/BaseLayout.astro` |
 | Font | `@fontsource-variable/geist`, imported in `global.css` |
 | Reference screenshots | `docs/design/` (add them as designs arrive) |
@@ -142,7 +143,9 @@ navigation and footer once a design defines them.
   functions, class instances or secrets, because props are written into the HTML.
 - Each island is its own React root. Context does not cross islands, so two islands that share
   state should become one island.
-- `.astro` files have no unit tests. If a piece of UI needs a test, make it `.tsx`.
+- `.astro` files have no unit tests (Vitest only collects `.ts`/`.tsx`); their states are covered
+  by a Storybook story and, for pages, a Container API test. Do not rewrite `.astro` as React just
+  to test it.
 
 ## Responsive
 
@@ -185,8 +188,13 @@ the design actually uses.
 
 ## Working conventions
 
-- One component per folder under `src/components/<feature>/`, with tests in `__tests__/` beside
-  it. Query tests by role and accessible name.
+- **One folder per component**, `src/components/<feature>/<Name>/`, holding up to three things:
+  `index.astro` or `index.tsx`, `<Name>.stories.tsx` (React stories set
+  `parameters: { renderer: 'react' }`), and `__test__/index.test.tsx`. Feature helpers
+  (`format.ts`, `load<Resource>.ts`) sit beside the component folders with their own `__test__/`.
+  Query tests by role and accessible name.
+- Stories show every state with fixtures from `src/mocks/`, never the network. Check each new
+  story in light and dark (theme toolbar) with a clean Accessibility panel: `pnpm storybook`.
 - Import order: external packages → `@/` aliases → relative imports.
 - No `any` and no `@ts-ignore`. API data is decoded with Effect `Schema` before it reaches UI.
 - Verify with `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`.

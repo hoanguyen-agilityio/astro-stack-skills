@@ -1,13 +1,13 @@
 ---
 name: code-skeleton
-description: Scaffold a runnable web project on the team stack — Astro with React islands, strict TypeScript, Effect (with Schema), an oRPC client, shadcn/ui on Tailwind, `@/` path aliases, ESLint and Vitest. Use whenever the user wants to start a new Astro/React/Effect/oRPC app, "create the skeleton", "set up the project", bootstrap a sample project to try the other web-dev-stack skills on, or bring an existing Astro repo up to this stack's baseline. Starts by running analyze-task on the request, then scaffolds and proves the four gates pass.
+description: Scaffold a runnable web project on the team stack — Astro with React islands, strict TypeScript, Effect (with Schema), an oRPC client, shadcn/ui on Tailwind, `@/` path aliases, ESLint, Vitest and Storybook. Use whenever the user wants to start a new Astro/React/Effect/oRPC app, "create the skeleton", "set up the project", bootstrap a sample project to try the other web-dev-stack skills on, or bring an existing Astro repo up to this stack's baseline. Starts by running analyze-task on the request, then scaffolds and proves the four gates pass.
 argument-hint: "[project name] [API base URL, e.g. http://localhost:8787]"
 ---
 
 # Code skeleton — Astro + React islands + Effect + oRPC + shadcn
 
-Produce a project that **builds, lints, type-checks and runs one passing test** before any
-feature code exists. A skeleton with a broken gate makes every later feature start by debugging
+Produce a project that **builds, lints, type-checks, runs one passing test and builds its
+Storybook** before any feature code exists. A skeleton with a broken gate makes every later feature start by debugging
 config, so nothing here is done until all four gates are green.
 
 **Sibling skills.** `analyze-task` runs first (step 0) and writes the acceptance criteria this
@@ -46,7 +46,8 @@ What this skill needs back from the analysis (kind `setup`):
 - API base URL (the user often writes `…/rpc`; see step 4)
 - deploy target (decides the adapter), shadcn preset, and whether the project already exists
 - acceptance criteria: at least "all four gates pass", "API URL comes from env", "the island
-  renders", "`DESIGN.md` matches the installed theme"
+  renders", "`DESIGN.md` matches the installed theme", "Storybook builds and shows the island's
+  story"
 
 Defaults the analysis may record as assumptions rather than open questions: `pnpm`,
 `@astrojs/node`, shadcn preset `nova`. Continue only once its gate passes. For a `high-risk`
@@ -61,7 +62,7 @@ plan.
    new project.
 3. Note what is already present (Tailwind v3 vs v4, an adapter, an existing `components.json`),
    and add only what is missing.
-4. Check `node -v`. This skill needs Node ≥ 22.12 (see step 2). If the default Node is older,
+4. Check `node -v`. This skill needs Node ≥ 22.19 (see step 2). If the default Node is older,
    look for a newer installed one (`nvm ls`, `fnm list`) and run every command with it. If there
    is none, stop and ask the user to install it.
 
@@ -81,14 +82,16 @@ request against a stub oRPC server all pass):
 | `vitest` / `jsdom` | 3 / 26 | 3.2 / 26.1 |
 | `eslint` / `eslint-plugin-astro` | 9 / 1 | 9.39 / 1.7 |
 | `shadcn` CLI | 4 | 4.22 |
+| `storybook`, `@storybook/builder-vite`, `@storybook/react`, `@storybook/addon-{docs,a11y,themes}` | 10 | 10.6 |
+| `@storybook-astro/framework` / `@vitejs/plugin-react` | 1 / 5 | 1.12, 1.13 / 5.2 |
 
 `latest` is already past this set (Astro 7, Effect 4). Their APIs differ from the code here. A new
 project pins the majors above. For an existing repo on a different major, stop and tell the user
 that the skill's examples need adapting, and do not upgrade or downgrade on your own.
 
-Requires **Node ≥ 22.12** (`astro check` and current jsdom `require()` ES modules). On an older
-Node they fail with `ERR_REQUIRE_ESM`. Record the requirement in the project so the next person
-gets it too: `"engines": { "node": ">=22.12" }` in `package.json` and a `.nvmrc` containing `22`.
+Requires **Node ≥ 22.19**. `astro check` and current jsdom `require()` ES modules (≥ 22.12, older
+Node fails with `ERR_REQUIRE_ESM`), and `@storybook-astro/framework` needs 22.19. Record the requirement in the project so the next person
+gets it too: `"engines": { "node": ">=22.19" }` in `package.json` and a `.nvmrc` containing `22`.
 
 Write `package.json` yourself from `references/project-files.md` instead of running
 `pnpm init`. On pnpm 11, `pnpm init` adds a `devEngines` block that makes the next `pnpm add`
@@ -99,7 +102,9 @@ pnpm add astro@^5 @astrojs/react@^4 @astrojs/node@^9 react@^19 react-dom@^19 \
   tailwindcss@^4 @tailwindcss/vite@^4 effect@^3 @orpc/client@^1
 pnpm add -D vite@^6 typescript@^5 @types/node @types/react@^19 @types/react-dom@^19 @astrojs/check \
   vitest@^3 jsdom@^26 @testing-library/react @testing-library/jest-dom @testing-library/user-event \
-  eslint@^9 @eslint/js@^9 typescript-eslint eslint-plugin-astro@^1 eslint-plugin-react-hooks
+  eslint@^9 @eslint/js@^9 typescript-eslint eslint-plugin-astro@^1 eslint-plugin-react-hooks \
+  storybook@^10 @storybook/builder-vite@^10 @storybook/react@^10 @storybook-astro/framework@^1 \
+  @vitejs/plugin-react@^5 @storybook/addon-docs@^10 @storybook/addon-a11y@^10 @storybook/addon-themes@^10
 ```
 
 - pnpm ≥ 10 skips dependency build scripts unless they are allowed, and Astro needs `esbuild`
@@ -114,6 +119,12 @@ pnpm add -D vite@^6 typescript@^5 @types/node @types/react@^19 @types/react-dom@
 - On `effect` < 3.10, Schema comes from `@effect/schema`. Follow what the repo uses, and do not
   mix the two.
 - A repo on Tailwind v3 (`@astrojs/tailwind`) stays on v3.
+- Install Storybook by hand as above and write its two config files from step 4. Do not run
+  `storybook init`: it does not recognise Astro, asks questions and adds example stories.
+  `@storybook-astro/framework` renders `.astro` and React stories in one Storybook. A repo that
+  already has Storybook keeps its major and its config; check only that `global.css` is loaded in
+  the preview. pnpm's warning about the framework's `vitest@^4` peer is expected (optional
+  integration).
 
 Then initialise shadcn and let it write its own files:
 
@@ -137,14 +148,33 @@ src/
 ├── layouts/               # BaseLayout.astro
 ├── components/
 │   ├── ui/                # shadcn primitives only (generated, then owned)
-│   └── <feature>/         # React islands + their tests (__tests__/)
+│   └── <feature>/         # one folder per component (see below), plus feature helpers
 ├── lib/utils.ts           # generated by shadcn: leave it to shadcn
 ├── libs/
 │   └── orpcClient.ts      # the one oRPC client factory
 ├── services/              # empty: integrate-api adds <name>.ts modules returning Effect
 ├── types/                 # Schema definitions + derived TS types per domain
+├── mocks/                 # fixtures in the API's wire format, shared by stories and tests
 └── styles/global.css
+.storybook/                # main.ts (Astro framework + React integration) + preview.ts (theme, mocked client)
 ```
+
+Each component is a folder, the same layout as the team's `space` apps:
+
+```
+src/components/<feature>/
+├── <Name>/                      # one folder per component
+│   ├── index.astro | index.tsx  # the component
+│   ├── <Name>.stories.tsx       # its stories (Astro and React alike)
+│   └── __test__/index.test.tsx  # React components; .astro is covered by its story and the page test
+├── format.ts, load<Resource>.ts # feature helpers, not components
+└── __test__/<helper>.test.ts    # their tests
+```
+
+Import a React component from its folder (`@/components/orders/StatusBadge`, which resolves
+`index.tsx`) and an Astro one by file (`@/components/dashboard/StatCard/index.astro`). Tests import
+the component with `from '..'`, stories with `from '.'` or `'./index.astro'`. Test folders are
+`__test__/` everywhere, including `src/services/__test__/` and `src/pages/__test__/`.
 
 `src/lib/` belongs to shadcn and `src/libs/` belongs to the app. Do not move shadcn's file:
 `shadcn add` resolves its imports from `components.json`.
@@ -158,11 +188,12 @@ Copy the files from `references/project-files.md`, adapting names and versions:
 | `tsconfig.json` | `astro/tsconfigs/strictest`, React JSX, `@/*` alias |
 | `astro.config.mjs` | React integration, Tailwind Vite plugin, adapter, dev proxy `/rpc` → API |
 | `src/styles/global.css`, `src/layouts/BaseLayout.astro` | Tailwind entry (shadcn adds its theme) and the HTML shell |
-| `eslint.config.js` | flat config; bans `any` and `@ts-ignore` |
+| `eslint.config.js` | flat config; bans `any` and `@ts-ignore`; ignores `storybook-static` |
 | `vitest.config.ts` + `vitest.setup.ts` | `getViteConfig`, jsdom, jest-dom |
+| `.storybook/main.ts` + `.storybook/preview.ts` | `@storybook-astro/framework` with the `react()` integration (reads `astro.config.mjs`, so Tailwind and `@/` just work); `global.css`, light/dark toggle on the `.dark` class, a11y addon, `createOrpcClient` mocked so stories never call an API |
 | `src/libs/orpcClient.ts` | client factory: `RPCLink` to `${PUBLIC_API_URL}/rpc`, auth header |
 | `.env.example`, `src/env.d.ts` | `PUBLIC_API_URL` placeholder and its type |
-| `package.json` scripts | `dev build preview lint typecheck test` |
+| `package.json` scripts | `dev build preview lint typecheck test storybook build-storybook` |
 | `DESIGN.md` | design context for agents, from `references/design-md-template.md`, written **after** shadcn init so its values match `global.css` |
 
 The oRPC client's router type starts empty. `integrate-api` adds procedures to it, plus
@@ -174,7 +205,9 @@ The user often gives the API as a full URL (`http://localhost:8787/rpc`). Store 
 ## 5. Prove it runs
 
 Add a smoke page (`src/pages/index.astro` rendering a shadcn `Button` inside a React island
-with `client:load`) and one test for that island.
+with `client:load`), one test for that island, and one story for it
+(`src/components/home/GreetingButton/` with `index.tsx`, `GreetingButton.stories.tsx` whose
+`play` function clicks it, and `__test__/index.test.tsx`).
 
 Verify in this order. Any fix sends you back to the first gate.
 
@@ -185,6 +218,9 @@ Verify in this order. Any fix sends you back to the first gate.
 3. `pnpm typecheck`
 4. `pnpm test`
 5. `pnpm build`
+6. `pnpm build-storybook`: proves the Storybook config loads Tailwind, the alias and the stories.
+   This gate is part of setup only; later work relies on `pnpm typecheck` to catch broken
+   stories.
 
 Report the exact commands and their real result. A failing gate is reported as failing. Never
 weaken a gate to get green: no `any`, no `@ts-ignore`, no disabled rules.
@@ -203,7 +239,7 @@ Next:        integrate-api (API services) or develop-feature (pages)
 
 | AC | Proven by |
 |----|-----------|
-| AC1 gates pass | the four commands above |
+| AC1 gates pass | the four commands above, plus `pnpm build-storybook` |
 ```
 
 Also give the hand-off facts the next skill needs: the API env var (`PUBLIC_API_URL`), where

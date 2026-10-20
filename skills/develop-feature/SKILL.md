@@ -1,6 +1,6 @@
 ---
 name: develop-feature
-description: Build a ticket into a tested feature in an Astro + React islands + Effect + oRPC + shadcn/ui app — acceptance criteria, an Astro page that loads data on the server, React islands only for the interactive parts, shadcn/ui components, empty/error/pending states, and Vitest tests for helpers, islands and pages. Use whenever the user gives a ticket or asks to add, build or change a page, screen, list, table, filter, form, button or component in this stack, or to add tests for one.
+description: Build a ticket into a tested feature in an Astro + React islands + Effect + oRPC + shadcn/ui app — acceptance criteria, an Astro page that loads data on the server, React islands only for the interactive parts, shadcn/ui components, empty/error/pending states, a Storybook story per state for every component, and Vitest tests for helpers, islands and pages. Use whenever the user gives a ticket or asks to add, build or change a page, screen, list, table, filter, form, button or component in this stack, or to add tests for one.
 argument-hint: "[ticket text or feature to build]"
 ---
 
@@ -10,13 +10,14 @@ Step 3 of the web-dev-stack chain. It uses the project layout from `code-skeleto
 layer from `integrate-api`.
 
 ```
-ticket ─► criteria ─► data in place? ─► page ─► islands ─► states ─► tests ─► run it
+ticket ─► criteria ─► data in place? ─► page ─► islands ─► states ─► stories ─► tests ─► run it
 ```
 
 ## Scope
 
 Handles: turning a ticket into criteria, an Astro page that loads data on the server, React
-islands for the interactive parts, UI states, and tests for helpers, islands and pages.
+islands for the interactive parts, UI states, a Storybook story per state for every component
+(`.astro` and React), and tests for helpers, islands and pages.
 
 Does **not** handle: the API layer (`integrate-api`), project setup (`code-skeleton`), backend
 code or deployment.
@@ -33,13 +34,15 @@ code or deployment.
 
 1. Read `package.json`. Examples are for **Astro 5, React 19, Effect 3, Vitest 3** (the
    skeleton's pinned set). Differences for Astro 7 are noted in the references.
-2. Read `components.json` and list `src/components/ui/`. Reuse what's there.
+2. Read `components.json` and list `src/components/ui/`. Reuse what's there. Check that
+   `.storybook/` exists and uses `@storybook-astro/framework`; if the project predates it, ask
+   before adding Storybook (the skeleton's `references/project-files.md` has the config).
 3. Open one existing page and one island. Follow their naming and exports.
 4. **Check the data layer.** For each resource the ticket needs, there should be
    `src/services/<resource>.ts`, `src/types/<resource>.ts` and
    `src/components/<resource>/load<Resource>.ts` with a `load…` per read and a `run…` per action.
    If something is missing, run `integrate-api` for it first. Never call the client from a page.
-5. Check the backend answers (step 7 needs it). If it doesn't, start it the way `integrate-api`
+5. Check the backend answers (step 8 needs it). If it doesn't, start it the way `integrate-api`
    describes, or ask the user.
 
 ## Steps
@@ -57,13 +60,37 @@ code or deployment.
    `pnpm dlx shadcn@4 add <name> -y`, never by hand.
 5. **States.** Every view shows empty, error and data. Islands that load after hydration also
    show loading. Every action shows pending, success and a failure message next to its control.
-6. **Tests** in `__tests__/` next to the code: helpers (unit), islands (Testing Library, outcome
+6. **Stories.** Every component you added or changed gets `<Name>.stories.tsx` in its folder, with
+   one story per state from step 5. For `.astro`, props go in `args` and slots in `args.slots`;
+   React stories set `parameters: { renderer: 'react' }`. Data
+   comes from fixtures in `src/mocks/<resource>.ts`; islands mock their outcome helper with
+   `sb.mock` in `.storybook/preview.ts` and drive actions with a `play` function. Keep `.astro`
+   as `.astro`: it gets an Astro story, not a rewrite. → `references/stories.md`
+7. **Tests** in `__test__/` next to the code (`<Name>/__test__/index.test.tsx` for a component): helpers (unit), islands (Testing Library, outcome
    helper mocked), the page (Astro Container API, `load<Resource>` mocked).
    → `references/testing.md`
-7. **Run it.** `pnpm lint && pnpm typecheck && pnpm test && pnpm build`, then `pnpm dev` with the
-   backend running. Open the page and go through the criteria: filter, act, and stop the backend
+8. **Run it.** `pnpm lint && pnpm typecheck && pnpm test && pnpm build`, then `pnpm storybook` to
+   look at each new story in light and dark with the Accessibility panel clean, then `pnpm dev`
+   with the backend running. Open the page and go through the criteria: filter, act, and stop the backend
    once to see the error state. Link the skeleton's demo home page to the new page if it's still
    there. If you started a dev server, stop it when done.
+
+## Component layout
+
+Same as the team's `space` apps: one folder per component.
+
+```
+src/components/<feature>/
+├── <Name>/                      # one folder per component
+│   ├── index.astro | index.tsx  # the component
+│   ├── <Name>.stories.tsx       # its stories (Astro and React alike)
+│   └── __test__/index.test.tsx  # React components; .astro is covered by its story and the page test
+├── format.ts, load<Resource>.ts # feature helpers, not components
+└── __test__/<helper>.test.ts    # their tests
+```
+
+React components are imported from the folder (`@/components/orders/CancelOrderButton`), Astro
+ones by file (`@/components/orders/OrderSummary/index.astro`).
 
 ## Rules
 
@@ -80,6 +107,8 @@ code or deployment.
 
 - Every criterion has a test or was checked by hand in the browser, and the report says which.
 - The four gates pass, and the empty and error states were seen in the browser.
+- Every component added or changed (`.astro` or React) has a story for each of its states, seen in
+  both themes.
 - The user knows the page URL and how to start the backend and the dev server.
 
 ## References
@@ -88,3 +117,4 @@ code or deployment.
 |------|-----|
 | `references/page-and-island.md` | The worked `/orders` example: helpers, page, island, directives |
 | `references/testing.md` | Tests for helpers, islands and pages |
+| `references/stories.md` | Stories per state for `.astro` and React components, fixtures, mocking an island's outcome helper |

@@ -71,6 +71,9 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | oRPC procedure output typed `unknown` | Forces every response through Effect `Schema` before the app uses it |
 | Skeleton has no batching, errors or retry | Those belong to `integrate-api`. The skeleton stays the smallest thing that runs |
 | `DESIGN.md` generated after shadcn init | Its token, radius and font values are read from the installed theme, so they match the code |
+| Storybook through `@storybook-astro/framework` (Storybook 10) | Renders `.astro` (server, Container API) and React (browser) stories in one Storybook, reading `astro.config.mjs`, so `.astro` components keep their story without a React rewrite. The team's in-house `@storybook/astro` in `space` is Storybook 8 and kitchen's `.astro` stories are excluded from its config. Needs Node ≥ 22.19 |
+| One folder per component (`index.astro`/`index.tsx`, `<Name>.stories.tsx`, `__test__/index.test.tsx`) | The layout of the team's `space` apps (kitchen: 49 `__test__` folders to 3 `__tests__`, `<Name>.stories.tsx` everywhere), so code moves between repos without renaming. Feature helpers stay one level up, beside the component folders |
+| React stories set `parameters: { renderer: 'react' }` | The Astro framework renders every story with Astro by default; without it a React story fails with `Renderer 'astro' not found` |
 | Plain `name` + `description` frontmatter | Matches the team's plugins on `feat/claude-shared-plugins`. Descriptions list trigger phrases and the sibling relationship |
 
 ## Verification strategy

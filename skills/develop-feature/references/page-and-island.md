@@ -145,14 +145,14 @@ Why it's shaped like this:
 - **A server-rendered page has no loading state.** The HTML arrives with the data.
 - Add the shadcn parts first: `pnpm dlx shadcn@4 add table badge -y`.
 
-## src/components/orders/CancelOrderButton.tsx
+## src/components/orders/CancelOrderButton/index.tsx
 
 ```tsx
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
-import { runCancel } from './loadOrders';
+import { runCancel } from '../loadOrders';
 
 interface Props {
   readonly orderId: string;

@@ -15,7 +15,7 @@ Dependencies are added by the `pnpm add` commands in step 2.
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22.12"
+    "node": ">=22.19"
   },
   "scripts": {
     "dev": "astro dev",
@@ -23,7 +23,9 @@ Dependencies are added by the `pnpm add` commands in step 2.
     "preview": "astro preview",
     "typecheck": "astro check",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   }
 }
 ```
@@ -40,7 +42,7 @@ Dependencies are added by the `pnpm add` commands in step 2.
 {
   "extends": "astro/tsconfigs/strictest",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"],
+  "exclude": ["dist", "storybook-static"],
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
@@ -130,7 +132,7 @@ import astro from 'eslint-plugin-astro';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default defineConfig(
-  { ignores: ['dist', '.astro', 'node_modules'] },
+  { ignores: ['dist', '.astro', 'node_modules', 'storybook-static'] },
   js.configs.recommended,
   tseslint.configs.strict,
   astro.configs.recommended,
@@ -192,7 +194,7 @@ interface ImportMeta {
 }
 ```
 
-Make sure `.env` is in `.gitignore`.
+Make sure `.env` and `storybook-static/` (Storybook's build output) are in `.gitignore`.
 
 ## `src/libs/orpcClient.ts`
 
@@ -239,9 +241,74 @@ sibling), use it rather than the hand-written type:
 from `@orpc/contract`. Responses still pass through Schema: a server type describes what the
 server should send, and does not check what actually arrives.
 
-## Smoke island and its test
+## Storybook: `.storybook/main.ts` and `.storybook/preview.ts`
 
-`src/components/home/GreetingButton.tsx`:
+One Storybook covers both kinds of component. `@storybook-astro/framework` renders `.astro`
+components on the server through Astro's Container API, and its `react()` integration renders
+React components in the browser. It reads `astro.config.mjs`, so Tailwind and the `@/` alias work
+without extra Vite config. Verified with framework 1.13, Storybook 10.6, Astro 5.18, Vite 6.4,
+React 19 and Tailwind 4, in both `storybook dev` and `storybook build`.
+
+`.storybook/main.ts`:
+
+```ts
+import type { StorybookConfig } from '@storybook-astro/framework';
+import { react } from '@storybook-astro/framework/integrations';
+
+const config: StorybookConfig = {
+  stories: ['../src/**/*.stories.@(ts|tsx)'],
+  addons: ['@storybook/addon-docs', '@storybook/addon-a11y', '@storybook/addon-themes'],
+  framework: {
+    name: '@storybook-astro/framework',
+    options: { integrations: [react()] },
+  },
+};
+
+export default config;
+```
+
+`.storybook/preview.ts`:
+
+```ts
+import { withThemeByClassName } from '@storybook/addon-themes';
+import type { Preview } from '@storybook-astro/framework';
+import { sb } from 'storybook/test';
+
+import '../src/styles/global.css';
+
+// Stories never reach a real API: each React story sets what `createOrpcClient` returns.
+sb.mock(import('../src/libs/orpcClient.ts'), { spy: true });
+
+const preview: Preview = {
+  parameters: {
+    layout: 'padded',
+    controls: { matchers: { color: /(background|color)$/i, date: /Date$/i } },
+    // Fail the a11y panel loudly instead of only listing violations.
+    a11y: { test: 'error' },
+  },
+  // global.css switches tokens on the `.dark` class, same as the app.
+  decorators: [withThemeByClassName({ themes: { light: '', dark: 'dark' }, defaultTheme: 'light' })],
+  tags: ['autodocs'],
+};
+
+export default preview;
+```
+
+- **Every React story sets `parameters: { renderer: 'react' }`** in its meta. The framework
+  renders stories with Astro by default, and a React story without it fails with
+  `Renderer 'astro' not found`.
+- Stories are `<Name>.stories.tsx` inside the component's folder. Astro stories default-import
+  `./index.astro`; React stories import from `'.'` and take their types from `@storybook/react`.
+- Install by hand (step 2). `storybook init` does not recognise Astro, asks questions, and adds
+  example stories.
+- pnpm warns that the framework wants `vitest@^4`. That peer is for its optional Vitest
+  integration; Storybook and the stories work on the skeleton's Vitest 3.
+- Fixtures shared by stories and tests live in `src/mocks/<resource>.ts`, in the wire format the
+  API sends, so stories go through the same Schema decoding as the app.
+
+## Smoke island, its test and its story
+
+`src/components/home/GreetingButton/index.tsx`:
 
 ```tsx
 import { useState } from 'react';
@@ -272,14 +339,14 @@ import { GreetingButton } from '@/components/home/GreetingButton';
 </BaseLayout>
 ```
 
-`src/components/home/__tests__/GreetingButton.test.tsx`:
+`src/components/home/GreetingButton/__test__/index.test.tsx`:
 
 ```tsx
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
-import { GreetingButton } from '../GreetingButton';
+import { GreetingButton } from '..';
 
 describe('GreetingButton', () => {
   it('confirms the stack after a click', async () => {
@@ -292,3 +359,30 @@ describe('GreetingButton', () => {
 });
 ```
 
+`src/components/home/GreetingButton/GreetingButton.stories.tsx`:
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react';
+import { expect } from 'storybook/test';
+
+import { GreetingButton } from '.';
+
+const meta = {
+  title: 'Home/GreetingButton',
+  component: GreetingButton,
+  parameters: { renderer: 'react' },
+} satisfies Meta<typeof GreetingButton>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Idle: Story = {};
+
+export const Clicked: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Check stack' }));
+    await expect(canvas.getByRole('button', { name: 'Stack is running' })).toBeInTheDocument();
+  },
+};
+```

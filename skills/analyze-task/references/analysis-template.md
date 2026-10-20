@@ -56,6 +56,7 @@ Then <observable result>
 | Module / file | Kind | Depends on | Notes |
 |---------------|------|------------|-------|
 | `src/...` | new / extend / exists | — | <astro or island, directive> |
+| `src/components/<feature>/<Name>/<Name>.stories.tsx` | new / extend | the component | <states: data, empty, error, …> |
 
 Build order: <1, 2, 3>
 Not covered: <criteria skipped and why>
@@ -64,7 +65,7 @@ Not covered: <criteria skipped and why>
 
 | AC | Test | Level |
 |----|------|-------|
-| AC1 | <what the test asserts> | unit / component / build |
+| AC1 | <what the test asserts> | unit / component / page / story / build |
 
 Ready: <ACs> · Blocked: <ACs (Qn)> · Next: <skill>
 ```
