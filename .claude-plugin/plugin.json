@@ -1,0 +1,8 @@
+{
+  "name": "web-dev-stack",
+  "version": "0.1.0",
+  "description": "Project-agnostic skills for the Astro + React islands + strict TypeScript + Effect (Schema) + oRPC + shadcn/ui stack. Ships code-skeleton: scaffold a runnable project with lint, typecheck, tests and build passing.",
+  "author": {
+    "name": "Granbull Team"
+  }
+}

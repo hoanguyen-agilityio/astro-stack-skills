@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "astro-stack",
+  "description": "Claude Code skills for the Astro + React islands + TypeScript + Effect + oRPC + shadcn/ui stack.",
+  "owner": {
+    "name": "Granbull Team"
+  },
+  "plugins": [
+    {
+      "name": "web-dev-stack",
+      "description": "Scaffold, integrate APIs and build features on Astro + React islands + strict TypeScript + Effect (Schema) + oRPC + shadcn/ui.",
+      "author": {
+        "name": "Granbull Team"
+      },
+      "category": "development",
+      "source": "./"
+    }
+  ]
+}
