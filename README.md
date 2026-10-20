@@ -49,7 +49,9 @@ CLAUDE.md, spec.md, DESIGN.md
 └── plugin.json        # plugin "web-dev-stack"
 skills/
 ├── analyze-task/      # SKILL.md + references/{analysis-template,design-input}.md
-└── code-skeleton/     # SKILL.md + references/{project-files,design-md-template}.md
+├── code-skeleton/     # SKILL.md + references/{project-files,design-md-template}.md
+├── integrate-api/     # SKILL.md + references/{client,service,calling}.md
+└── develop-feature/   # SKILL.md + references/{page-and-island,testing}.md
 ```
 
 ## Skills
@@ -58,12 +60,13 @@ skills/
 |---|-------|--------|-------------|
 | 0 | `analyze-task` | ready | Turning a ticket, design or loose request into acceptance criteria and a plan |
 | 1 | `code-skeleton` | ready | Starting a project, or bringing an Astro repo up to the stack |
-| 2 | `integrate-api` | planned | Calling oRPC procedures through Effect services |
-| 3 | `develop-feature` | planned | Building a ticket into a tested page or island |
+| 2 | `integrate-api` | ready | Calling oRPC procedures through Effect services |
+| 3 | `develop-feature` | ready | Building a ticket into a tested page or island |
 
-Every workflow follows the same steps: **analyze → ground → build → verify → report**. Each
-build skill runs `analyze-task` as its step 0, so calling `/code-skeleton` alone still starts with
-the analysis. Running `analyze-task` on its own stops after the plan and names the skill to run
+Every workflow follows the same steps: **analyze → ground → build → verify → report**.
+`code-skeleton` runs `analyze-task` as its step 0, so calling `/code-skeleton` alone still starts
+with the analysis. `integrate-api` and `develop-feature` start with their own "Look first" step
+and do not call `analyze-task` yet. Running `analyze-task` on its own stops after the plan and names the skill to run
 next.
 
 ### `analyze-task`
@@ -95,12 +98,39 @@ exists. It includes:
 Verified on Astro 5, Effect 3, oRPC 1, Tailwind 4, Vite 6, Vitest 3 and shadcn CLI 4. Requires
 Node ≥ 22.12. The skill's step 2 table lists the full set.
 
+### `integrate-api`
+
+Adds procedures to `AppRouterClient`, Schema types in `src/types/`, and services in
+`src/services/` that wrap each call in Effect with typed errors, timeout and retry (reads only).
+Outcome helpers in `src/components/<resource>/` turn every result into UI state, so pages and
+islands never handle Effect errors themselves.
+
+```text
+/web-dev-stack:integrate-api orders.list({ status? }) and orders.cancel({ id }), handle 401 and 404
+```
+
+### `develop-feature`
+
+Turns a ticket into criteria, an Astro page that loads data on the server, React islands only
+for the interactive parts, empty/error/pending states, and tests for helpers, islands and the
+page (Astro Container API).
+
+```text
+/web-dev-stack:develop-feature /orders lists orders with a status filter; pending orders have a Cancel button
+```
+
+Both are verified on the same set as `code-skeleton` (Astro 5, Effect 3, oRPC 1): lint,
+typecheck, tests and build pass, and the `/orders` example ran against a local oRPC server
+through the `/rpc` proxy.
+
 ## Conventions shared by all skills
 
 | What | Where |
 |------|-------|
 | oRPC client factory and procedure types | `src/libs/orpcClient.ts` |
 | Services (one per API namespace, return `Effect`) | `src/services/<name>.ts` |
+| Schema types (wire format + domain type) | `src/types/<resource>.ts` |
+| Outcome helpers, islands, feature helpers, their tests | `src/components/<resource>/` (+ `__tests__/`) |
 | shadcn primitives | `src/components/ui/` |
 
 - Read `package.json` first and match the project's Astro, Effect, Tailwind and oRPC versions.
