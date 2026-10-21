@@ -4,9 +4,28 @@ Starting contents for every file `code-skeleton` writes. Adapt names, the adapte
 to the repo; keep the behavior. If the repo already has one of these files, merge the missing
 parts in rather than overwriting it.
 
+| File | Purpose |
+|------|---------|
+| `package.json`, `.nvmrc`, `pnpm-workspace.yaml` | pinned Node, scripts, allowed build scripts (`esbuild`, `sharp`) |
+| `.gitignore` | `node_modules`, `dist`, `.astro`, `.env`, `storybook-static` |
+| `tsconfig.json` | `astro/tsconfigs/strictest`, React JSX, `@/*` alias |
+| `astro.config.mjs` | React integration, Tailwind Vite plugin, adapter, dev proxy `/rpc` → API |
+| `src/styles/global.css` | Tailwind entry; shadcn adds its theme, the starter UI its `brand` token |
+| `eslint.config.js` | flat config; bans `any` and `@ts-ignore` |
+| `.prettierrc`, `.prettierignore`, `.editorconfig` | the team's `space` style: single quotes, trailing commas, 80 columns, Astro plugin |
+| `.husky/pre-commit`, `.husky/pre-push`, `.lintstagedrc` | ESLint + Prettier on staged files before a commit; typecheck + tests before a push |
+| `vitest.config.ts`, `vitest.setup.ts` | `getViteConfig`, jsdom, jest-dom |
+| `.env.example`, `.env`, `src/env.d.ts` | `PUBLIC_API_URL` placeholder, local copy (gitignored), its type |
+| `src/libs/orpcClient.ts` | client factory: `RPCLink` to `${PUBLIC_API_URL}/rpc`, auth header; router type starts empty |
+| `.storybook/main.ts`, `preview.ts` | `@storybook-astro/framework` + `react()`; `global.css`, theme toggle, a11y, `createOrpcClient` mocked |
+
+`PUBLIC_API_URL` holds the base **without** `/rpc`, even when the user gives
+`http://localhost:8787/rpc`: the client appends `/rpc` and the dev proxy forwards it. The router
+type stays empty; `integrate-api` adds procedures, batching, decoding, errors and retry.
+
 ## `package.json`
 
-Dependencies are added by the `pnpm add` commands of each layer in step 2a.
+Dependencies are added by the `pnpm add` commands of each layer in `setup-layers.md`.
 
 ```json
 {
@@ -23,9 +42,12 @@ Dependencies are added by the `pnpm add` commands of each layer in step 2a.
     "preview": "astro preview",
     "typecheck": "astro check",
     "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest run",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "prepare": "husky"
   }
 }
 ```
@@ -104,7 +126,11 @@ import node from '@astrojs/node';
 import tailwindcss from '@tailwindcss/vite';
 import { loadEnv } from 'vite';
 
-const { PUBLIC_API_URL } = loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), '');
+const { PUBLIC_API_URL } = loadEnv(
+  process.env.NODE_ENV ?? 'development',
+  process.cwd(),
+  '',
+);
 
 export default defineConfig({
   output: 'server',
@@ -125,37 +151,16 @@ export default defineConfig({
 On Tailwind v3 the repo uses the `@astrojs/tailwind` integration instead of the Vite plugin.
 In production, put the same `/rpc` forwarding in the host's proxy or in Astro middleware.
 
-## `src/styles/global.css` and `src/layouts/BaseLayout.astro`
+## `src/styles/global.css`
 
 ```css
 @import "tailwindcss";
 ```
 
-`shadcn init` appends its imports and theme variables to this file. Leave them in place.
-
-```astro
----
-import '@/styles/global.css';
-
-interface Props {
-  title: string;
-}
-
-const { title } = Astro.props;
----
-
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
-  </head>
-  <body>
-    <slot />
-  </body>
-</html>
-```
+`shadcn init` appends its imports and theme variables to this file. Leave them in place. The
+starter UI then appends the `brand` token and the `bg-grid` utility
+(`references/starter-ui.md`). The layouts (`BaseLayout.astro`, `AppLayout.astro`) are part of
+the starter UI too.
 
 ## `eslint.config.js`
 
@@ -242,7 +247,12 @@ import { RPCLink } from '@orpc/client/fetch';
  * One remote procedure. The output is `unknown` on purpose: every response is decoded by an
  * Effect Schema in src/services before the app sees it.
  */
-export type Procedure<TInput> = Client<Record<never, never>, TInput, unknown, Error>;
+export type Procedure<TInput> = Client<
+  Record<never, never>,
+  TInput,
+  unknown,
+  Error
+>;
 
 /** The procedures this app calls, by namespace. Empty until integrate-api adds the first one. */
 export type AppRouterClient = Record<string, never>;
@@ -260,7 +270,10 @@ const resolveBaseUrl = (baseUrl?: string): string => {
   return import.meta.env.PUBLIC_API_URL;
 };
 
-export const createOrpcClient = ({ token, baseUrl }: OrpcClientOptions = {}): AppRouterClient => {
+export const createOrpcClient = ({
+  token,
+  baseUrl,
+}: OrpcClientOptions = {}): AppRouterClient => {
   const link = new RPCLink({
     url: `${resolveBaseUrl(baseUrl)}/rpc`,
     headers: () => (token ? { Authorization: `Bearer ${token}` } : {}),
@@ -292,7 +305,11 @@ import { react } from '@storybook-astro/framework/integrations';
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.stories.@(ts|tsx)'],
-  addons: ['@storybook/addon-docs', '@storybook/addon-a11y', '@storybook/addon-themes'],
+  addons: [
+    '@storybook/addon-docs',
+    '@storybook/addon-a11y',
+    '@storybook/addon-themes',
+  ],
   framework: {
     name: '@storybook-astro/framework',
     options: { integrations: [react()] },
@@ -322,7 +339,12 @@ const preview: Preview = {
     a11y: { test: 'error' },
   },
   // global.css switches tokens on the `.dark` class, same as the app.
-  decorators: [withThemeByClassName({ themes: { light: '', dark: 'dark' }, defaultTheme: 'light' })],
+  decorators: [
+    withThemeByClassName({
+      themes: { light: '', dark: 'dark' },
+      defaultTheme: 'light',
+    }),
+  ],
   tags: ['autodocs'],
 };
 
@@ -334,90 +356,88 @@ export default preview;
   `Renderer 'astro' not found`.
 - Stories are `<Name>.stories.tsx` inside the component's folder. Astro stories default-import
   `./index.astro`; React stories import from `'.'` and take their types from `@storybook/react`.
-- Install by hand (step 2). `storybook init` does not recognise Astro, asks questions, and adds
+- Install by hand (`setup-layers.md`, layer 9). `storybook init` does not recognise Astro, asks questions, and adds
   example stories.
 - pnpm warns that the framework wants `vitest@^4`. That peer is for its optional Vitest
   integration; Storybook and the stories work on the skeleton's Vitest 3.
 - Fixtures shared by stories and tests live in `src/mocks/<resource>.ts`, in the wire format the
   API sends, so stories go through the same Schema decoding as the app.
 
-## Smoke island, its test and its story
+## Prettier, EditorConfig, Husky and lint-staged
 
-`src/components/home/GreetingButton/index.tsx`:
+Same settings as the team's `space` repo, so code moves between repos without reformatting.
 
-```tsx
-import { useState } from 'react';
+`.prettierrc`:
 
-import { Button } from '@/components/ui/button';
-
-export const GreetingButton = () => {
-  const [clicked, setClicked] = useState(false);
-
-  return (
-    <Button onClick={() => setClicked(true)}>{clicked ? 'Stack is running' : 'Check stack'}</Button>
-  );
-};
+```json
+{
+  "plugins": ["prettier-plugin-astro"],
+  "quoteProps": "as-needed",
+  "trailingComma": "all",
+  "tabWidth": 2,
+  "printWidth": 80,
+  "singleQuote": true,
+  "endOfLine": "auto"
+}
 ```
 
-`src/pages/index.astro`:
+`.prettierignore`:
 
-```astro
----
-import BaseLayout from '@/layouts/BaseLayout.astro';
-import { GreetingButton } from '@/components/home/GreetingButton';
----
-
-<BaseLayout title="Home">
-  <main class="mx-auto max-w-2xl p-6">
-    <GreetingButton client:load />
-  </main>
-</BaseLayout>
+```text
+dist/
+.astro/
+storybook-static/
+pnpm-lock.yaml
+# Generated by shadcn: keep them as shadcn writes them, so `shadcn add` diffs stay readable.
+src/components/ui/
+src/lib/
 ```
 
-`src/components/home/GreetingButton/__test__/index.test.tsx`:
+`.editorconfig`:
 
-```tsx
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+```ini
+root = true
 
-import { GreetingButton } from '..';
-
-describe('GreetingButton', () => {
-  it('confirms the stack after a click', async () => {
-    render(<GreetingButton />);
-
-    await userEvent.click(screen.getByRole('button', { name: 'Check stack' }));
-
-    expect(screen.getByRole('button', { name: 'Stack is running' })).toBeInTheDocument();
-  });
-});
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
 ```
 
-`src/components/home/GreetingButton/GreetingButton.stories.tsx`:
+`.lintstagedrc`:
 
-```tsx
-import type { Meta, StoryObj } from '@storybook/react';
-import { expect } from 'storybook/test';
-
-import { GreetingButton } from '.';
-
-const meta = {
-  title: 'Home/GreetingButton',
-  component: GreetingButton,
-  parameters: { renderer: 'react' },
-} satisfies Meta<typeof GreetingButton>;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-export const Idle: Story = {};
-
-export const Clicked: Story = {
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Check stack' }));
-    await expect(canvas.getByRole('button', { name: 'Stack is running' })).toBeInTheDocument();
-  },
-};
+```json
+{
+  "*.{js,mjs,ts,tsx,astro}": ["eslint", "prettier --write"],
+  "*.{css,json,md,yml,yaml}": "prettier --write"
+}
 ```
+
+`.husky/pre-commit` and `.husky/pre-push` (created after `pnpm exec husky`, which the `prepare`
+script also runs on every install):
+
+```sh
+pnpm exec lint-staged
+```
+
+```sh
+pnpm typecheck && pnpm test
+```
+
+- ESLint in the hook has no `--fix`: a lint error blocks the commit (verified with an `any`)
+  instead of being silently rewritten. Prettier does rewrite, then lint-staged re-stages.
+- The config needs no `eslint-config-prettier`: `typescript-eslint` strict and
+  `eslint-plugin-astro` recommended carry no formatting rules.
+- `prettier --write .` also formats the `CLAUDE.md` and `DESIGN.md` the skill writes, and the
+  4-space theme block `shadcn init` puts in `global.css`. That is expected.
+- Husky installs hooks into the git repository that contains `package.json`. When the project is
+  not the repository root (a monorepo package), stop and ask: the hooks belong at the root.
+
+## Starter UI
+
+The layouts, the site config, the theme toggle, the reusable `common/` and `layout/`
+components, the welcome page and the 404 page, with their stories and tests, are in
+`references/starter-ui.md`.

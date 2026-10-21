@@ -1,10 +1,12 @@
 ---
 name: analyze-task
-description: Turn an incoming request — a task or ticket, a design (image, screenshot or Figma link), or a "set up the project" ask — into a written analysis before any code is written, covering request kind, risk lane, acceptance criteria in Given/When/Then, scope, open questions, and a build plan. Use whenever work on the Astro + React islands + Effect + oRPC + shadcn stack starts from a ticket, a design or a loose request, when the user says "analyze", "break this down", "what do we need", or before running code-skeleton, integrate-api or develop-feature. Those skills call this one as their first step, so it runs even when the user only names them.
+description: Turn a ticket, design or loose request into acceptance criteria, open questions and a build plan before any code is written.
 argument-hint: "[ticket text, file, design image or Figma link]"
 ---
 
 # Analyze task — request → acceptance criteria → plan
+
+Use this skill when work starts from a ticket, a design (image, screenshot, Figma) or a one-line ask. The build skills run it as their step 0, so it also runs when the user names only one of them.
 
 Code written from a half-understood request gets rewritten. This skill turns whatever arrived
 (a ticket, a design, a one-line ask) into criteria someone can test and a plan someone can
@@ -102,6 +104,21 @@ End with a **Readiness** line: `Ready: AC1–AC4 · Blocked: AC5 (Q2) · Next: <
   the inline block) and the answers.
 - Run alone: name the skill to run next and the command, e.g.
   `/web-dev-stack:code-skeleton` (`/code-skeleton` when installed as project skills).
+
+## Use this skill for
+
+- "analyze this", "break this down", "what do we need"
+- turning a ticket or user story into Given/When/Then criteria
+- reading a design into regions, states and theme tokens
+- deciding the risk lane and whether the user must confirm scope
+
+## Common failure modes
+
+- Guessing a missing requirement instead of writing it as an open question
+- Analyzing a design or link that could not be opened
+- A criterion with no Given, so nobody can test it
+- Starting a `high-risk` build before the user confirmed scope
+- Copying a secret or internal URL from the ticket into the analysis
 
 ## References
 

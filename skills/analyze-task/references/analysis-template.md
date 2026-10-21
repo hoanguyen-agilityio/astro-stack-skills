@@ -88,7 +88,8 @@ http://localhost:8787/rpc.
 Empty directory. Node 22.x, pnpm available.
 
 ## Scope
-In: skeleton, configs, oRPC client factory, shadcn, lint, tests, smoke island.
+In: skeleton, configs, oRPC client factory, shadcn, lint, tests, starter UI (layouts, reusable
+common components, welcome and 404 pages).
 Out: API services (integrate-api), pages and features (develop-feature).
 
 ## Acceptance criteria

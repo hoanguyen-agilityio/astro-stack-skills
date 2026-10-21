@@ -1,10 +1,12 @@
 ---
 name: develop-feature
-description: Build a ticket into a tested feature in an Astro + React islands + Effect + oRPC + shadcn/ui app — acceptance criteria, an Astro page that loads data on the server, React islands only for the interactive parts, shadcn/ui components, empty/error/pending states, a Storybook story per state for every component, and Vitest tests for helpers, islands and pages. Use whenever the user gives a ticket or asks to add, build or change a page, screen, list, table, filter, form, button or component in this stack, or to add tests for one.
+description: Build a ticket into a tested page or component: server-loaded Astro page, small React islands, every UI state, stories and tests.
 argument-hint: "[ticket text or feature to build]"
 ---
 
 # Develop feature — ticket to tested UI
+
+Use this skill when the user gives a ticket or asks to add or change a page, screen, list, table, filter, form, button or component.
 
 Step 3 of the web-dev-stack chain. It uses the project layout from `code-skeleton` and the data
 layer from `integrate-api`.
@@ -34,7 +36,10 @@ code or deployment.
 
 1. Read `package.json`. Examples are for **Astro 5, React 19, Effect 3, Vitest 3** (the
    skeleton's pinned set). Differences for Astro 7 are noted in the references.
-2. Read `components.json` and list `src/components/ui/`. Reuse what's there. Check that
+2. Read `components.json` and list `src/components/ui/` and `src/components/common/`. Reuse
+   what's there: pages use `AppLayout`, `Container` and `PageHeader` (the table in `DESIGN.md`
+   lists them). A component another feature already has moves to `common/` with generic props
+   instead of being imported across features or copied. Check that
    `.storybook/` exists and uses `@storybook-astro/framework`; if the project predates it, ask
    before adding Storybook (the skeleton's `references/project-files.md` has the config).
 3. Open one existing page and one island. Follow their naming and exports.
@@ -72,8 +77,8 @@ code or deployment.
 8. **Run it.** `pnpm lint && pnpm typecheck && pnpm test && pnpm build`, then `pnpm storybook` to
    look at each new story in light and dark with the Accessibility panel clean, then `pnpm dev`
    with the backend running. Open the page and go through the criteria: filter, act, and stop the backend
-   once to see the error state. Link the skeleton's demo home page to the new page if it's still
-   there. If you started a dev server, stop it when done.
+   once to see the error state. Add the route to `siteConfig.nav` in `src/config/site.ts` so the
+   header links to it. If you started a dev server, stop it when done.
 
 ## Component layout
 
@@ -110,6 +115,21 @@ ones by file (`@/components/orders/OrderSummary/index.astro`).
 - Every component added or changed (`.astro` or React) has a story for each of its states, seen in
   both themes.
 - The user knows the page URL and how to start the backend and the dev server.
+
+## Use this skill for
+
+- a ticket or user story that becomes a page
+- adding stories or tests to an existing component
+
+## Common failure modes
+
+- Rewriting the page shell instead of using `AppLayout`, `Container` and `PageHeader`
+- Importing a component from another feature instead of moving it to `common/`
+- Making a whole section an island when a small leaf would do, or `client:load` everywhere
+- A React component in `.astro` without a `client:*` directive, so its handlers never run
+- Passing functions or secrets as island props
+- Showing only the data state: no empty, error or pending
+- A component without a story per state
 
 ## References
 
