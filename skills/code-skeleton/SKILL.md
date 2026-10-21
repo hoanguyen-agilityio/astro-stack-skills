@@ -52,8 +52,8 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
   shadcn 4, Vitest 3, Storybook 10, Prettier 3, Husky 9 + lint-staged 16, installed layer by layer by hand, never through
   `pnpm create astro`, `astro add` or `storybook init` → `references/setup-layers.md`
 - **Configs and plumbing**: `package.json`, `tsconfig.json`, `astro.config.mjs`, ESLint,
-  Prettier (the `space` style), Husky hooks (lint-staged on commit, typecheck + tests on push),
-  Vitest, Storybook, `.env*`, `src/libs/orpcClient.ts` → `references/project-files.md`
+  Prettier (the `space` style), Husky hooks (lint-staged on commit, typecheck + tests with 80%
+  coverage on push), Vitest with v8 coverage, Storybook, `.env*`, `src/libs/orpcClient.ts` → `references/project-files.md`
 - **Starter UI**: `config/site.ts`, `libs/theme.ts`, `BaseLayout` + `AppLayout`, `common/`
   (`Container`, `PageHeader`, `LinkCard`, `ThemeToggle`), `layout/` (`SiteHeader`, `SiteFooter`),
   welcome and 404 pages, a story per component, island and page tests → `references/starter-ui.md`
@@ -68,8 +68,9 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
 
 ## Done when
 
-- `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test`, `pnpm build` and
-  `pnpm build-storybook` pass, with no `any`, `@ts-ignore` or disabled rule.
+- `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage` (≥ 80% lines,
+  functions, branches, statements), `pnpm build` and `pnpm build-storybook` pass, with no `any`,
+  `@ts-ignore`, disabled rule or lowered threshold.
 - `.husky/pre-commit` and `.husky/pre-push` exist and `git config core.hooksPath` is `.husky/_`.
 - No URL or secret in `src/` (docs links aside); `DESIGN.md` values match `global.css`; every
   component folder outside `ui/` has a story.
@@ -89,6 +90,7 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
 - Husky run before `git init`, or in a package that is not the repository root: no hooks installed
 - `pnpm format` skipped after writing the files: `format:check` fails on `global.css`, `CLAUDE.md`, `DESIGN.md`
 - Layout or common pieces inlined into the welcome page, leaving nothing to reuse
+- `@vitest/coverage-v8` on another major than `vitest`: `test:coverage` fails to start
 
 ## References
 

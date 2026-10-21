@@ -31,9 +31,9 @@ tokens are in `DESIGN.md`.
 2. **Ground**: read `package.json`, `DESIGN.md` and the neighbouring code before writing.
    Existing patterns win over defaults.
 3. **Build**: `integrate-api` for API services, `develop-feature` for pages and islands.
-4. **Verify**: run `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test` and
-   `pnpm build`. Any fix restarts at lint. Never weaken a gate to get green, and never skip the
-   Git hooks with `--no-verify`.
+4. **Verify**: run `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage`
+   (≥ 80%) and `pnpm build`. Any fix restarts at lint. Never weaken a gate or lower a coverage
+   threshold to get green, and never skip the Git hooks with `--no-verify`.
 5. **Report**: a `## Result` block (Did, Saw, Not done, Blocked by, Next), plus a table of which
    test proves which acceptance criterion.
 

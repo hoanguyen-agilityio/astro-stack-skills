@@ -54,11 +54,15 @@ const blocksOf = (entries, type) =>
   );
 
 // `pnpm lint`, `pnpm run lint`, `pnpm -s test` … each gate named in a Bash command.
+// `test:coverage` runs the same tests, so it counts as `test`.
+const runsScript = (command, script) =>
+  new RegExp(`\\bpnpm\\s+(?:-\\S+\\s+)*(?:run\\s+)?${script.replace(':', '\\:')}(?![\\w:-])`).test(
+    command,
+  );
+
 const gatesIn = (command) =>
-  GATES.filter((gate) =>
-    new RegExp(`\\bpnpm\\s+(?:-\\S+\\s+)*(?:run\\s+)?${gate.replace(':', '\\:')}(?![\\w:-])`).test(
-      command,
-    ),
+  GATES.filter(
+    (gate) => runsScript(command, gate) || (gate === 'test' && runsScript(command, 'test:coverage')),
   );
 
 const collect = (entries) => {

@@ -74,7 +74,8 @@ code or deployment.
 7. **Tests** in `__test__/` next to the code (`<Name>/__test__/index.test.tsx` for a component): helpers (unit), islands (Testing Library, outcome
    helper mocked), the page (Astro Container API, `load<Resource>` mocked).
    → `references/testing.md`
-8. **Run it.** `pnpm lint && pnpm typecheck && pnpm test && pnpm build`, then `pnpm storybook` to
+8. **Run it.** `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:coverage && pnpm build`
+   (coverage stays ≥ 80%: new helpers and islands come with their tests), then `pnpm storybook` to
    look at each new story in light and dark with the Accessibility panel clean, then `pnpm dev`
    with the backend running. Open the page and go through the criteria: filter, act, and stop the backend
    once to see the error state. Add the route to `siteConfig.nav` in `src/config/site.ts` so the

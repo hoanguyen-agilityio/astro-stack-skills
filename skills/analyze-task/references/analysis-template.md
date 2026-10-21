@@ -95,8 +95,8 @@ Out: API services (integrate-api), pages and features (develop-feature).
 ## Acceptance criteria
 ### AC1 — Gates pass
 Given a fresh install
-When pnpm lint, pnpm typecheck, pnpm test and pnpm build run
-Then all four exit 0
+When pnpm lint, pnpm format:check, pnpm typecheck, pnpm test:coverage and pnpm build run
+Then all five exit 0, with coverage ≥ 80%
 
 ### AC2 — API URL from env
 Given .env with PUBLIC_API_URL=http://localhost:8787
