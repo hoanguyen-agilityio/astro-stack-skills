@@ -1,6 +1,6 @@
 ---
 name: develop-feature
-description: Build a ticket into a tested page or component: server-loaded Astro page, small React islands, every UI state, stories and tests.
+description: "Build a ticket into a tested page or component: server-loaded Astro page, small React islands, every UI state, stories and tests."
 argument-hint: "[ticket text or feature to build]"
 ---
 
