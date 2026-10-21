@@ -39,8 +39,12 @@ Storybook 10 (`@storybook-astro/framework`, `.astro` and React stories).
 | shadcn config and aliases | `components.json` |
 | shadcn primitives (generated, then owned) | `src/components/ui/` |
 | Class merger `cn()` | the `cn` package (re-exported by `src/lib/utils.ts`) |
+| App-wide reusable components | `src/components/common/<Name>/` |
+| Shell parts (header, footer) | `src/components/layout/<Name>/` |
 | Feature components and islands, one folder each | `src/components/<feature>/<Name>/` |
-| Layout shell | `src/layouts/BaseLayout.astro` |
+| Layouts | `src/layouts/BaseLayout.astro` (HTML shell), `src/layouts/AppLayout.astro` (shell + header + footer) |
+| App name, description, nav links | `src/config/site.ts` |
+| Light/dark switch | `src/libs/theme.ts`, the inline script in `BaseLayout.astro`, `common/ThemeToggle` |
 | Font | `@fontsource-variable/geist`, imported in `global.css` |
 | Reference screenshots | `docs/design/` (add them as designs arrive) |
 
@@ -48,7 +52,8 @@ Storybook 10 (`@storybook-astro/framework`, `.astro` and React stories).
 
 TODO(design): two or three sentences on the product's look. Is it neutral or branded, dense or
 airy, flat or elevated, with or without imagery? Until a design fills this in, the project uses
-the stock shadcn `nova` look: neutral greys, Geist, a 10px base radius and hairline borders.
+the stock shadcn `nova` look (neutral greys, Geist, a 10px base radius, hairline borders) with one
+violet `brand` accent for the logo mark, eyebrows, icon tiles and the hero glow.
 
 ## Screens
 
@@ -56,7 +61,8 @@ TODO(design): one row per route.
 
 | Route | Layout | Rendering |
 |-------|--------|-----------|
-| `/` | `BaseLayout` | SSR `.astro` + `GreetingButton` island (`client:load`) |
+| `/` | `AppLayout` | SSR welcome page: `Hero`, `GetStarted` + `CounterButton` island (`client:load`), `LinkCard` grid. Replace it with the first real screen |
+| `/404` | `AppLayout` | SSR, `Container size="sm"` + `PageHeader` |
 
 ## Type scale
 
@@ -79,8 +85,11 @@ All colors are `oklch()` CSS variables on `:root` and `.dark`, mapped to Tailwin
 | Accent | `bg-accent` `text-accent-foreground` | hover and selected rows |
 | Destructive | `text-destructive`, `bg-destructive/10` | delete, cancel, errors |
 | Lines | `border-border`, `border-input`, `ring-ring` | borders, inputs, focus rings |
+| Brand | `bg-brand` `text-brand-foreground`, `text-brand`, `bg-brand/10` | logo mark, eyebrow labels, icon tiles, decorative glow. Not for actions: actions use `primary` |
 | Charts | `chart-1` … `chart-5` | data series only |
 
+`--brand` and `--brand-foreground` are the only tokens added on top of shadcn's, in the block
+at the end of `global.css`, next to the `bg-grid` utility (the faint grid behind the hero).
 TODO(design): brand colors. When a design brings them, change the variables in `:root` and
 `.dark`. Do not add hex classes. A design color with no matching token is an open question,
 not a `bg-[#…]`.
@@ -89,8 +98,9 @@ not a `bg-[#…]`.
 
 Class-based: `@custom-variant dark (&:is(.dark *))`. Dark applies under any ancestor with the
 `dark` class, and every token is redefined in `.dark`. Semantic utilities switch automatically,
-so a component built only from tokens needs no `dark:` classes. Nothing toggles the class yet.
-Add a toggle only when a design asks for one.
+so a component built only from tokens needs no `dark:` classes. `ThemeToggle` (in `SiteHeader`)
+flips the class and stores the choice in `localStorage` under `theme`. An inline script in
+`BaseLayout.astro` applies the stored choice, or the system preference, before first paint.
 
 ## Radius, shadows, elevation
 
@@ -113,6 +123,19 @@ tokens, if the design is elevated.
 - **Icons:** `lucide-react` only. Size them with `size-4` or let the button size them. Icon-only
   buttons need `aria-label`.
 
+### Reusable components
+
+Use these before writing layout markup. Each has a story per variant.
+
+| Component | Import | Use for |
+|-----------|--------|---------|
+| `AppLayout` | `@/layouts/AppLayout.astro` | every page with the app shell (`title`, optional `description`) |
+| `Container` | `@/components/common/Container/index.astro` | page width and gutters: `size` `sm` (forms, reading), `md`, `lg` (default, grids) |
+| `PageHeader` | `@/components/common/PageHeader/index.astro` | the top of every page: `eyebrow`, `title` (the `h1`), `description`, `actions` slot |
+| `LinkCard` | `@/components/common/LinkCard/index.astro` | a card that is one link: `href`, `title`, `description`, `external`, `icon` slot |
+| `ThemeToggle` | `@/components/common/ThemeToggle` | light/dark switch (already in `SiteHeader`) |
+| `SiteHeader`, `SiteFooter` | `@/components/layout/…` | used by `AppLayout` only; nav links come from `siteConfig.nav` |
+
 ## Motion
 
 `tw-animate-css` provides the enter/exit animations shadcn uses. Keep custom motion short
@@ -120,9 +143,23 @@ tokens, if the design is elevated.
 
 ## Layout
 
-`BaseLayout.astro` holds the HTML shell (`lang`, `charset`, `viewport`, `<title>`) and imports the
-stylesheet. Pages put content in `<main class="mx-auto max-w-… p-6">`. TODO(design): header,
-navigation and footer once a design defines them.
+`BaseLayout.astro` holds the HTML shell (`lang`, `charset`, `viewport`, description, favicon,
+`<title>` suffixed with the app name, the theme script) and imports the stylesheet.
+`AppLayout.astro` wraps it with a skip link, the sticky `SiteHeader`, `<main id="main">` and
+`SiteFooter`. A page is:
+
+```astro
+<AppLayout title="Orders">
+  <Container class="flex flex-col gap-8 py-10">
+    <PageHeader title="Orders" description="…"><a slot="actions" …>New order</a></PageHeader>
+    <!-- feature components -->
+  </Container>
+</AppLayout>
+```
+
+Do not write `<main>` or a max-width wrapper in a page; `AppLayout` and `Container` own them. Add
+a route's link to `siteConfig.nav`. TODO(design): header and footer content once a design
+defines them.
 
 ## Astro islands — the rendering boundary
 
@@ -188,6 +225,10 @@ the design actually uses.
 
 ## Working conventions
 
+- **Where a component goes:** `ui/` for shadcn primitives, `common/` for app-wide pieces whose
+  props carry no domain words, `layout/` for the shell, `<feature>/` for the rest. A feature
+  never imports from another feature: when a second feature needs a component, move it to
+  `common/` with generic props, and add it to the table under Components.
 - **One folder per component**, `src/components/<feature>/<Name>/`, holding up to three things:
   `index.astro` or `index.tsx`, `<Name>.stories.tsx` (React stories set
   `parameters: { renderer: 'react' }`), and `__test__/index.test.tsx`. Feature helpers
@@ -197,6 +238,8 @@ the design actually uses.
   story in light and dark (theme toolbar) with a clean Accessibility panel: `pnpm storybook`.
 - Import order: external packages → `@/` aliases → relative imports.
 - No `any` and no `@ts-ignore`. API data is decoded with Effect `Schema` before it reaches UI.
-- Verify with `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`.
+- Verify with `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test` and `pnpm build`.
+  Commits run ESLint and Prettier on staged files (Husky + lint-staged); pushes run typecheck and
+  tests. Never skip them with `--no-verify`.
 - When a design changes tokens or adds a pattern, update this file in the same change.
 ```

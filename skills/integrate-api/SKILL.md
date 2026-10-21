@@ -1,10 +1,12 @@
 ---
 name: integrate-api
-description: Connect an Astro + React islands app to an oRPC backend through Effect — add the procedures to the oRPC client type, define Schema types for the wire format, write services that wrap each call in Effect with typed errors, timeout and retry, and turn every outcome into UI state for pages and islands. Use whenever the user asks to call an oRPC procedure, add or change a service in src/services, "hook up" or "wire" data, handle API errors (401, 404, network, timeout), validate a response, or fix a failing or untyped API call in this stack.
+description: Connect the app to an oRPC backend through Effect services with Schema-decoded responses, typed errors and retry.
 argument-hint: "[procedure(s) to integrate, e.g. orders.list and orders.cancel]"
 ---
 
 # Integrate API — oRPC + Effect
+
+Use this skill when the app needs to call a backend procedure or endpoint, or an existing API call is failing, untyped or unhandled.
 
 Step 2 of the web-dev-stack chain. It builds on the files `code-skeleton` created and hands
 `develop-feature` everything a page or island needs to show data.
@@ -89,6 +91,21 @@ outcome helpers.
 - The running backend's responses decode with the service's Schema.
 - Report to the user: which procedures were added, how to start the backend (folder and
   command), anything left running in the background, and that `develop-feature` builds the page.
+
+## Use this skill for
+
+- "hook up" or "wire" data, call an oRPC procedure, add a service in `src/services`
+- connecting a form's submit to the API
+- handling 401, 404, network errors and timeouts; validating a response
+
+## Common failure modes
+
+- Inventing procedures or shapes when the backend cannot be found
+- Using API data without Schema decoding, or with `as`
+- Turning a failed call into an empty list
+- Retrying a mutation, a 401, a 404 or a decode error
+- Calling the client or building Effect chains in a page or island instead of an outcome helper
+- Reading the oRPC 2.x docs (orpc.dev) instead of v1.orpc.dev
 
 ## References
 

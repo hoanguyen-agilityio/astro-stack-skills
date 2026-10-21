@@ -31,8 +31,9 @@ tokens are in `DESIGN.md`.
 2. **Ground**: read `package.json`, `DESIGN.md` and the neighbouring code before writing.
    Existing patterns win over defaults.
 3. **Build**: `integrate-api` for API services, `develop-feature` for pages and islands.
-4. **Verify**: run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`. Any fix restarts
-   at lint. Never weaken a gate to get green.
+4. **Verify**: run `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test` and
+   `pnpm build`. Any fix restarts at lint. Never weaken a gate to get green, and never skip the
+   Git hooks with `--no-verify`.
 5. **Report**: a `## Result` block (Did, Saw, Not done, Blocked by, Next), plus a table of which
    test proves which acceptance criterion.
 
@@ -47,6 +48,8 @@ confirm scope after the analysis. Open questions are asked, never guessed.
 | Services, one per API namespace, returning `Effect` | `src/services/<name>.ts` |
 | Effect Schemas and the types derived from them | `src/types/<name>.ts` |
 | shadcn primitives (generated, then owned) | `src/components/ui/` |
+| App-wide reusable components (`Container`, `PageHeader`, `LinkCard`, `ThemeToggle`) | `src/components/common/<Name>/` |
+| App shell: layouts, header, footer, nav links | `src/layouts/`, `src/components/layout/`, `src/config/site.ts` |
 | One folder per component: `index.astro`/`index.tsx`, `<Name>.stories.tsx`, `__test__/` | `src/components/<feature>/<Name>/` |
 | Feature helpers (`format.ts`, `load<Resource>.ts`) and their `__test__/` | `src/components/<feature>/` |
 | Fixtures for stories and tests, in the API's wire format | `src/mocks/<resource>.ts` |
@@ -55,6 +58,8 @@ confirm scope after the analysis. Open questions are asked, never guessed.
 
 - No `any` and no `@ts-ignore`. API responses are decoded with Effect `Schema` before use.
 - Keep the majors in `package.json` (Astro 5, Effect 3, oRPC 1, Vite 6). Node ≥ 22.19.
+- Pages use `AppLayout` + `Container` + `PageHeader`. A feature never imports from another
+  feature; a component needed twice moves to `src/components/common/` with generic props.
 - UI uses tokens from `DESIGN.md`: no raw hex and no `[15px]`. Use shadcn before hand-rolled
   markup, and respect the island boundary (serialisable props, smallest island).
 - Tests use Vitest + Testing Library and query by role and accessible name.

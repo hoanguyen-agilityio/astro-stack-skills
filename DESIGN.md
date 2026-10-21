@@ -18,7 +18,7 @@ astro-stack-skills/                 one repo = marketplace "astro-stack" = plugi
 │   │   └── references/{analysis-template,design-input}.md
 │   └── code-skeleton/              part 1 of the brief
 │       ├── SKILL.md
-│       └── references/{project-files,design-md-template,claude-md-template}.md
+│       └── references/{setup-layers,project-files,starter-ui,design-md-template,claude-md-template}.md
 ```
 
 The repo root has the same layout as a `.claude/` folder, so it works two ways:
@@ -41,10 +41,11 @@ request ──► analyze-task ──► ground ──► build ──► verify
             plan             neighbours                       test, build
 ```
 
-- **Step 0 is always `analyze-task`.** Each build skill invokes it with the Skill tool
-  (`web-dev-stack:analyze-task` or `analyze-task`). If the Skill tool cannot find it, the skill
-  falls back to reading `../analyze-task/SKILL.md`, a relative path that works in both install
-  modes. The user can call only `/code-skeleton` and still get the analysis.
+- **The workflow lives in `CLAUDE.md`, not in the skills.** This repo's `CLAUDE.md` and the one
+  `code-skeleton` writes into each project list the steps (analyze → ground → build → verify →
+  report). A skill holds only its own knowledge: scope, inputs, what it produces, done-when,
+  failure modes and references. `code-skeleton` takes its inputs from an `analyze-task`
+  analysis.
 - **Lanes control the ceremony.** In `tiny`, the analysis stays inline. In `normal`, it is saved
   to `docs/analysis/<slug>.md`. In `high-risk`, the build waits for the user to confirm scope.
 - **Verify loops.** Any fix restarts at the first gate. A failing gate is reported as failing.
@@ -130,3 +131,5 @@ To add `integrate-api` or `develop-feature`:
   separately.
 - `analyze-task`'s Figma path depends on the Figma MCP being connected, and falls back to
   screenshots.
+| The skeleton ships a starter UI from reusable pieces (`AppLayout`, `common/`, `layout/`, `config/site.ts`), not a bare smoke page | A lone button on an unstyled page left every later page to invent its own shell and wrappers, so features copied markup instead of reusing it. Layers with an import rule (`ui` → `common` → `layout` → `<feature>`, no feature-to-feature imports) give reuse a place, and a polished welcome page shows the tokens and dark mode working |
+| Skill frontmatter: a one-sentence `description` plus `when_to_use` for the trigger phrases; `SKILL.md` kept to about 120 lines (Scope, Workflow steps, Common failure modes, References table) with commands, versions and file contents in `references/` | The format of the team's `space/.claude/skills` and of incluud/astro-agent-skills. `SKILL.md` loads in full on every run, references only when a step needs them, so the short file costs less context and is easier to follow |

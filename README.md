@@ -129,9 +129,15 @@ in **retrofit** mode and adds only the missing layers. It includes:
 - Effect and oRPC installed, with `src/libs/orpcClient.ts` pointing at `PUBLIC_API_URL`
 - shadcn/ui on Tailwind v4
 - ESLint, which bans `any` and `@ts-ignore`
-- Vitest with Testing Library, plus a smoke island and its test
+- Prettier with the team's `space` settings, and Husky + lint-staged: ESLint and Prettier on
+  staged files before each commit, typecheck and tests before each push
+- Vitest with Testing Library: tests for the two islands and a Container API test for the pages
 - Storybook 10 through `@storybook-astro/framework`, so `.astro` and React components both get
-  stories; light/dark toggle, a11y addon, the oRPC client mocked; the smoke island has a story
+  stories; light/dark toggle, a11y addon, the oRPC client mocked
+- a starter UI built from reusable pieces: `AppLayout` (sticky header with nav and a dark-mode
+  toggle, footer, skip link), `common/` components (`Container`, `PageHeader`, `LinkCard`,
+  `ThemeToggle`), `src/config/site.ts` for the name and nav, a welcome page in the style of the
+  Astro and Vite starters, and a 404 page; every component has a story
 - `DESIGN.md`: design context for agents (tokens, components, island rules, states, anti-slop
   rules), filled from the installed theme, with `TODO(design)` sections for the brand
 

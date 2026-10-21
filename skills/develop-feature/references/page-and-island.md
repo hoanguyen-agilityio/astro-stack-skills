@@ -50,7 +50,9 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
 ---
 import { Effect } from 'effect';
 
-import BaseLayout from '@/layouts/BaseLayout.astro';
+import AppLayout from '@/layouts/AppLayout.astro';
+import Container from '@/components/common/Container/index.astro';
+import PageHeader from '@/components/common/PageHeader/index.astro';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -77,11 +79,11 @@ const filters = [
 ];
 ---
 
-<BaseLayout title="Orders">
-  <main class="mx-auto max-w-3xl p-6">
-    <h1 class="mb-4 text-2xl font-semibold">Orders</h1>
+<AppLayout title="Orders">
+  <Container size="md" class="flex flex-col gap-6 py-10">
+    <PageHeader title="Orders" description="Every order, newest first." />
 
-    <nav aria-label="Filter by status" class="mb-4 flex gap-2">
+    <nav aria-label="Filter by status" class="flex gap-2">
       {
         filters.map((f) => (
           <a
@@ -127,11 +129,14 @@ const filters = [
         </Table>
       )
     }
-  </main>
-</BaseLayout>
+  </Container>
+</AppLayout>
 ```
 
 Why it's shaped like this:
+- **The shell is reused, not rewritten.** `AppLayout` brings the header, nav, footer and
+  `<main>`; `Container` the width; `PageHeader` the `h1`. Add the route to `siteConfig.nav` in
+  `src/config/site.ts`.
 - **The skeleton sets `output: 'server'`**, so the frontmatter runs on every request. No
   `prerender` line is needed.
 - **The server client carries the token**: `createOrpcClient({ token })`. Use the project's real
@@ -186,7 +191,7 @@ export const CancelOrderButton = ({ orderId }: Props) => {
 };
 ```
 
-It uses a named export like the skeleton's `GreetingButton`, and a serializable prop
+It uses a named export like the skeleton's `CounterButton`, and a serializable prop
 (`orderId: string`). Every outcome renders next to the button. The browser call goes to
 same-origin `/rpc`, which the dev server proxies to the API, so no CORS setup is needed.
 
