@@ -29,7 +29,7 @@ stub oRPC server):
 | `typescript` | 5 | 5.9 |
 | `tailwindcss`, `@tailwindcss/vite` | 4 | 4.3 |
 | `vite` | 6 (Astro 5's major) | 6.4 |
-| `vitest` / `jsdom` | 3 / 26 | 3.2 / 26.1 |
+| `vitest` / `@vitest/coverage-v8` / `jsdom` | 3 / 3 / 26 | 3.2 / 3.2 / 26.1 |
 | `eslint` / `eslint-plugin-astro` | 9 / 1 | 9.39 / 1.7 |
 | `shadcn` CLI | 4 | 4.22 |
 | `storybook`, `@storybook/builder-vite`, `@storybook/react`, `@storybook/addon-{docs,a11y,themes}` | 10 | 10.6 |
@@ -103,10 +103,11 @@ layers.
    pnpm add -D eslint@^9 @eslint/js@^9 typescript-eslint eslint-plugin-astro@^1 eslint-plugin-react-hooks
    ```
 
-8. **Vitest and Testing Library.** Write `vitest.config.ts` and `vitest.setup.ts`.
+8. **Vitest and Testing Library.** Write `vitest.config.ts` and `vitest.setup.ts`. Keep
+   `@vitest/coverage-v8` on the same major as `vitest`.
 
    ```bash
-   pnpm add -D vitest@^3 jsdom@^26 @testing-library/react @testing-library/jest-dom @testing-library/user-event
+   pnpm add -D vitest@^3 @vitest/coverage-v8@^3 jsdom@^26 @testing-library/react @testing-library/jest-dom @testing-library/user-event
    ```
 
 9. **Storybook.** Write `.storybook/main.ts` and `.storybook/preview.ts`. pnpm's warning about
@@ -124,7 +125,7 @@ layers.
     pnpm add -D prettier@^3 prettier-plugin-astro@^1 husky@^9 lint-staged@^16
     pnpm exec husky                     # creates .husky/_ and sets core.hooksPath
     echo 'pnpm exec lint-staged' > .husky/pre-commit
-    echo 'pnpm typecheck && pnpm test' > .husky/pre-push
+    echo 'pnpm typecheck && pnpm test:coverage' > .husky/pre-push
     ```
 
 11. **Folders and `DESIGN.md`.** Create the folders from `starter-ui.md`, with a `.gitkeep` in
@@ -150,6 +151,9 @@ existing files instead of overwriting them.
   missing. Do not run `pnpm format` over the whole repo; that is a separate change for the user
   to decide. An existing Husky setup keeps its hooks; add `lint-staged` to `pre-commit` only if
   it has none.
+- Coverage: add the `coverage` block and `test:coverage` script, then run it. Below 80% on an
+  existing repo: do not lower the thresholds and do not put `test:coverage` in `pre-push`;
+  report the numbers and let the user decide.
 - No root `CLAUDE.md`: write it from the template. One exists: leave it, and list in the report
   the template rules it does not cover.
 - Starter UI: add `AppLayout`, `config/site.ts` and the `common/` components only where the repo

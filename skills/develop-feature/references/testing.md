@@ -141,7 +141,10 @@ describe('/orders', () => {
 ## Run before calling it done
 
 ```bash
-pnpm lint && pnpm typecheck && pnpm test && pnpm build
+pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:coverage && pnpm build
 ```
+
+`test:coverage` fails below 80% (lines, functions, branches, statements). Add tests for the
+uncovered branches; never lower the thresholds or widen `coverage.exclude` to pass.
 
 `typecheck` is `astro check`. It also checks `.astro` files, which plain `tsc` can't read.

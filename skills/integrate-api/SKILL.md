@@ -87,7 +87,7 @@ outcome helpers.
 
 ## Done means
 
-- `pnpm lint && pnpm typecheck && pnpm test` pass.
+- `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:coverage` pass, coverage ≥ 80%.
 - The running backend's responses decode with the service's Schema.
 - Report to the user: which procedures were added, how to start the backend (folder and
   command), anything left running in the background, and that `develop-feature` builds the page.

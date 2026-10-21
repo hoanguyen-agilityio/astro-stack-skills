@@ -238,8 +238,8 @@ the design actually uses.
   story in light and dark (theme toolbar) with a clean Accessibility panel: `pnpm storybook`.
 - Import order: external packages → `@/` aliases → relative imports.
 - No `any` and no `@ts-ignore`. API data is decoded with Effect `Schema` before it reaches UI.
-- Verify with `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test` and `pnpm build`.
-  Commits run ESLint and Prettier on staged files (Husky + lint-staged); pushes run typecheck and
-  tests. Never skip them with `--no-verify`.
+- Verify with `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage` and
+  `pnpm build`. Commits run ESLint and Prettier on staged files (Husky + lint-staged); pushes run
+  typecheck and tests with 80% coverage. Never skip them with `--no-verify`.
 - When a design changes tokens or adds a pattern, update this file in the same change.
 ```

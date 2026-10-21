@@ -1,6 +1,18 @@
 {
-  "description": "After a turn that changed files: a checklist of changed files and gates, plus a success signal",
+  "description": "Lint each edited file and feed problems back to Claude; after a turn that changed files, a checklist of changed files and gates, plus a success signal",
   "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/post-edit-lint.mjs\"",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

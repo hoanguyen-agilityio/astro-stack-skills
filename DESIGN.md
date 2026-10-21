@@ -12,7 +12,7 @@ astro-stack-skills/                 one repo = marketplace "astro-stack" = plugi
 │   ├── marketplace.json            lists the plugin at "./"
 │   └── plugin.json
 ├── CLAUDE.md                       contract, loaded when the repo is cloned as .claude/
-├── hooks/                          Stop hook: checklist + success signal (plugin installs only)
+├── hooks/                          PostToolUse lint per edit; Stop checklist + success signal (plugin installs only)
 ├── skills/
 │   ├── analyze-task/               step 0 of every workflow
 │   │   ├── SKILL.md
@@ -82,6 +82,9 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | One folder per component (`index.astro`/`index.tsx`, `<Name>.stories.tsx`, `__test__/index.test.tsx`) | The layout of the team's `space` apps (kitchen: 49 `__test__` folders to 3 `__tests__`, `<Name>.stories.tsx` everywhere), so code moves between repos without renaming. Feature helpers stay one level up, beside the component folders |
 | React stories set `parameters: { renderer: 'react' }` | The Astro framework renders every story with Astro by default; without it a React story fails with `Renderer 'astro' not found` |
 | A `Stop` hook prints the task checklist and success signal, read from the transcript and `git` | The `## Result` block is written by the model and can be skipped or wrong. The hook runs every time, reports only what the turn actually did (edited files, gate commands and their exit status), and treats a gate as passed only if it ran after the last edit. It notifies but never blocks, so a small task is not forced through every gate |
+| A `PostToolUse` hook lints each edited file (final newline, ESLint, Prettier) and feeds problems back with exit 2 | Husky only fires at commit and push, so an agent could write many files with the same lint error before finding out. Checking the one file right after the edit lets Claude fix it while it is still in context. It runs the project's own binaries, so the rules are the project's; typecheck and tests are too slow per edit |
+| Coverage ≥ 80% through `@vitest/coverage-v8` thresholds, enforced by `pnpm test:coverage` in `pre-push` | The mentor's requirement. Thresholds in `vitest.config.ts` fail the run instead of only printing a report. `pnpm test` stays fast for the inner loop. `.astro` files are left out because v8 cannot map them; the page tests cover them |
+| ESLint `eol-last: error` | Prettier alone writes the final newline silently at commit, so nobody hears about it; the mentor wants the linter to report it. The core rule is deprecated but still in ESLint 9 and needs no plugin |
 | Plain `name` + `description` frontmatter | Matches the team's plugins on `feat/claude-shared-plugins`. Descriptions list trigger phrases and the sibling relationship |
 
 ## Verification strategy
@@ -133,8 +136,7 @@ To add `integrate-api` or `develop-feature`:
   separately.
 - `analyze-task`'s Figma path depends on the Figma MCP being connected, and falls back to
   screenshots.
-- The task-checklist hook loads only with the plugin; a `--copy` or `.claude/` clone install
-  has no hook. Files changed by Bash commands (codegen, `pnpm add`) are not listed, and a
+- The hooks load only with the plugin; a `--copy` or `.claude/` clone install has none. Files changed by Bash commands (codegen, `pnpm add`) are not listed, and a
   failing chained command (`pnpm lint && pnpm test`) marks every gate in it as failed.
 | The skeleton ships a starter UI from reusable pieces (`AppLayout`, `common/`, `layout/`, `config/site.ts`), not a bare smoke page | A lone button on an unstyled page left every later page to invent its own shell and wrappers, so features copied markup instead of reusing it. Layers with an import rule (`ui` → `common` → `layout` → `<feature>`, no feature-to-feature imports) give reuse a place, and a polished welcome page shows the tokens and dark mode working |
 | Skill frontmatter: a one-sentence `description` plus `when_to_use` for the trigger phrases; `SKILL.md` kept to about 120 lines (Scope, Workflow steps, Common failure modes, References table) with commands, versions and file contents in `references/` | The format of the team's `space/.claude/skills` and of incluud/astro-agent-skills. `SKILL.md` loads in full on every run, references only when a step needs them, so the short file costs less context and is easier to follow |

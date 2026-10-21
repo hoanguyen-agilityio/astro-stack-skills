@@ -7,14 +7,14 @@ parts in rather than overwriting it.
 | File | Purpose |
 |------|---------|
 | `package.json`, `.nvmrc`, `pnpm-workspace.yaml` | pinned Node, scripts, allowed build scripts (`esbuild`, `sharp`) |
-| `.gitignore` | `node_modules`, `dist`, `.astro`, `.env`, `storybook-static` |
+| `.gitignore` | `node_modules`, `dist`, `.astro`, `.env`, `storybook-static`, `coverage` |
 | `tsconfig.json` | `astro/tsconfigs/strictest`, React JSX, `@/*` alias |
 | `astro.config.mjs` | React integration, Tailwind Vite plugin, adapter, dev proxy `/rpc` → API |
 | `src/styles/global.css` | Tailwind entry; shadcn adds its theme, the starter UI its `brand` token |
-| `eslint.config.js` | flat config; bans `any` and `@ts-ignore` |
+| `eslint.config.js` | flat config; bans `any` and `@ts-ignore`, requires a final newline |
 | `.prettierrc`, `.prettierignore`, `.editorconfig` | the team's `space` style: single quotes, trailing commas, 80 columns, Astro plugin |
-| `.husky/pre-commit`, `.husky/pre-push`, `.lintstagedrc` | ESLint + Prettier on staged files before a commit; typecheck + tests before a push |
-| `vitest.config.ts`, `vitest.setup.ts` | `getViteConfig`, jsdom, jest-dom |
+| `.husky/pre-commit`, `.husky/pre-push`, `.lintstagedrc` | ESLint + Prettier on staged files before a commit; typecheck + tests with 80% coverage before a push |
+| `vitest.config.ts`, `vitest.setup.ts` | `getViteConfig`, jsdom, jest-dom, v8 coverage with 80% thresholds |
 | `.env.example`, `.env`, `src/env.d.ts` | `PUBLIC_API_URL` placeholder, local copy (gitignored), its type |
 | `src/libs/orpcClient.ts` | client factory: `RPCLink` to `${PUBLIC_API_URL}/rpc`, auth header; router type starts empty |
 | `.storybook/main.ts`, `preview.ts` | `@storybook-astro/framework` + `react()`; `global.css`, theme toggle, a11y, `createOrpcClient` mocked |
@@ -45,6 +45,7 @@ Dependencies are added by the `pnpm add` commands of each layer in `setup-layers
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "prepare": "husky"
@@ -65,6 +66,7 @@ node_modules/
 dist/
 .astro/
 storybook-static/
+coverage/
 .env
 .env.*
 !.env.example
@@ -172,7 +174,7 @@ import astro from 'eslint-plugin-astro';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default defineConfig(
-  { ignores: ['dist', '.astro', 'node_modules', 'storybook-static'] },
+  { ignores: ['dist', '.astro', 'node_modules', 'storybook-static', 'coverage'] },
   js.configs.recommended,
   tseslint.configs.strict,
   astro.configs.recommended,
@@ -185,10 +187,16 @@ export default defineConfig(
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/ban-ts-comment': 'error',
+      'eol-last': 'error',
     },
   },
 );
 ```
+
+`eol-last` makes `pnpm lint` and the pre-commit hook report a missing final newline instead of
+Prettier fixing it silently. It is one of ESLint's deprecated formatting rules, still shipped in
+ESLint 9; it needs no extra plugin and does not conflict with Prettier, which writes the same
+newline.
 
 ## `vitest.config.ts` and `vitest.setup.ts`
 
@@ -201,9 +209,28 @@ export default getViteConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/__test__/**',
+        'src/**/*.stories.tsx',
+        'src/components/ui/**',
+        'src/lib/**',
+        'src/mocks/**',
+        'src/types/**',
+        'src/env.d.ts',
+      ],
+      thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
+    },
   },
 });
 ```
+
+Coverage counts the TypeScript and React source, including files no test imports. It leaves
+out what is generated (`ui/`, `lib/`), fixtures, Schema-only `types/` and stories. `.astro`
+files are not counted: v8 cannot map them, and the page tests (Container API) cover them.
+`pnpm test` stays fast; `pnpm test:coverage` enforces the 80% and runs before every push.
 
 ```ts
 import '@testing-library/jest-dom/vitest';
@@ -281,6 +308,79 @@ export const createOrpcClient = ({
 
   return createORPCClient<AppRouterClient>(link);
 };
+```
+
+`src/libs/__test__/orpcClient.test.ts`. Without it the factory has 0% coverage and the starter
+sits at about 83%, too close to the 80% threshold for the first feature:
+
+```ts
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { createOrpcClient } from '../orpcClient';
+import type { Procedure } from '../orpcClient';
+
+// The router type is empty until integrate-api adds procedures, so the test declares its own.
+type TestClient = { readonly ping: Procedure<undefined> };
+
+const stubFetch = () => {
+  const fetchMock = vi.fn<typeof fetch>(
+    async () =>
+      new Response(JSON.stringify({ json: 'pong' }), {
+        headers: { 'content-type': 'application/json' },
+      }),
+  );
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+};
+
+const lastRequest = (fetchMock: ReturnType<typeof stubFetch>): Request => {
+  const [input, init] = fetchMock.mock.calls.at(-1) ?? [];
+  if (input === undefined) throw new Error('fetch was not called');
+  return new Request(input, init);
+};
+
+describe('createOrpcClient', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it('calls /rpc on the given base URL with the bearer token', async () => {
+    const fetchMock = stubFetch();
+    const client = createOrpcClient({
+      baseUrl: 'http://api.test',
+      token: 'secret',
+    }) as unknown as TestClient;
+
+    await expect(client.ping(undefined)).resolves.toBe('pong');
+
+    const request = lastRequest(fetchMock);
+    expect(request.url).toBe('http://api.test/rpc/ping');
+    expect(request.headers.get('authorization')).toBe('Bearer secret');
+  });
+
+  it('uses the same-origin /rpc proxy in the browser and sends no token', async () => {
+    const fetchMock = stubFetch();
+    const client = createOrpcClient() as unknown as TestClient;
+
+    await client.ping(undefined);
+
+    const request = lastRequest(fetchMock);
+    expect(request.url).toBe(`${window.location.origin}/rpc/ping`);
+    expect(request.headers.has('authorization')).toBe(false);
+  });
+
+  it('uses PUBLIC_API_URL on the server', async () => {
+    vi.stubGlobal('window', undefined);
+    vi.stubEnv('PUBLIC_API_URL', 'http://server.test');
+    const fetchMock = stubFetch();
+    const client = createOrpcClient() as unknown as TestClient;
+
+    await client.ping(undefined);
+
+    expect(lastRequest(fetchMock).url).toBe('http://server.test/rpc/ping');
+  });
+});
 ```
 
 If the server's router or contract type can be imported (a shared package, a monorepo
@@ -387,6 +487,7 @@ Same settings as the team's `space` repo, so code moves between repos without re
 dist/
 .astro/
 storybook-static/
+coverage/
 pnpm-lock.yaml
 # Generated by shadcn: keep them as shadcn writes them, so `shadcn add` diffs stay readable.
 src/components/ui/
@@ -424,11 +525,12 @@ pnpm exec lint-staged
 ```
 
 ```sh
-pnpm typecheck && pnpm test
+pnpm typecheck && pnpm test:coverage
 ```
 
-- ESLint in the hook has no `--fix`: a lint error blocks the commit (verified with an `any`)
-  instead of being silently rewritten. Prettier does rewrite, then lint-staged re-stages.
+- ESLint in the hook has no `--fix`: a lint error (an `any`, a missing final newline) blocks the
+  commit instead of being silently rewritten. Prettier does rewrite, then lint-staged re-stages.
+- The push runs the tests with coverage, so a push below 80% fails.
 - The config needs no `eslint-config-prettier`: `typescript-eslint` strict and
   `eslint-plugin-astro` recommended carry no formatting rules.
 - `prettier --write .` also formats the `CLAUDE.md` and `DESIGN.md` the skill writes, and the

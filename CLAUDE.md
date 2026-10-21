@@ -26,7 +26,7 @@ change it. Exact verified versions: `README.md`.
 | Styling | `tailwindcss`, `@tailwindcss/vite` | 4 |
 | Components | `shadcn` CLI | 4 |
 | Bundler | `vite` (pinned explicitly) | 6 |
-| Tests | `vitest` / `jsdom` + Testing Library | 3 / 26 |
+| Tests | `vitest`, `@vitest/coverage-v8` / `jsdom` + Testing Library | 3 / 26 |
 | Lint | `eslint` / `eslint-plugin-astro` | 9 / 1 |
 | Stories | `storybook` + `@storybook/*` addons | 10 |
 | | `@storybook-astro/framework` / `@vitejs/plugin-react` | 1 / 5 |
@@ -43,9 +43,9 @@ Not `latest`: Astro 7 and Effect 4 have different APIs from the code in the skil
    Existing patterns win over defaults.
 3. **Build**: use the skill for the kind of work: `code-skeleton` for setup (`integrate-api`
    and `develop-feature` are planned).
-4. **Verify**: run `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test` and
-   `pnpm build`. Any fix restarts at lint. Never weaken a gate to get green, and never skip the
-   Git hooks with `--no-verify`.
+4. **Verify**: run `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage`
+   (≥ 80%) and `pnpm build`. Any fix restarts at lint. Never weaken a gate or lower a coverage
+   threshold to get green, and never skip the Git hooks with `--no-verify`.
 5. **Report**: a `## Result` block (Did, Saw, Not done, Blocked by, Next), plus a table of which
    test proves which acceptance criterion.
 

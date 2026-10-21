@@ -22,7 +22,7 @@ passed on. Source: `skills/code-skeleton/references/setup-layers.md`.
 | Styling | `tailwindcss`, `@tailwindcss/vite` | 4 | 4.3 |
 | Components | `shadcn` CLI (radix base, `nova` preset) | 4 | 4.22 |
 | Bundler | `vite` | 6 (Astro 5's major) | 6.4 |
-| Tests | `vitest` / `jsdom` + Testing Library | 3 / 26 | 3.2 / 26.1 |
+| Tests | `vitest`, `@vitest/coverage-v8` / `jsdom` + Testing Library | 3 / 26 | 3.2 / 26.1 |
 | Lint | `eslint` / `eslint-plugin-astro` | 9 / 1 | 9.39 / 1.7 |
 | Stories | `storybook` + `@storybook/{builder-vite,react,addon-docs,addon-a11y,addon-themes}` | 10 | 10.6 |
 | | `@storybook-astro/framework` / `@vitejs/plugin-react` | 1 / 5 | 1.12, 1.13 / 5.2 |
@@ -121,7 +121,8 @@ bin/cli.mjs           # `npx … init`: plugin install (default) or --copy
 ├── marketplace.json   # marketplace "astro-stack", lists the plugin at ./
 └── plugin.json        # plugin "web-dev-stack"
 hooks/
-├── hooks.json         # Stop hook, loaded with the plugin
+├── hooks.json         # PostToolUse + Stop hooks, loaded with the plugin
+├── post-edit-lint.mjs # newline, ESLint, Prettier on each edited file
 └── task-checklist.mjs # checklist + success signal after a turn that changed files
 skills/
 ├── analyze-task/      # SKILL.md + references/{analysis-template,design-input}.md
@@ -155,7 +156,7 @@ before anything is built.
 
 ### `code-skeleton`
 
-Produces a project that passes `lint`, `typecheck`, `test` and `build` before any feature code
+Produces a project that passes `lint`, `typecheck`, `test:coverage` and `build` before any feature code
 exists. In an empty directory (only `.claude/`, `.git/` and the like) it runs in **init** mode
 and creates the project layer by layer: package and git, Astro + React, TypeScript, Tailwind,
 Effect + oRPC, shadcn, ESLint, Vitest, Storybook. Called with no arguments there, it takes the
@@ -166,10 +167,11 @@ in **retrofit** mode and adds only the missing layers. It includes:
 - strict TypeScript and the `@/` alias
 - Effect and oRPC installed, with `src/libs/orpcClient.ts` pointing at `PUBLIC_API_URL`
 - shadcn/ui on Tailwind v4
-- ESLint, which bans `any` and `@ts-ignore`
+- ESLint, which bans `any` and `@ts-ignore` and requires a final newline
 - Prettier with the team's `space` settings, and Husky + lint-staged: ESLint and Prettier on
-  staged files before each commit, typecheck and tests before each push
-- Vitest with Testing Library: tests for the two islands and a Container API test for the pages
+  staged files before each commit, typecheck and tests with 80% coverage before each push
+- Vitest with Testing Library and v8 coverage (80% thresholds, `pnpm test:coverage`): tests for
+  the two islands and a Container API test for the pages
 - Storybook 10 through `@storybook-astro/framework`, so `.astro` and React components both get
   stories; light/dark toggle, a11y addon, the oRPC client mocked
 - a starter UI built from reusable pieces: `AppLayout` (sticky header with nav and a dark-mode
@@ -213,8 +215,20 @@ through the `/rpc` proxy.
 
 ## Hooks
 
-The plugin ships one `Stop` hook. After any turn that changed files in the project (a skill run
-or a plain task), it shows a checklist in Claude Code and a desktop notification with the verdict:
+The plugin ships two Claude Code hooks. They complement the project's Git hooks (Husky), which
+only run at commit and push.
+
+| Hook | When | What |
+|------|------|------|
+| `PostToolUse` (`post-edit-lint.mjs`) | after each `Edit`/`Write` | Checks that one file: final newline, the project's ESLint, Prettier. Problems go back to Claude (exit 2) so it fixes them before moving on |
+| `Stop` (`task-checklist.mjs`) | end of a turn that changed files | Checklist of changed files and gates, plus a success signal |
+
+`PostToolUse` uses the project's own `node_modules/.bin/eslint` and `prettier` and skips them
+when they are not installed; the newline check needs nothing. Typecheck and tests are too slow
+per edit and stay with the `Stop` checklist and the pre-push hook.
+
+After any turn that changed files in the project (a skill run or a plain task), `Stop` shows a
+checklist in Claude Code and a desktop notification with the verdict:
 
 ```text
 ✅ Task done: all gates passed
@@ -228,6 +242,7 @@ Gates: [x] lint  [x] format:check  [x] typecheck  [x] test  [x] build
 - Gates are the `package.json` scripts among `lint`, `format:check`, `typecheck`, `test` and
   `build`. A gate counts only if it ran and passed after the last edit; otherwise the verdict is
   ⚠️ and names it (`[✗]` failed, `[~]` passed before a later edit, `[ ]` not run).
+  `pnpm test:coverage` counts as `test`.
 - It only reports and never blocks. Turns with no file changes print nothing.
 - Desktop notification: `notify-send` on Linux, `osascript` on macOS, skipped elsewhere.
 
