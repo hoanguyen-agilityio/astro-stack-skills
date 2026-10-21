@@ -8,6 +8,33 @@ does not load when the skills are installed as a plugin; the skills carry their 
 instructions either way. Project-specific facts belong in the project's own `CLAUDE.md` and
 `DESIGN.md`, and those win over this file.
 
+## Tech stack versions
+
+Pin each package to its major (`astro@^5`). A repo on another major: tell the user, never
+change it. Exact verified versions: `README.md`.
+
+| Layer | Package | Version |
+|-------|---------|---------|
+| Runtime | Node | ≥ 22.19 |
+| Package manager | pnpm | 8, 10, 11 |
+| Framework | `astro` | 5 |
+| | `@astrojs/react` / `@astrojs/node` (SSR adapter) | 4 / 9 |
+| UI library | `react`, `react-dom` | 19 |
+| Language | `typescript` (strictest) | 5 |
+| Async, errors, validation | `effect` (with `Schema`) | 3 (≥ 3.10) |
+| API client | `@orpc/client` | 1 |
+| Styling | `tailwindcss`, `@tailwindcss/vite` | 4 |
+| Components | `shadcn` CLI | 4 |
+| Bundler | `vite` (pinned explicitly) | 6 |
+| Tests | `vitest` / `jsdom` + Testing Library | 3 / 26 |
+| Lint | `eslint` / `eslint-plugin-astro` | 9 / 1 |
+| Stories | `storybook` + `@storybook/*` addons | 10 |
+| | `@storybook-astro/framework` / `@vitejs/plugin-react` | 1 / 5 |
+| Format | `prettier` / `prettier-plugin-astro` | 3 / 1 |
+| Git hooks | `husky` / `lint-staged` | 9 / 16 |
+
+Not `latest`: Astro 7 and Effect 4 have different APIs from the code in the skills.
+
 ## Workflow: every task, every size
 
 1. **Analyze**: run `analyze-task` first. It produces the request kind, the lane, acceptance
@@ -42,8 +69,7 @@ confirm scope after the analysis. Open questions are asked, never guessed.
 | Analyses | `docs/analysis/<slug>.md` |
 
 - No `any` and no `@ts-ignore`. API responses are decoded with Effect `Schema` before use.
-- Match the versions in `package.json`. New projects pin Astro 5, Effect 3, oRPC 1, Vite 6 and
-  need Node ≥ 22.19.
+- Match the versions in `package.json`. New projects pin the majors in Tech stack versions above.
 - Pages use `AppLayout` + `Container` + `PageHeader`. A feature never imports from another
   feature; a component needed twice moves to `src/components/common/` with generic props.
 - UI uses tokens from `DESIGN.md`: no raw hex and no `[15px]`. Use shadcn before hand-rolled

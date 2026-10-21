@@ -4,6 +4,41 @@ Claude Code marketplace `astro-stack`. It holds one plugin, `web-dev-stack`: pro
 skills for one stack, **Astro** · **React** (islands) · **TypeScript** (strict) · **Effect** (with
 Schema) · **oRPC** · **shadcn/ui**.
 
+## Tech stack versions
+
+**Version** is what a new project pins (`astro@^5`). **Verified** is the exact version all gates
+passed on. Source: `skills/code-skeleton/references/setup-layers.md`.
+
+| Layer | Package | Version | Verified |
+|-------|---------|---------|----------|
+| Runtime | Node | ≥ 22.19 | 22.23 |
+| Package manager | pnpm | 8, 10, 11 | 8, 11 |
+| Framework | `astro` | 5 | 5.18 |
+| | `@astrojs/react` / `@astrojs/node` (SSR adapter) | 4 / 9 | 4.4 / 9.5 |
+| UI library | `react`, `react-dom` | 19 | 19.3 |
+| Language | `typescript` (strictest) | 5 | 5.x (minor not recorded) |
+| Async, errors, validation | `effect` (with `Schema`) | 3 (≥ 3.10) | 3.22 |
+| API client | `@orpc/client` | 1 | 1.15 |
+| Styling | `tailwindcss`, `@tailwindcss/vite` | 4 | 4.3 |
+| Components | `shadcn` CLI (radix base, `nova` preset) | 4 | 4.22 |
+| Bundler | `vite` | 6 (Astro 5's major) | 6.4 |
+| Tests | `vitest` / `jsdom` + Testing Library | 3 / 26 | 3.2 / 26.1 |
+| Lint | `eslint` / `eslint-plugin-astro` | 9 / 1 | 9.39 / 1.7 |
+| Stories | `storybook` + `@storybook/{builder-vite,react,addon-docs,addon-a11y,addon-themes}` | 10 | 10.6 |
+| | `@storybook-astro/framework` / `@vitejs/plugin-react` | 1 / 5 | 1.12, 1.13 / 5.2 |
+| Format | `prettier` / `prettier-plugin-astro` | 3 / 1 | 3.9 / 1.1 |
+| Git hooks | `husky` / `lint-staged` | 9 / 16 | 9.1 / 16.4 |
+
+Notes:
+
+- Not `latest`: Astro 7 and Effect 4 have different APIs. A repo on another major is reported,
+  never changed.
+- `vite@^6` is explicit, or `@tailwindcss/vite` pulls Vite 8 and the config fails to load.
+- Node 22.19 is the floor for `@storybook-astro/framework`; `lint-staged` 17 would need 22.22.1.
+  The `npx … init` installer alone needs only Node 18.
+- pnpm 10 is untested (it uses `onlyBuiltDependencies`, not `allowBuilds`).
+- The `vitest@^4` peer warning from `@storybook-astro/framework` is expected; ignore it.
+
 ## Install
 
 ### One command (recommended)
@@ -145,8 +180,7 @@ in **retrofit** mode and adds only the missing layers. It includes:
 /web-dev-stack:code-skeleton Create project lunch-order, oRPC pointing to http://localhost:8787/rpc
 ```
 
-Verified on Astro 5, Effect 3, oRPC 1, Tailwind 4, Vite 6, Vitest 3, shadcn CLI 4 and Storybook 10.
-Requires Node ≥ 22.19. The skill's step 2 table lists the full set.
+Verified on the set in [Tech stack versions](#tech-stack-versions).
 
 ### `integrate-api`
 
@@ -170,7 +204,7 @@ helpers, islands and the page (Astro Container API).
 /web-dev-stack:develop-feature /orders lists orders with a status filter; pending orders have a Cancel button
 ```
 
-Both are verified on the same set as `code-skeleton` (Astro 5, Effect 3, oRPC 1): lint,
+Both are verified on the same [set](#tech-stack-versions) as `code-skeleton`: lint,
 typecheck, tests and build pass, and the `/orders` example ran against a local oRPC server
 through the `/rpc` proxy.
 
