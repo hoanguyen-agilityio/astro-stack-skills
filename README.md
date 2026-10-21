@@ -120,6 +120,9 @@ bin/cli.mjs           # `npx … init`: plugin install (default) or --copy
 .claude-plugin/
 ├── marketplace.json   # marketplace "astro-stack", lists the plugin at ./
 └── plugin.json        # plugin "web-dev-stack"
+hooks/
+├── hooks.json         # Stop hook, loaded with the plugin
+└── task-checklist.mjs # checklist + success signal after a turn that changed files
 skills/
 ├── analyze-task/      # SKILL.md + references/{analysis-template,design-input}.md
 ├── code-skeleton/     # SKILL.md + references/{project-files,design-md-template,claude-md-template}.md
@@ -207,6 +210,26 @@ helpers, islands and the page (Astro Container API).
 Both are verified on the same [set](#tech-stack-versions) as `code-skeleton`: lint,
 typecheck, tests and build pass, and the `/orders` example ran against a local oRPC server
 through the `/rpc` proxy.
+
+## Hooks
+
+The plugin ships one `Stop` hook. After any turn that changed files in the project (a skill run
+or a plain task), it shows a checklist in Claude Code and a desktop notification with the verdict:
+
+```text
+✅ Task done: all gates passed
+Changed (2):
+  • src/pages/orders.astro (+42 −3)
+  • src/services/orders.ts (new)
+Gates: [x] lint  [x] format:check  [x] typecheck  [x] test  [x] build
+```
+
+- Files come from the turn's `Edit`/`Write` calls; line counts from `git`.
+- Gates are the `package.json` scripts among `lint`, `format:check`, `typecheck`, `test` and
+  `build`. A gate counts only if it ran and passed after the last edit; otherwise the verdict is
+  ⚠️ and names it (`[✗]` failed, `[~]` passed before a later edit, `[ ]` not run).
+- It only reports and never blocks. Turns with no file changes print nothing.
+- Desktop notification: `notify-send` on Linux, `osascript` on macOS, skipped elsewhere.
 
 ## Conventions shared by all skills
 
