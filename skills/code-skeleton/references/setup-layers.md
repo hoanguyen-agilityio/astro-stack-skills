@@ -26,6 +26,7 @@ stub oRPC server):
 | `effect` | 3 (≥ 3.10) | 3.22 |
 | `@orpc/client` | 1 | 1.15 |
 | `react`, `react-dom` | 19 | 19.3 |
+| `typescript` | 5 | 5.9 |
 | `tailwindcss`, `@tailwindcss/vite` | 4 | 4.3 |
 | `vite` | 6 (Astro 5's major) | 6.4 |
 | `vitest` / `jsdom` | 3 / 26 | 3.2 / 26.1 |

@@ -16,7 +16,7 @@ passed on. Source: `skills/code-skeleton/references/setup-layers.md`.
 | Framework | `astro` | 5 | 5.18 |
 | | `@astrojs/react` / `@astrojs/node` (SSR adapter) | 4 / 9 | 4.4 / 9.5 |
 | UI library | `react`, `react-dom` | 19 | 19.3 |
-| Language | `typescript` (strictest) | 5 | 5.x (minor not recorded) |
+| Language | `typescript` (strictest) | 5 | 5.9 |
 | Async, errors, validation | `effect` (with `Schema`) | 3 (≥ 3.10) | 3.22 |
 | API client | `@orpc/client` | 1 | 1.15 |
 | Styling | `tailwindcss`, `@tailwindcss/vite` | 4 | 4.3 |
