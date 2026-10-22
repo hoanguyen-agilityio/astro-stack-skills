@@ -28,6 +28,7 @@ passed on. Source: `skills/code-skeleton/references/setup-layers.md`.
 | | `@storybook-astro/framework` / `@vitejs/plugin-react` | 1 / 5 | 1.12, 1.13 / 5.2 |
 | Format | `prettier` / `prettier-plugin-astro` | 3 / 1 | 3.9 / 1.1 |
 | Git hooks | `husky` / `lint-staged` | 9 / 16 | 9.1 / 16.4 |
+| Duplicate detection | `jscpd` | 4 | 4.3 |
 
 Notes:
 
@@ -128,7 +129,8 @@ skills/
 ├── analyze-task/      # SKILL.md + references/{analysis-template,design-input}.md
 ├── code-skeleton/     # SKILL.md + references/{project-files,design-md-template,claude-md-template}.md
 ├── integrate-api/     # SKILL.md + references/{client,service,calling}.md
-└── develop-feature/   # SKILL.md + references/{page-and-island,testing}.md
+├── develop-feature/   # SKILL.md + references/{page-and-island,testing}.md
+└── review-code/       # SKILL.md + references/{inventory,checklist,duplicates,reviewer-prompt}.md
 ```
 
 ## Skills
@@ -139,8 +141,11 @@ skills/
 | 1 | `code-skeleton` | ready | Starting a project, or bringing an Astro repo up to the stack |
 | 2 | `integrate-api` | ready | Calling oRPC procedures through Effect services |
 | 3 | `develop-feature` | ready | Building a ticket into a tested page or island |
+| 4 | `review-code` | ready | Reviewing a change for duplicates and broken conventions, then fixing it in a loop |
 
-Every workflow follows the same steps: **analyze → ground → build → verify → report**.
+Every workflow follows the same steps: **analyze → ground → build → verify → review → report**.
+`integrate-api` and `develop-feature` end with `review-code`, which loops review → fix → review
+until nothing is left to fix (at most 3 rounds).
 `code-skeleton` runs `analyze-task` as its step 0, so calling `/code-skeleton` alone still starts
 with the analysis. `integrate-api` and `develop-feature` start with their own "Look first" step
 and do not call `analyze-task` yet. Running `analyze-task` on its own stops after the plan and names the skill to run
@@ -212,6 +217,33 @@ helpers, islands and the page (Astro Container API).
 Both are verified on the same [set](#tech-stack-versions) as `code-skeleton`: lint,
 typecheck, tests and build pass, and the `/orders` example ran against a local oRPC server
 through the `/rpc` proxy.
+
+### `review-code`
+
+Each feature built on the skeleton tends to add its own card, badge or `formatPrice` next to
+one that already exists, and the gates still pass. `review-code` looks for that after the code
+is written:
+
+```
+change ─► inventory ─► pnpm dup + gates ─► review (fresh subagent) ─► fix ─► again, max 3 rounds ─► report
+```
+
+- **Inventory**: lists what already exists (`ui/`, `common/`, feature components, helpers,
+  services, Schemas) so the change is compared with it, not reviewed alone.
+- **Checks**: `pnpm dup` runs `jscpd` for copied code (`.astro` included) and fails on any clone;
+  then the five gates.
+- **Review**: a subagent that did not write the code goes through a checklist: duplicates and
+  cross-feature imports, conventions (`DESIGN.md` tokens, island boundary, stories, layout),
+  criteria without proof, and bugs. Findings are `blocker`, `should` or `nit`.
+- **Fix and loop**: blockers and shoulds are fixed (reuse the existing piece, extend it with a
+  prop, or move it to `common/`), then the checks and a new review run again.
+
+`develop-feature` and `integrate-api` run it as their last step. On its own, it reviews a
+branch:
+
+```text
+/web-dev-stack:review-code Review the branch feat/products against main and fix what you find
+```
 
 ## Hooks
 

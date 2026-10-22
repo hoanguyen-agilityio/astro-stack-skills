@@ -53,6 +53,7 @@ that starts with written acceptance criteria.
 | `code-skeleton` | project name, API URL (both defaulted in an empty directory) | runnable project, `src/libs/orpcClient.ts`, `DESIGN.md`, `CLAUDE.md`, Storybook, starter UI (shared layout, reusable `common/` components, welcome + 404 pages) with tests and stories | 4 gates green, Storybook builds, URL only in env, `DESIGN.md` matches `global.css` |
 | `integrate-api` | procedures | `src/types/<name>.ts`, `src/services/<name>.ts` returning `Effect` with typed errors and retry | service tests cover success, decode error, API error, retry |
 | `develop-feature` | ticket or design | Astro page + React island with shadcn, loading/empty/error states, a story per state for each component, tests | one test per AC, a story per state, 4 gates green |
+| `review-code` | a change (branch, diff or files), its criteria | findings by severity, fixed in a loop of at most 3 rounds; a review table for the report | no `blocker` or `should` left (or listed as left), `pnpm dup` clean, gates green |
 
 Hand-offs: `analyze-task` → any build skill (via the plan). `integrate-api` → `develop-feature`
 via `src/services/<name>.ts`.

@@ -77,6 +77,9 @@ outcome helpers.
    `load<Resource>` has error type `never`. → `references/calling.md`
 7. **Check against the backend.** `curl` each read procedure and make sure the response decodes
    with your Schema. Pages are built in `develop-feature`; don't add them here.
+8. **Review loop.** Run `review-code` on the change. It catches a second Schema, service, error
+   mapper or `load<Resource>` for something that already has one, fixes it and reviews again, at
+   most 3 rounds.
 
 ## Rules
 
@@ -89,6 +92,7 @@ outcome helpers.
 
 - `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:coverage` pass, coverage ≥ 80%.
 - The running backend's responses decode with the service's Schema.
+- `review-code` ended with no `blocker` or `should` left, or the report says what is left.
 - Report to the user: which procedures were added, how to start the backend (folder and
   command), anything left running in the background, and that `develop-feature` builds the page.
 
