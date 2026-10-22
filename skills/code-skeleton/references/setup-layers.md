@@ -36,6 +36,7 @@ stub oRPC server):
 | `@storybook-astro/framework` / `@vitejs/plugin-react` | 1 / 5 | 1.12, 1.13 / 5.2 |
 | `prettier` / `prettier-plugin-astro` | 3 / 1 | 3.9 / 1.1 |
 | `husky` / `lint-staged` | 9 / 16 | 9.1 / 16.4 |
+| `jscpd` | 4 | 4.3 |
 
 `lint-staged` stays on 16: 17 needs Node ≥ 22.22.1, above this skill's 22.19 floor.
 
@@ -97,10 +98,11 @@ layers.
    pnpm dlx shadcn@4 add card badge -y                                  # used by the starter UI
    ```
 
-7. **ESLint.** Write `eslint.config.js`.
+7. **ESLint and duplicate detection.** Write `eslint.config.js` and `.jscpd.json`. `review-code`
+   runs `pnpm dup` to find copied code; `jscpd` stays on 4 (5 is still changing every week).
 
    ```bash
-   pnpm add -D eslint@^9 @eslint/js@^9 typescript-eslint eslint-plugin-astro@^1 eslint-plugin-react-hooks
+   pnpm add -D eslint@^9 @eslint/js@^9 typescript-eslint eslint-plugin-astro@^1 eslint-plugin-react-hooks jscpd@^4
    ```
 
 8. **Vitest and Testing Library.** Write `vitest.config.ts` and `vitest.setup.ts`. Keep

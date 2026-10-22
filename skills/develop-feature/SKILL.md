@@ -12,7 +12,7 @@ Step 3 of the web-dev-stack chain. It uses the project layout from `code-skeleto
 layer from `integrate-api`.
 
 ```
-ticket ─► criteria ─► data in place? ─► page ─► islands ─► states ─► stories ─► tests ─► run it
+ticket ─► criteria ─► data in place? ─► page ─► islands ─► states ─► stories ─► tests ─► run it ─► review loop
 ```
 
 ## Scope
@@ -80,6 +80,9 @@ code or deployment.
    with the backend running. Open the page and go through the criteria: filter, act, and stop the backend
    once to see the error state. Add the route to `siteConfig.nav` in `src/config/site.ts` so the
    header links to it. If you started a dev server, stop it when done.
+9. **Review loop.** Run `review-code` on the change with the criteria from step 1. It looks for
+   components and helpers that duplicate existing ones, broken conventions and criteria without
+   proof, fixes them and reviews again, at most 3 rounds. Add its review table to the report.
 
 ## Component layout
 
@@ -112,7 +115,8 @@ ones by file (`@/components/orders/OrderSummary/index.astro`).
 ## Done means
 
 - Every criterion has a test or was checked by hand in the browser, and the report says which.
-- The four gates pass, and the empty and error states were seen in the browser.
+- The gates pass, and the empty and error states were seen in the browser.
+- `review-code` ended with no `blocker` or `should` left, or the report says what is left.
 - Every component added or changed (`.astro` or React) has a story for each of its states, seen in
   both themes.
 - The user knows the page URL and how to start the backend and the dev server.
@@ -131,6 +135,7 @@ ones by file (`@/components/orders/OrderSummary/index.astro`).
 - Passing functions or secrets as island props
 - Showing only the data state: no empty, error or pending
 - A component without a story per state
+- A new badge, card or `format…` next to one that already exists in `common/` or another feature
 
 ## References
 

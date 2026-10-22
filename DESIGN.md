@@ -17,9 +17,13 @@ astro-stack-skills/                 one repo = marketplace "astro-stack" = plugi
 │   ├── analyze-task/               step 0 of every workflow
 │   │   ├── SKILL.md
 │   │   └── references/{analysis-template,design-input}.md
-│   └── code-skeleton/              part 1 of the brief
+│   ├── code-skeleton/              part 1 of the brief
+│   │   ├── SKILL.md
+│   │   └── references/{setup-layers,project-files,starter-ui,design-md-template,claude-md-template}.md
+│   ├── integrate-api/  develop-feature/
+│   └── review-code/                last step of every build: review → fix → review loop
 │       ├── SKILL.md
-│       └── references/{setup-layers,project-files,starter-ui,design-md-template,claude-md-template}.md
+│       └── references/{inventory,checklist,duplicates,reviewer-prompt}.md
 ```
 
 The repo root has the same layout as a `.claude/` folder, so it works two ways:
@@ -36,10 +40,10 @@ The repo root has the same layout as a `.claude/` folder, so it works two ways:
 Every build skill follows the same steps as the team's `space` repo:
 
 ```
-request ──► analyze-task ──► ground ──► build ──► verify ──► report
-            kind, lane,      package.json,   skill-specific   read back,     ## Result
-            ACs, questions,  DESIGN.md,      steps            lint, types,   + AC → proof
-            plan             neighbours                       test, build
+request ──► analyze-task ──► ground ──► build ──► verify ──► review ──► report
+            kind, lane,      package.json,   skill-specific   read back,     review-code:    ## Result
+            ACs, questions,  DESIGN.md,      steps            lint, types,   dup + review    + review table
+            plan             neighbours                       test, build    → fix, ≤ 3 ×    + AC → proof
 ```
 
 - **The workflow lives in `CLAUDE.md`, not in the skills.** This repo's `CLAUDE.md` and the one
@@ -50,6 +54,9 @@ request ──► analyze-task ──► ground ──► build ──► verify
 - **Lanes control the ceremony.** In `tiny`, the analysis stays inline. In `normal`, it is saved
   to `docs/analysis/<slug>.md`. In `high-risk`, the build waits for the user to confirm scope.
 - **Verify loops.** Any fix restarts at the first gate. A failing gate is reported as failing.
+- **Review loops.** `review-code` runs after verify: a fresh subagent reviews the change against
+  an inventory of existing code, the findings are fixed, and checks and review run again, at
+  most 3 rounds. What is left after that is reported, not looped on.
 - **Report shape:** `Did / Saw / Not done / Blocked by / Next`, plus a table of which proof
   covers which AC. This matches `space-general`'s reporting rule.
 
@@ -60,6 +67,8 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | `analyze-task` → build skill | analysis (file path or inline block): kind, ACs, assumptions, plan, Ready line |
 | `code-skeleton` → `integrate-api` | `PUBLIC_API_URL`; `src/libs/orpcClient.ts` with an empty `AppRouterClient` and a `Procedure<Input>` type whose output is `unknown` |
 | `code-skeleton` → `develop-feature` | `DESIGN.md` (tokens, components, island rules, states), shadcn in `src/components/ui/` |
+| `code-skeleton` → `review-code` | `.jscpd.json` and `pnpm dup`; a starter with no clones, so the first clone comes from new code |
+| build skill → `review-code` | the changed files, the acceptance criteria; back: the review table for `## Result` |
 | `integrate-api` → `develop-feature` | `src/services/<name>.ts`: functions returning `Effect<A, NetworkError \| ApiError \| DecodeError>` |
 
 ## Decisions
@@ -85,6 +94,11 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | A `PostToolUse` hook lints each edited file (final newline, ESLint, Prettier) and feeds problems back with exit 2 | Husky only fires at commit and push, so an agent could write many files with the same lint error before finding out. Checking the one file right after the edit lets Claude fix it while it is still in context. It runs the project's own binaries, so the rules are the project's; typecheck and tests are too slow per edit |
 | Coverage ≥ 80% through `@vitest/coverage-v8` thresholds, enforced by `pnpm test:coverage` in `pre-push` | The mentor's requirement. Thresholds in `vitest.config.ts` fail the run instead of only printing a report. `pnpm test` stays fast for the inner loop. `.astro` files are left out because v8 cannot map them; the page tests cover them |
 | ESLint `eol-last: error` | Prettier alone writes the final newline silently at commit, so nobody hears about it; the mentor wants the linter to report it. The core rule is deprecated but still in ESLint 9 and needs no plugin |
+| Review is its own skill, `review-code`, run in a loop at the end of `develop-feature` and `integrate-api` | The mentor's review: teams keep building on the generated code base, and each feature adds components that already exist. Gates cannot see that. A separate skill can also review someone else's branch, and one place holds the checklist for every build skill |
+| The reviewer is a fresh subagent, one per round | An agent reviewing code it just wrote tends to accept it. A new context with only the change, the inventory and the checklist judges it like a second developer would |
+| Duplicates are found two ways: `jscpd` for copies, an inventory for the same idea written twice | `jscpd` is exact and cheap but compares tokens, so a card with renamed props passes it. The inventory of existing pieces gives the reviewer something concrete to compare against |
+| `jscpd` 4 with `.astro` mapped to `markup` | Without `formatsExts` it skips `.astro` files. Version 5 releases every few days, so the skeleton stays on 4 |
+| At most 3 review rounds | Enough for a fix to be checked twice; a finding that survives that needs a human, so it is reported instead of looped on |
 | Plain `name` + `description` frontmatter | Matches the team's plugins on `feat/claude-shared-plugins`. Descriptions list trigger phrases and the sibling relationship |
 
 ## Verification strategy

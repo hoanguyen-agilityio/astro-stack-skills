@@ -12,6 +12,7 @@ parts in rather than overwriting it.
 | `astro.config.mjs` | React integration, Tailwind Vite plugin, adapter, dev proxy `/rpc` → API |
 | `src/styles/global.css` | Tailwind entry; shadcn adds its theme, the starter UI its `brand` token |
 | `eslint.config.js` | flat config; bans `any` and `@ts-ignore`, requires a final newline |
+| `.jscpd.json` | copy-paste detection for `pnpm dup`, used by `review-code` |
 | `.prettierrc`, `.prettierignore`, `.editorconfig` | the team's `space` style: single quotes, trailing commas, 80 columns, Astro plugin |
 | `.husky/pre-commit`, `.husky/pre-push`, `.lintstagedrc` | ESLint + Prettier on staged files before a commit; typecheck + tests with 80% coverage before a push |
 | `vitest.config.ts`, `vitest.setup.ts` | `getViteConfig`, jsdom, jest-dom, v8 coverage with 80% thresholds |
@@ -42,6 +43,7 @@ Dependencies are added by the `pnpm add` commands of each layer in `setup-layers
     "preview": "astro preview",
     "typecheck": "astro check",
     "lint": "eslint .",
+    "dup": "jscpd",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
@@ -197,6 +199,27 @@ export default defineConfig(
 Prettier fixing it silently. It is one of ESLint's deprecated formatting rules, still shipped in
 ESLint 9; it needs no extra plugin and does not conflict with Prettier, which writes the same
 newline.
+
+## `.jscpd.json`
+
+```json
+{
+  "path": ["src"],
+  "format": ["typescript", "tsx", "markup"],
+  "formatsExts": { "markup": ["astro"], "typescript": ["ts"], "tsx": ["tsx"] },
+  "ignore": ["**/components/ui/**", "**/lib/**", "**/__test__/**", "**/*.stories.tsx", "**/mocks/**"],
+  "minTokens": 50,
+  "minLines": 5,
+  "exitCode": 1,
+  "reporters": ["consoleFull"],
+  "gitignore": true
+}
+```
+
+`pnpm dup` fails on any copied block of 5 lines or more in `src/`. `.astro` files are compared
+as `markup`; without `formatsExts` they are skipped. Generated shadcn code, tests, stories and
+fixtures repeat on purpose and are left out. The starter UI has no clones, so the first one
+`review-code` reports comes from new code.
 
 ## `vitest.config.ts` and `vitest.setup.ts`
 

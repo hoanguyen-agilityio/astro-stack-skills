@@ -34,8 +34,11 @@ tokens are in `DESIGN.md`.
 4. **Verify**: run `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage`
    (≥ 80%) and `pnpm build`. Any fix restarts at lint. Never weaken a gate or lower a coverage
    threshold to get green, and never skip the Git hooks with `--no-verify`.
-5. **Report**: a `## Result` block (Did, Saw, Not done, Blocked by, Next), plus a table of which
-   test proves which acceptance criterion.
+5. **Review**: run `review-code` on the change. It compares it with what already exists
+   (`ui/`, `common/`, other features, helpers, services), fixes duplicates and broken
+   conventions, re-runs the checks and reviews again, at most 3 rounds.
+6. **Report**: a `## Result` block (Did, Saw, Not done, Blocked by, Next), the review table, and
+   a table of which test proves which acceptance criterion.
 
 `high-risk` work (auth, data loss, public contracts, 4+ risk flags) waits for the user to
 confirm scope after the analysis. Open questions are asked, never guessed.
@@ -52,6 +55,7 @@ confirm scope after the analysis. Open questions are asked, never guessed.
 | App shell: layouts, header, footer, nav links | `src/layouts/`, `src/components/layout/`, `src/config/site.ts` |
 | One folder per component: `index.astro`/`index.tsx`, `<Name>.stories.tsx`, `__test__/` | `src/components/<feature>/<Name>/` |
 | Feature helpers (`format.ts`, `load<Resource>.ts`) and their `__test__/` | `src/components/<feature>/` |
+| Pure helpers used by two features or more, and their `__test__/` | `src/libs/<name>.ts` |
 | Fixtures for stories and tests, in the API's wire format | `src/mocks/<resource>.ts` |
 | Design tokens and UI rules | `DESIGN.md` → `src/styles/global.css` |
 | Analyses | `docs/analysis/<slug>.md` |
@@ -59,7 +63,8 @@ confirm scope after the analysis. Open questions are asked, never guessed.
 - No `any` and no `@ts-ignore`. API responses are decoded with Effect `Schema` before use.
 - Keep the majors in `package.json` (Astro 5, Effect 3, oRPC 1, Vite 6). Node ≥ 22.19.
 - Pages use `AppLayout` + `Container` + `PageHeader`. A feature never imports from another
-  feature; a component needed twice moves to `src/components/common/` with generic props.
+  feature; a component needed twice moves to `src/components/common/` with generic props, a
+  helper needed twice to `src/libs/`.
 - UI uses tokens from `DESIGN.md`: no raw hex and no `[15px]`. Use shadcn before hand-rolled
   markup, and respect the island boundary (serialisable props, smallest island).
 - Tests use Vitest + Testing Library and query by role and accessible name.
