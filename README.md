@@ -42,66 +42,63 @@ Notes:
 
 ## Install
 
-### One command (recommended)
-
-In the project's root, even an empty directory:
+Run these in the root of the project that will use the skills (the folder with `package.json`
+and `.git`, or an empty folder for a new project), not in this repo. They need Node ≥ 18, git
+and SSH access to the GitLab.
 
 ```bash
 npx git+ssh://git@gitlab.asoft-python.com/hoa.nguyen/astro-stack-skills.git init
 ```
 
-It runs the two `claude plugin` commands below with `--scope project`, then prints the next
-step. Options: `--scope user|local`, `--source <path>` (try a local checkout), and `--copy`
-(copy the skills into `.claude/skills/` instead; `--force` overwrites). It needs Node ≥ 18, SSH
-access to the GitLab, and the `claude` CLI on `PATH` (for `--copy`, only Node and git).
-`bin/cli.mjs` is the whole installer.
+`init` copies every Claude Code folder of this repo into the project's `.claude/`: `skills/`,
+`hooks/` and, once they exist here, `rules/`, `agents/`, `commands/` and `output-styles/`. The hooks in
+`hooks/hooks.json` are added to `.claude/settings.json` with paths into `.claude/hooks/`; hooks
+the project already has stay. `.claude/astro-stack.lock.json` records the commit and a hash of
+each copied file. Commit all of `.claude/`: the team gets the same skills, and can read and edit
+them.
 
-### Into a project, by hand
+### Update
 
-Run these in the project's root, even an empty directory:
+```bash
+npx git+ssh://git@gitlab.asoft-python.com/hoa.nguyen/astro-stack-skills.git update
+```
+
+`update` brings `.claude/` to the latest commit on `main`, including new files and folders, and
+keeps the project's own edits:
+
+| The file is… | `update` |
+|--------------|----------|
+| new in this repo | adds it |
+| unchanged in the project | replaces it with the new version, or deletes it if this repo did |
+| changed in the project only | keeps it |
+| changed in both | merges them (`git merge-file`); lines both sides changed get `<<<<<<<` markers to resolve by hand |
+| deleted in the project | leaves it deleted |
+| in the project before the first `init`, and different | keeps it and writes the repo's copy next to it as `<file>.upstream` |
+
+Add `--dry-run` to see the list first. Then commit `.claude/` and restart Claude Code (or type
+`/reload-plugins`). Since versions come from commits, there is no version number to bump.
+
+Options: `--source <path or URL>` copies from another checkout (a local path tries commits you
+have not pushed), `--dry-run` writes nothing.
+
+### As a plugin instead
+
+`init --plugin` installs the `web-dev-stack` plugin (project scope) instead of copying. The
+skills then live in Claude Code's plugin cache, carry the `/web-dev-stack:` prefix and cannot be
+edited in the project. By hand:
 
 ```bash
 claude plugin marketplace add git@gitlab.asoft-python.com:hoa.nguyen/astro-stack-skills.git --scope project
 claude plugin install web-dev-stack@astro-stack --scope project
 ```
 
-They write the marketplace and the plugin into the project's `.claude/settings.json`. Commit
-that file: everyone who opens the project in Claude Code is offered the same skills, and an
-update of the plugin reaches them all. Then start a session and run:
+Update a plugin with `claude plugin marketplace update astro-stack`, then
+`claude plugin update web-dev-stack@astro-stack --scope project`. That only sees a new release
+when `version` in `.claude-plugin/plugin.json` changes. Use one way per project: with both, every
+skill and hook runs twice.
 
-```text
-/web-dev-stack:code-skeleton
-```
-
-In an empty directory, that creates the whole project, including a `CLAUDE.md` with the stack's
-working contract (a plugin does not load this repo's own `CLAUDE.md`).
-
-### For yourself only
-
-Without `--scope project` (or with `--scope user`), the plugin is installed for your user and
-works in every project on your machine, but teammates do not get it.
-
-To try local changes without installing, start Claude Code with `claude --plugin-dir <path to this repo>`.
-
-### Or copy it as a project `.claude` folder
-
-The repo root uses the same layout as `.claude/`, so `skills/<name>/SKILL.md` lands where Claude
-Code looks for project skills. Use this only when a plugin install is not possible: the copy
-does not update, and a clone into `.claude/` nests a second git repo and puts this repo's
-`DESIGN.md` next to the project's.
-
-```bash
-# Project with no .claude/ yet: clone straight into it
-git clone git@gitlab.asoft-python.com:hoa.nguyen/astro-stack-skills.git .claude
-```
-
-```bash
-# Project that already has .claude/: copy only the skills
-cp -R astro-stack-skills/skills/. .claude/skills/
-```
-
-As project skills, invoke them without the plugin prefix: `/code-skeleton` instead of
-`/web-dev-stack:code-skeleton`. In this mode, `.claude-plugin/` and this README are ignored.
+To try local changes without installing anything, start Claude Code with
+`claude --plugin-dir <path to this repo>`.
 
 ## Working on this repo
 
@@ -109,7 +106,7 @@ As project skills, invoke them without the plugin prefix: `/code-skeleton` inste
 pnpm install     # also sets up the Git hooks (Husky)
 pnpm lint        # ESLint on bin/ and hooks/
 pnpm format      # Prettier (Markdown is left as written)
-pnpm test        # node:test cases for the checklist hook
+pnpm test        # node:test cases for the checklist hook and the installer
 ```
 
 A commit runs ESLint and Prettier on the staged `.js`, `.mjs` and `.json` files. A push runs
@@ -129,7 +126,9 @@ A commit runs ESLint and Prettier on the staged `.js`, `.mjs` and `.json` files.
 ```
 CLAUDE.md, spec.md, DESIGN.md
 package.json          # the npx installer (bin + files) and the repo's own lint, format, test
-bin/cli.mjs           # `npx … init`: plugin install (default) or --copy
+bin/cli.mjs           # `npx … init` / `update`; `init --plugin` for a plugin install
+bin/vendor.mjs        # copy into .claude/, three-way update, hook registration
+bin/__test__/         # node:test cases for init and update (`pnpm test`)
 eslint.config.js, .prettierrc, .lintstagedrc, .husky/   # checks for the repo's own JavaScript
 .claude-plugin/
 ├── marketplace.json   # marketplace "astro-stack", lists the plugin at ./
