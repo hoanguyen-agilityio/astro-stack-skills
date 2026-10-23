@@ -122,9 +122,11 @@ bin/cli.mjs           # `npx … init`: plugin install (default) or --copy
 ├── marketplace.json   # marketplace "astro-stack", lists the plugin at ./
 └── plugin.json        # plugin "web-dev-stack"
 hooks/
-├── hooks.json         # PostToolUse + Stop hooks, loaded with the plugin
+├── hooks.json         # UserPromptSubmit + PostToolUse + Stop hooks, loaded with the plugin
+├── turn-snapshot.mjs  # records the working tree when a turn starts
 ├── post-edit-lint.mjs # newline, ESLint, Prettier on each edited file
-└── task-checklist.mjs # checklist + success signal after a turn that changed files
+├── task-checklist.mjs # checklist + success signal after a turn that changed files
+└── worktree.mjs       # working-tree snapshots shared by the two above
 skills/
 ├── analyze-task/      # SKILL.md + references/{analysis-template,design-input}.md
 ├── code-skeleton/     # SKILL.md + references/{project-files,design-md-template,claude-md-template}.md
@@ -247,11 +249,12 @@ branch:
 
 ## Hooks
 
-The plugin ships two Claude Code hooks. They complement the project's Git hooks (Husky), which
+The plugin ships three Claude Code hooks. They complement the project's Git hooks (Husky), which
 only run at commit and push.
 
 | Hook | When | What |
 |------|------|------|
+| `UserPromptSubmit` (`turn-snapshot.mjs`) | when a prompt is sent | Records which files differ from git and their content, so `Stop` can tell what the turn changed. Prints nothing |
 | `PostToolUse` (`post-edit-lint.mjs`) | after each `Edit`/`Write` | Checks that one file: final newline, the project's ESLint, Prettier. Problems go back to Claude (exit 2) so it fixes them before moving on |
 | `Stop` (`task-checklist.mjs`) | end of a turn that changed files | Checklist of changed files and gates, plus a success signal |
 
@@ -263,18 +266,38 @@ After any turn that changed files in the project (a skill run or a plain task), 
 checklist in Claude Code and a desktop notification with the verdict:
 
 ```text
-✅ Task done: all gates passed
+✅ Task done: all gates passed · 1 task not done
+Tasks (from Claude's report):
+  [x] Added the /orders page with a status filter
+  [x] Added stories and tests for OrderList
+  [ ] Storybook check skipped: overlay error
 Changed (2):
   • src/pages/orders.astro (+42 −3)
   • src/services/orders.ts (new)
 Gates: [x] lint  [x] format:check  [x] typecheck  [x] test  [x] build
 ```
 
-- Files come from the turn's `Edit`/`Write` calls; line counts from `git`.
+- Tasks come from the `## Result` block Claude ends with: **Did** items are `[x]`, **Not done**
+  items are `[ ]` and are counted after the verdict. A turn without that block (a small task) lists its
+  own actions instead, `Tasks (from tool calls)`: each file created, edited or deleted, and the
+  gates that ran. The label says which source was used: the report is Claude's own words, the
+  files and gates below it are checked.
+
+- Files come from the turn's `Edit`/`Write` calls plus the working tree compared with the
+  snapshot taken when the prompt was sent, so files written by Bash (`printf > file`, codegen,
+  `pnpm add`) count too. Files that were already changed and stayed the same are left out.
+  Line counts come from `git`.
 - Gates are the `package.json` scripts among `lint`, `format:check`, `typecheck`, `test` and
-  `build`. A gate counts only if it ran and passed after the last edit; otherwise the verdict is
-  ⚠️ and names it (`[✗]` failed, `[~]` passed before a later edit, `[ ]` not run).
+  `build`. A gate counts only if it ran and passed after the last edit; otherwise the verdict
+  names it (`[✗]` failed, `[~]` passed before a later edit, `[?]` result hidden, `[ ]` not run).
   `pnpm test:coverage` counts as `test`.
+- The icon follows the gates only: ✅ all passed, ❌ `Gates failing: …`, ⚠️ `Gates to check: …`
+  (not run, or result hidden). "Task done" appears only next to ✅.
+- A gate's result is read from pnpm's output, where each script starts with a `> pkg@ <script>`
+  line and a failure prints `ELIFECYCLE`. So `pnpm typecheck; echo $?`, `pnpm test | tail` and
+  `for s in lint test; do pnpm $s; done` are judged by the gate, not by the last command. When
+  the output cannot tell (`pnpm -s typecheck; echo $?`), the gate shows `[?]` and the verdict
+  asks to run it alone.
 - It only reports and never blocks. Turns with no file changes print nothing.
 - Desktop notification: `notify-send` on Linux, `osascript` on macOS, skipped elsewhere.
 

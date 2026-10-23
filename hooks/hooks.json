@@ -1,6 +1,17 @@
 {
-  "description": "Lint each edited file and feed problems back to Claude; after a turn that changed files, a checklist of changed files and gates, plus a success signal",
+  "description": "Record the working tree at each prompt; lint each edited file and feed problems back to Claude; after a turn that changed files, a checklist of changed files and gates, plus a success signal",
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/turn-snapshot.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|MultiEdit|Write",
