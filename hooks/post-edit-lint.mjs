@@ -30,7 +30,12 @@ const projectRoot = (file, cwd) => {
 };
 
 const bin = (root, name) => {
-  const path = join(root, 'node_modules', '.bin', process.platform === 'win32' ? `${name}.cmd` : name);
+  const path = join(
+    root,
+    'node_modules',
+    '.bin',
+    process.platform === 'win32' ? `${name}.cmd` : name,
+  );
   return existsSync(path) ? path : null;
 };
 

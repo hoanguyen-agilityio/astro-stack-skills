@@ -38,7 +38,13 @@ const fail = (message) => {
 };
 
 const parseArgs = (argv) => {
-  const options = { command: undefined, scope: 'project', source: REPO_URL, copy: false, force: false };
+  const options = {
+    command: undefined,
+    scope: 'project',
+    source: REPO_URL,
+    copy: false,
+    force: false,
+  };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '-h' || arg === '--help') options.command = 'help';
@@ -62,13 +68,16 @@ const quote = (arg) => (/[\s"]/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : ar
 
 const findClaude = () => {
   const modes = process.platform === 'win32' ? [false, true] : [false];
-  return modes.find((shell) => spawnSync('claude', ['--version'], { stdio: 'ignore', shell }).status === 0);
+  return modes.find(
+    (shell) => spawnSync('claude', ['--version'], { stdio: 'ignore', shell }).status === 0,
+  );
 };
 
 const runClaude = (shell, args) => {
   console.log(`\n> claude ${args.join(' ')}`);
   const result = spawnSync('claude', shell ? args.map(quote) : args, { stdio: 'inherit', shell });
-  if (result.status !== 0) fail(`\`claude ${args.slice(0, 3).join(' ')}\` failed (exit ${result.status}).`);
+  if (result.status !== 0)
+    fail(`\`claude ${args.slice(0, 3).join(' ')}\` failed (exit ${result.status}).`);
 };
 
 const installPlugin = ({ scope, source }) => {
@@ -103,14 +112,18 @@ const copySkills = ({ force }) => {
 
   const existing = names.filter((name) => existsSync(join(to, name)));
   if (existing.length > 0 && !force) {
-    fail(`.claude/skills/ already has: ${existing.join(', ')}. Run again with --force to overwrite.`);
+    fail(
+      `.claude/skills/ already has: ${existing.join(', ')}. Run again with --force to overwrite.`,
+    );
   }
 
   for (const name of names) {
     cpSync(join(from, name), join(to, name), { recursive: true, force: true });
     console.log(`  copied .claude/skills/${name}`);
   }
-  console.log(`\n✔ ${names.length} skills copied. They do not update; run this again with --force to refresh.`);
+  console.log(
+    `\n✔ ${names.length} skills copied. They do not update; run this again with --force to refresh.`,
+  );
   console.log('\nNext: start `claude` here and run /code-skeleton');
 };
 

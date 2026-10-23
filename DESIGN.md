@@ -101,6 +101,8 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | Duplicates are found two ways: `jscpd` for copies, an inventory for the same idea written twice | `jscpd` is exact and cheap but compares tokens, so a card with renamed props passes it. The inventory of existing pieces gives the reviewer something concrete to compare against |
 | `jscpd` 4 with `.astro` mapped to `markup` | Without `formatsExts` it skips `.astro` files. Version 5 releases every few days, so the skeleton stays on 4 |
 | At most 3 review rounds | Enough for a fix to be checked twice; a finding that survives that needs a human, so it is reported instead of looped on |
+| The skill repo has its own ESLint, Prettier and Husky gates for `bin/` and `hooks/` | The repo started as Markdown only, so nothing ran on commit. The hooks are now real code that every project runs; a commit runs ESLint + Prettier on staged files and a push runs lint, format and the hook tests, the same split as the generated projects. Same majors as the skeleton (ESLint 9, Prettier 3, Husky 9, lint-staged 16). `printWidth` is 100, the width the existing code was written at. Markdown is left out: Prettier would rewrite the templates inside skill code blocks |
+| `prepare: husky \|\| true` | `pnpm install` sets up the Git hooks for whoever clones the repo. `\|\| true` keeps the npx installer working where there is no `.git` (npm runs `prepare` when it installs a git dependency) |
 | Plain `name` + `description` frontmatter | Matches the team's plugins on `feat/claude-shared-plugins`. Descriptions list trigger phrases and the sibling relationship |
 
 ## Verification strategy

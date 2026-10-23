@@ -1,0 +1,5 @@
+node_modules/
+pnpm-lock.yaml
+# Skills and docs are Markdown whose code blocks are templates copied into projects as written;
+# Prettier would reformat them. They are reviewed as text, not formatted.
+*.md
