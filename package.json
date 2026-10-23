@@ -11,9 +11,24 @@
     "bin/",
     "skills/",
     "hooks/",
+    "!hooks/__test__/",
     ".claude-plugin/"
   ],
   "engines": {
     "node": ">=18"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "node --test \"hooks/__test__/*.test.mjs\"",
+    "prepare": "husky || true"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.9.10"
   }
 }

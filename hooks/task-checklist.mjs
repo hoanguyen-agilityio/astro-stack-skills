@@ -69,7 +69,8 @@ const runsScript = (command, script) =>
 
 const gatesIn = (command) =>
   GATES.filter(
-    (gate) => runsScript(command, gate) || (gate === 'test' && runsScript(command, 'test:coverage')),
+    (gate) =>
+      runsScript(command, gate) || (gate === 'test' && runsScript(command, 'test:coverage')),
   );
 
 const textOf = (result) => {
@@ -154,13 +155,17 @@ const collect = (entries) => {
 // items are not. A label counts only as a heading, in bold or with a colon, so a bullet that
 // starts with "Next, …" stays a bullet.
 const RESULT_HEADING = /^#{1,4}\s*Result\b/im;
-const LABEL = /^\s*(?:[-*]\s+)?(#{1,4}\s*)?(\*\*)?(did|saw|not done|blocked by|next)\b\s*(:)?\s*(\*\*)?\s*(:)?\s*(.*)$/i;
+const LABEL =
+  /^\s*(?:[-*]\s+)?(#{1,4}\s*)?(\*\*)?(did|saw|not done|blocked by|next)\b\s*(:)?\s*(\*\*)?\s*(:)?\s*(.*)$/i;
 const BULLET = /^\s*(?:[-*•]|\d+\.)\s+(.*)$/;
 const EMPTY = /^(none|nothing|n\/a|—|-)\.?$/i;
 const MAX_TASKS = 10;
 
 const tidy = (text) => {
-  const plain = text.replace(/\*\*|`/g, '').replace(/\s+/g, ' ').trim();
+  const plain = text
+    .replace(/\*\*|`/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
   return plain.length > 100 ? `${plain.slice(0, 99)}…` : plain;
 };
 
@@ -306,7 +311,9 @@ const main = () => {
   ];
   if (required.length) {
     lines.push(`Gates: ${required.map((gate) => `${mark(gates[gate])} ${gate}`).join('  ')}`);
-    lines.push('[x] passed  [✗] failed  [~] passed before a later edit  [?] result hidden  [ ] not run');
+    lines.push(
+      '[x] passed  [✗] failed  [~] passed before a later edit  [?] result hidden  [ ] not run',
+    );
   }
 
   process.stdout.write(JSON.stringify({ systemMessage: lines.join('\n') }));

@@ -98,3 +98,8 @@ Skills live in `skills/<name>/` (`SKILL.md` + `references/`). The design of the 
 `DESIGN.md`, and its intent is in `spec.md`. Quick check: `claude --plugin-dir <this repo>` in
 an empty directory. Real check: run the skill in `astro-stack-playground` (it installs this
 plugin through `.claude/settings.json`), then refresh the generated project and the evidence there.
+
+The repo's own JavaScript (`bin/`, `hooks/`) has gates too: `pnpm install` once sets up Husky.
+A commit runs ESLint and Prettier on staged `.js`/`.mjs`/`.json` files; a push runs `pnpm lint`,
+`pnpm format:check` and `pnpm test` (the hook tests in `hooks/__test__/`). Markdown is not
+formatted: its code blocks are templates copied into projects as written.

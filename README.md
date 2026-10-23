@@ -103,6 +103,18 @@ cp -R astro-stack-skills/skills/. .claude/skills/
 As project skills, invoke them without the plugin prefix: `/code-skeleton` instead of
 `/web-dev-stack:code-skeleton`. In this mode, `.claude-plugin/` and this README are ignored.
 
+## Working on this repo
+
+```bash
+pnpm install     # also sets up the Git hooks (Husky)
+pnpm lint        # ESLint on bin/ and hooks/
+pnpm format      # Prettier (Markdown is left as written)
+pnpm test        # node:test cases for the checklist hook
+```
+
+A commit runs ESLint and Prettier on the staged `.js`, `.mjs` and `.json` files. A push runs
+`pnpm lint`, `pnpm format:check` and `pnpm test`.
+
 ## Documents
 
 | File | What it is |
@@ -116,8 +128,9 @@ As project skills, invoke them without the plugin prefix: `/code-skeleton` inste
 
 ```
 CLAUDE.md, spec.md, DESIGN.md
-package.json          # only for the npx installer: bin + files
+package.json          # the npx installer (bin + files) and the repo's own lint, format, test
 bin/cli.mjs           # `npx … init`: plugin install (default) or --copy
+eslint.config.js, .prettierrc, .lintstagedrc, .husky/   # checks for the repo's own JavaScript
 .claude-plugin/
 ├── marketplace.json   # marketplace "astro-stack", lists the plugin at ./
 └── plugin.json        # plugin "web-dev-stack"
@@ -126,7 +139,8 @@ hooks/
 ├── turn-snapshot.mjs  # records the working tree when a turn starts
 ├── post-edit-lint.mjs # newline, ESLint, Prettier on each edited file
 ├── task-checklist.mjs # checklist + success signal after a turn that changed files
-└── worktree.mjs       # working-tree snapshots shared by the two above
+├── worktree.mjs       # working-tree snapshots shared by the two above
+└── __test__/          # node:test cases for the checklist hook (`pnpm test`)
 skills/
 ├── analyze-task/      # SKILL.md + references/{analysis-template,design-input}.md
 ├── code-skeleton/     # SKILL.md + references/{project-files,design-md-template,claude-md-template}.md
