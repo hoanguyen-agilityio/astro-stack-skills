@@ -18,7 +18,7 @@ import process from 'node:process';
 
 import { changedBetween, loadSnapshot, snapshot } from './worktree.mjs';
 
-const GATES = ['lint', 'format:check', 'typecheck', 'test', 'build'];
+const GATES = ['lint', 'format:check', 'typecheck', 'test', 'build', 'test:stories'];
 const EDIT_TOOLS = new Set(['Edit', 'MultiEdit', 'Write', 'NotebookEdit']);
 
 const readJson = (text, fallback) => {

@@ -26,6 +26,7 @@ passed on. Source: `skills/code-skeleton/references/setup-layers.md`.
 | Lint | `eslint` / `eslint-plugin-astro` | 9 / 1 | 9.39 / 1.7 |
 | Stories | `storybook` + `@storybook/{builder-vite,react,addon-docs,addon-a11y,addon-themes}` | 10 | 10.6 |
 | | `@storybook-astro/framework` / `@vitejs/plugin-react` | 1 / 5 | 1.12, 1.13 / 5.2 |
+| Story checks | `playwright` (Chromium) | 1 | 1.64 |
 | Format | `prettier` / `prettier-plugin-astro` | 3 / 1 | 3.9 / 1.1 |
 | Git hooks | `husky` / `lint-staged` | 9 / 16 | 9.1 / 16.4 |
 | Duplicate detection | `jscpd` | 4 | 4.3 |
@@ -139,15 +140,19 @@ eslint.config.js, .prettierrc, .lintstagedrc, .husky/   # checks for the repo's 
 .claude-plugin/
 ├── marketplace.json   # marketplace "astro-stack", lists the plugin at ./
 └── plugin.json        # plugin "web-dev-stack"
+commands/
+└── verify.md          # /verify: gates in a loop (fix, re-run from lint), then review-code
 hooks/
-├── hooks.json         # UserPromptSubmit + PostToolUse + Stop hooks, loaded with the plugin
+├── hooks.json         # UserPromptSubmit + PreToolUse + PostToolUse + Stop hooks, loaded with the plugin
 ├── turn-snapshot.mjs  # records the working tree when a turn starts
+├── protect-branches.mjs # blocks git pushes to dev, stag and prod
 ├── post-edit-lint.mjs # newline, ESLint, Prettier on each edited file
 ├── task-checklist.mjs # checklist + success signal after a turn that changed files
 ├── worktree.mjs       # working-tree snapshots shared by the two above
-└── __test__/          # node:test cases for the checklist hook (`pnpm test`)
+└── __test__/          # node:test cases for the checklist and branch hooks (`pnpm test`)
 skills/
-├── analyze-task/      # SKILL.md + references/{analysis-template,design-input}.md
+├── analyze-task/      # SKILL.md + references/{ticket-contract,design-input}.md
+├── ticket/            # SKILL.md: /ticket <id> → docs/tickets/<id>/ pushed on docs/ticket-<id>
 ├── code-skeleton/     # SKILL.md + references/{project-files,design-md-template,claude-md-template}.md
 ├── integrate-api/     # SKILL.md + references/{client,service,calling}.md
 ├── develop-feature/   # SKILL.md + references/{page-and-island,testing}.md
@@ -159,6 +164,7 @@ skills/
 | # | Skill | Status | Use it when |
 |---|-------|--------|-------------|
 | 0 | `analyze-task` | ready | Turning a ticket, design or loose request into acceptance criteria and a plan |
+| 0 | `ticket` | ready | Writing one ticket's intent, spec and plan to `docs/tickets/<id>/` and pushing them for review |
 | 1 | `code-skeleton` | ready | Starting a project, or bringing an Astro repo up to the stack |
 | 2 | `integrate-api` | ready | Calling oRPC procedures through Effect services |
 | 3 | `develop-feature` | ready | Building a ticket into a tested page or island |
@@ -167,6 +173,9 @@ skills/
 Every workflow follows the same steps: **analyze → ground → build → verify → review → report**.
 `integrate-api` and `develop-feature` end with `review-code`, which loops review → fix → review
 until nothing is left to fix (at most 3 rounds).
+For work done without a build skill (a quick fix, a hand edit), `/verify` runs the same loop:
+the six gates until they pass (fix, then again from `lint`, at most 5 runs), then `review-code`.
+`/verify --no-review` stops after the gates.
 `code-skeleton` runs `analyze-task` as its step 0, so calling `/code-skeleton` alone still starts
 with the analysis. `integrate-api` and `develop-feature` start with their own "Look first" step
 and do not call `analyze-task` yet. Running `analyze-task` on its own stops after the plan and names the skill to run
@@ -177,12 +186,33 @@ next.
 Classifies the request (`setup`, `api` or `feature`) and its risk lane (`tiny`, `normal` or
 `high-risk`). It reads a design if one was given, then writes acceptance criteria as
 Given/When/Then, edge cases, open questions and a build plan. Lanes `normal` and `high-risk` save
-the result to `docs/analysis/<slug>.md`. A `high-risk` lane waits for the user to confirm scope
-before anything is built.
+the result as three files in `docs/tickets/<id>/` (`<id>` is the ticket id, or a slug):
+
+| File | Holds |
+|------|-------|
+| `intent.md` | Request, Goal, Current state, Scope |
+| `spec.md` | Acceptance criteria, Edge cases, Open questions, Assumptions |
+| `plan.md` | Modules, Build order, Not covered, Test scenarios, Ready line |
+
+The headings, their order and the ID rules are a contract
+(`skills/analyze-task/references/ticket-contract.md`), so the build skills and `review-code` can
+rely on them. A `high-risk` lane waits for the user to confirm scope before anything is built.
+
+### `ticket`
+
+Runs `analyze-task` on one ticket, always writes the three files, checks them against the
+contract, commits only those files on `docs/ticket-<id>` and pushes the branch. Open a merge
+request from it to review the analysis, then start the build with the folder. Only you can run
+it: Claude does not start it on its own.
+
+```text
+/web-dev-stack:ticket 412 On /orders, let support filter the list by status. Pending orders should stand out.
+/web-dev-stack:develop-feature docs/tickets/412/
+```
 
 ### `code-skeleton`
 
-Produces a project that passes `lint`, `typecheck`, `test:coverage` and `build` before any feature code
+Produces a project that passes `lint`, `typecheck`, `test:coverage`, `build` and `test:stories` before any feature code
 exists. In an empty directory (only `.claude/`, `.git/` and the like) it runs in **init** mode
 and creates the project layer by layer: package and git, Astro + React, TypeScript, Tailwind,
 Effect + oRPC, shadcn, ESLint, Vitest, Storybook. Called with no arguments there, it takes the
@@ -195,11 +225,15 @@ in **retrofit** mode and adds only the missing layers. It includes:
 - shadcn/ui on Tailwind v4
 - ESLint, which bans `any` and `@ts-ignore` and requires a final newline
 - Prettier with the team's `space` settings, and Husky + lint-staged: ESLint and Prettier on
-  staged files before each commit, typecheck and tests with 80% coverage before each push
+  staged files before each commit; typecheck, tests with 80% coverage and story checks before
+  each push
 - Vitest with Testing Library and v8 coverage (80% thresholds, `pnpm test:coverage`): tests for
   the two islands and a Container API test for the pages
 - Storybook 10 through `@storybook-astro/framework`, so `.astro` and React components both get
   stories; light/dark toggle, a11y addon, the oRPC client mocked
+- `pnpm test:stories` (`scripts/check-stories.ts`, Playwright): opens every story in Chromium in
+  light and dark, and fails on a render error, a failing `play` function or an a11y violation, so
+  Claude fixes what used to be checked by eye in Storybook
 - a starter UI built from reusable pieces: `AppLayout` (sticky header with nav and a dark-mode
   toggle, footer, skip link), `common/` components (`Container`, `PageHeader`, `LinkCard`,
   `ThemeToggle`), `src/config/site.ts` for the name and nav, a welcome page in the style of the
@@ -242,12 +276,9 @@ Given a design (image, screenshot or Figma link) and what to build from it, it r
 /web-dev-stack:develop-feature [design image] Implement the order summary card
 ```
 
-After `analyze-task`, pass the analysis file it saved instead of the ticket. One run builds one
-feature; without a file and with several analyses in the session, it asks which one:
-
-```text
-/web-dev-stack:develop-feature docs/analysis/orders-new.md
-```
+After `analyze-task` or `/ticket`, pass the ticket folder instead (`develop-feature
+docs/tickets/412/`, as above). One run builds one feature; without a folder and with several
+analyses in the session, it asks which one.
 
 Both are verified on the same [set](#tech-stack-versions) as `code-skeleton`: lint,
 typecheck, tests and build pass, and the `/orders` example ran against a local oRPC server
@@ -266,7 +297,7 @@ change ─► inventory ─► pnpm dup + gates ─► review (fresh subagent) �
 - **Inventory**: lists what already exists (`ui/`, `common/`, feature components, helpers,
   services, Schemas) so the change is compared with it, not reviewed alone.
 - **Checks**: `pnpm dup` runs `jscpd` for copied code (`.astro` included) and fails on any clone;
-  then the five gates.
+  then the six gates (`test:stories` included).
 - **Review**: a subagent that did not write the code goes through a checklist: duplicates and
   cross-feature imports, conventions (`DESIGN.md` tokens, island boundary, stories, layout),
   criteria without proof, and bugs. Findings are `blocker`, `should` or `nit`.
@@ -282,12 +313,13 @@ branch:
 
 ## Hooks
 
-The plugin ships three Claude Code hooks. They complement the project's Git hooks (Husky), which
+The plugin ships four Claude Code hooks. They complement the project's Git hooks (Husky), which
 only run at commit and push.
 
 | Hook | When | What |
 |------|------|------|
 | `UserPromptSubmit` (`turn-snapshot.mjs`) | when a prompt is sent | Records which files differ from git and their content, so `Stop` can tell what the turn changed. Prints nothing |
+| `PreToolUse` (`protect-branches.mjs`) | before each `Bash` call | Blocks a `git push` that would update or delete `dev`, `stag` or `prod` (exit 2), including `--force`, `--no-verify`, `HEAD:dev`, `--delete` and a bare `git push` from one of those branches. Claude is told to push a feature branch and open a merge request instead |
 | `PostToolUse` (`post-edit-lint.mjs`) | after each `Edit`/`Write` | Checks that one file: final newline, the project's ESLint, Prettier. Problems go back to Claude (exit 2) so it fixes them before moving on |
 | `Stop` (`task-checklist.mjs`) | end of a turn that changed files | Checklist of changed files and gates, plus a success signal |
 
@@ -307,7 +339,7 @@ Tasks (from Claude's report):
 Changed (2):
   • src/pages/orders.astro (+42 −3)
   • src/services/orders.ts (new)
-Gates: [x] lint  [x] format:check  [x] typecheck  [x] test  [x] build
+Gates: [x] lint  [x] format:check  [x] typecheck  [x] test  [x] build  [x] test:stories
 ```
 
 - Tasks come from the `## Result` block Claude ends with: **Did** items are `[x]`, **Not done**
@@ -320,8 +352,8 @@ Gates: [x] lint  [x] format:check  [x] typecheck  [x] test  [x] build
   snapshot taken when the prompt was sent, so files written by Bash (`printf > file`, codegen,
   `pnpm add`) count too. Files that were already changed and stayed the same are left out.
   Line counts come from `git`.
-- Gates are the `package.json` scripts among `lint`, `format:check`, `typecheck`, `test` and
-  `build`. A gate counts only if it ran and passed after the last edit; otherwise the verdict
+- Gates are the `package.json` scripts among `lint`, `format:check`, `typecheck`, `test`,
+  `build` and `test:stories`. A gate counts only if it ran and passed after the last edit; otherwise the verdict
   names it (`[✗]` failed, `[~]` passed before a later edit, `[?]` result hidden, `[ ]` not run).
   `pnpm test:coverage` counts as `test`.
 - The icon follows the gates only: ✅ all passed, ❌ `Gates failing: …`, ⚠️ `Gates to check: …`

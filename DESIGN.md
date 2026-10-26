@@ -12,11 +12,12 @@ astro-stack-skills/                 one repo = marketplace "astro-stack" = plugi
 │   ├── marketplace.json            lists the plugin at "./"
 │   └── plugin.json
 ├── CLAUDE.md                       contract, loaded when the repo is cloned as .claude/
-├── hooks/                          turn snapshot; PostToolUse lint per edit; Stop checklist + success signal (plugin installs only)
+├── hooks/                          turn snapshot; PreToolUse push guard for dev/stag/prod; PostToolUse lint per edit; Stop checklist + success signal (plugin installs only)
 ├── skills/
 │   ├── analyze-task/               step 0 of every workflow
 │   │   ├── SKILL.md
-│   │   └── references/{analysis-template,design-input}.md
+│   │   └── references/{ticket-contract,design-input}.md
+│   ├── ticket/                     /ticket <id>: analyze-task + contract check + push on docs/ticket-<id>
 │   ├── code-skeleton/              part 1 of the brief
 │   │   ├── SKILL.md
 │   │   └── references/{setup-layers,project-files,starter-ui,design-md-template,claude-md-template}.md
@@ -52,7 +53,8 @@ request ──► analyze-task ──► ground ──► build ──► verify
   failure modes and references. `code-skeleton` takes its inputs from an `analyze-task`
   analysis.
 - **Lanes control the ceremony.** In `tiny`, the analysis stays inline. In `normal`, it is saved
-  to `docs/analysis/<slug>.md`. In `high-risk`, the build waits for the user to confirm scope.
+  to `docs/tickets/<id>/` as `intent.md`, `spec.md` and `plan.md`. In `high-risk`, the build
+  waits for the user to confirm scope.
 - **Verify loops.** Any fix restarts at the first gate. A failing gate is reported as failing.
 - **Review loops.** `review-code` runs after verify: a fresh subagent reviews the change against
   an inventory of existing code, the findings are fixed, and checks and review run again, at
@@ -64,7 +66,8 @@ request ──► analyze-task ──► ground ──► build ──► verify
 
 | From → to | Contract |
 |-----------|----------|
-| `analyze-task` → build skill | analysis (file path or inline block): kind, ACs, assumptions, plan, Ready line |
+| `analyze-task` → build skill | `docs/tickets/<id>/` (or the inline block) in the shape `references/ticket-contract.md` fixes: intent (request, goal, scope), spec (ACs, edge cases, questions, assumptions), plan (modules, order, tests, Ready line) |
+| `/ticket` → team | the same three files, committed on `docs/ticket-<id>` and pushed for a merge request |
 | `code-skeleton` → `integrate-api` | `PUBLIC_API_URL`; `src/libs/orpcClient.ts` with an empty `AppRouterClient` and a `Procedure<Input>` type whose output is `unknown` |
 | `code-skeleton` → `develop-feature` | `DESIGN.md` (tokens, components, island rules, states), shadcn in `src/components/ui/` |
 | `code-skeleton` → `review-code` | `.jscpd.json` and `pnpm dup`; a starter with no clones, so the first clone comes from new code |
@@ -76,6 +79,8 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | Decision | Why |
 |----------|-----|
 | Analysis is its own skill, called by the build skills | One place for the intake rules, reusable by every build skill, and it still runs when the user names only a build skill |
+| One folder per ticket with `intent.md`, `spec.md`, `plan.md`, replacing `docs/analysis/<slug>.md` | The mentor's review: the analysis is reviewed in a merge request before the build. Splitting why, done-means and how lets each reviewer read their part, and a fixed heading list (`None.` instead of a deleted section, stable AC numbers) lets the build skills, `review-code` and a grep check rely on it. Named by ticket id, so a build is started with the folder (`/develop-feature docs/tickets/412/`) rather than "the analysis above" |
+| `/ticket` commits only the three files and pushes `docs/ticket-<id>`, but opens no merge request | Pushing gets the analysis in front of the team; the push guard keeps it off `dev`, `stag` and `prod`. The user opens the merge request, since the target branch and reviewers are the team's call. `disable-model-invocation` keeps Claude from pushing on its own when a ticket is only mentioned |
 | Pin Astro 5 / Effect 3 / oRPC 1 / Vite 6 | `latest` is Astro 7 / Effect 4, whose APIs differ. These majors match the team's kitchen app and were verified end to end |
 | Pin `vite@^6` explicitly | `@tailwindcss/vite`'s peer range otherwise pulls Vite 8 next to Astro's Vite 6, and the config fails to load |
 | Let `shadcn init -t astro -b radix -p nova` write `components.json` | A hand-written one diverged from shadcn 4 (which uses the `cn` package). `-p` avoids an interactive prompt that stalls agents |
@@ -94,7 +99,9 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | The checklist reads gate results from pnpm's output and changed files from a working-tree snapshot | Claude often runs `pnpm typecheck; echo $?` or a `for` loop, and writes files with Bash: the tool's error flag then says success for a failed gate, and Edit/Write calls miss files. pnpm's `> pkg@ <script>` headers and `ELIFECYCLE` lines say which gate ran and failed; a `UserPromptSubmit` snapshot compared at `Stop` finds every file the turn changed. When neither can tell, the gate shows `[?]` instead of a guess |
 | The checklist lists tasks from Claude's `## Result` (Did → `[x]`, Not done → `[ ]`), else from the turn's tool calls | The mentor wants to see what was done, not only which files changed. Claude Code 2.1 has no todo tool to read, and only the model can say what a change was for, so its report is the source, labelled as such. Small turns often have no report; listing their actions keeps a task list on every turn. The final answer can reach the transcript after Stop runs, so the hook reads `last_assistant_message` from its input first |
 | A `PostToolUse` hook lints each edited file (final newline, ESLint, Prettier) and feeds problems back with exit 2 | Husky only fires at commit and push, so an agent could write many files with the same lint error before finding out. Checking the one file right after the edit lets Claude fix it while it is still in context. It runs the project's own binaries, so the rules are the project's; typecheck and tests are too slow per edit |
+| A `PreToolUse` hook blocks `git push` to `dev`, `stag` and `prod` | The mentor's review: those branches deploy to real environments and change only through a merge request. The hook reads the Bash command before it runs, so `--no-verify` and `--force` cannot skip it, and it resolves a bare `git push` or `HEAD` to the current branch. It is a guard for Claude, not a replacement for protected branches on GitLab, which also stop people |
 | Coverage ≥ 80% through `@vitest/coverage-v8` thresholds, enforced by `pnpm test:coverage` in `pre-push` | The mentor's requirement. Thresholds in `vitest.config.ts` fail the run instead of only printing a report. `pnpm test` stays fast for the inner loop. `.astro` files are left out because v8 cannot map them; the page tests cover them |
+| Stories are a gate: `pnpm test:stories` opens each one in Chromium, light and dark, and reads the a11y addon's results | Checking each story by eye in Storybook was the one step of the workflow Claude could not loop on, so it was skipped or done by hand. The script listens to Storybook's own `storyFinished` event, so it reports what the Accessibility panel shows, with the same per-story rules. `@storybook/addon-vitest` would do the same inside Vitest, but `@storybook-astro/framework` supports it only from Vitest 4, and the stack is on 3. Playwright, a small script and a static build need no major change. Transitions are switched off first: in dark, axe otherwise measures colours mid-fade |
 | ESLint `eol-last: error` | Prettier alone writes the final newline silently at commit, so nobody hears about it; the mentor wants the linter to report it. The core rule is deprecated but still in ESLint 9 and needs no plugin |
 | Review is its own skill, `review-code`, run in a loop at the end of `develop-feature` and `integrate-api` | The mentor's review: teams keep building on the generated code base, and each feature adds components that already exist. Gates cannot see that. A separate skill can also review someone else's branch, and one place holds the checklist for every build skill |
 | The reviewer is a fresh subagent, one per round | An agent reviewing code it just wrote tends to accept it. A new context with only the change, the inventory and the checklist judges it like a second developer would |

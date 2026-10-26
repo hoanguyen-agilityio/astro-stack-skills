@@ -1,7 +1,7 @@
 ---
 name: develop-feature
 description: "Build a ticket or a design (image, screenshot, Figma link) into a tested page or component: server-loaded Astro page, small React islands, every UI state, stories and tests. A design is analysed with analyze-task first."
-argument-hint: "[analysis file (docs/analysis/<slug>.md), ticket text, or a design plus what to build from it]"
+argument-hint: "[ticket folder (docs/tickets/<id>/), ticket text, or a design plus what to build from it]"
 ---
 
 # Develop feature — ticket to tested UI
@@ -54,18 +54,19 @@ code or deployment.
 ## Steps
 
 1. **Criteria.** Build one feature per run, from one source:
-   - **An analysis file** (`docs/analysis/<slug>.md` from `analyze-task`): read it and use its
-     criteria, answered questions and plan as written. Its blocked criteria stay out of scope.
-   - **No file, but this conversation holds analyses from `analyze-task`:** exactly one, use it
-     and name it in the report; two or more, list them and ask which one. Never build several
-     features in one run, and never pick one by guessing.
+   - **A ticket folder** (`docs/tickets/<id>/`, named by the user, or existing for the ticket):
+     build exactly what its `spec.md` criteria and `plan.md` say, and ask before going beyond
+     them. Its blocked criteria stay out of scope.
+   - **No folder, but this conversation holds analyses from `analyze-task`:** exactly one, use
+     it and name it in the report; two or more, list them and ask which one. Never build
+     several features in one run, and never pick one by guessing.
    - **A design without an analysis** (an image, a screenshot or a Figma link in the request):
      run the `analyze-task` skill now, before writing any code, with the design and the
      user's words. Scope it to what the user asked for ("component A", "the header"), not
      everything in the image. It reads the design into regions, shadcn components and
      `DESIGN.md` tokens, lists the states the design does not show, and picks the lane: a
-     single component is usually `tiny` (analysis inline, no file), a page `normal` (saved to
-     `docs/analysis/<slug>.md`). Answer or ask its blocking questions, wait for the go-ahead in
+     single component is usually `tiny` (analysis inline, no files), a page `normal` (written
+     to `docs/tickets/<id>/`). Answer or ask its blocking questions, wait for the go-ahead in
      the `high-risk` lane, then continue here from its criteria and plan. Never build straight
      from the picture.
    - **Ticket text only:** rewrite it as a short checklist of behaviours.
@@ -92,9 +93,10 @@ code or deployment.
 7. **Tests** in `__test__/` next to the code (`<Name>/__test__/index.test.tsx` for a component): helpers (unit), islands (Testing Library, outcome
    helper mocked), the page (Astro Container API, `load<Resource>` mocked).
    → `references/testing.md`
-8. **Run it.** `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:coverage && pnpm build`
-   (coverage stays ≥ 80%: new helpers and islands come with their tests), then `pnpm storybook` to
-   look at each new story in light and dark with the Accessibility panel clean, then `pnpm dev`
+8. **Run it.** `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm test:stories`
+   (coverage stays ≥ 80%: new helpers and islands come with their tests; `test:stories` opens
+   every story in light and dark and fails on a render error, a failing `play` or an a11y
+   violation). Any failure: fix the cause and start again at `pnpm lint`. Then `pnpm dev`
    with the backend running. Open the page and go through the criteria: filter, act, and stop the backend
    once to see the error state. Add the route to `siteConfig.nav` in `src/config/site.ts` so the
    header links to it. If you started a dev server, stop it when done.
@@ -137,8 +139,8 @@ ones by file (`@/components/orders/OrderSummary/index.astro`).
   "inline"), and every colour and size comes from a `DESIGN.md` token or is listed as a question.
 - The gates pass, and the empty and error states were seen in the browser.
 - `review-code` ended with no `blocker` or `should` left, or the report says what is left.
-- Every component added or changed (`.astro` or React) has a story for each of its states, seen in
-  both themes.
+- Every component added or changed (`.astro` or React) has a story for each of its states, and
+  `pnpm test:stories` passes in both themes.
 - The user knows the page URL and how to start the backend and the dev server.
 
 ## Use this skill for

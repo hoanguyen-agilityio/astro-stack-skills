@@ -54,9 +54,11 @@ nearby.
 
 | Lane | When | Effect |
 |------|------|--------|
-| `tiny` | 0–1 flags | Analysis stays inline in the reply, with no file |
-| `normal` | 2–3 flags | Write the analysis file |
-| `high-risk` | 4+ flags, or auth / data loss / public contract | Write the file and get the user to **confirm scope before any build** |
+| `tiny` | 0–1 flags | Analysis stays inline in the reply, with no files |
+| `normal` | 2–3 flags | Write the ticket files |
+| `high-risk` | 4+ flags, or auth / data loss / public contract | Write the ticket files and get the user to **confirm scope before any build** |
+
+Called from `/ticket`, the files are always written, whatever the lane.
 
 Print one line: `Kind: <kind> · Lane: <lane> · Flags: <list>`.
 
@@ -68,8 +70,14 @@ as a question.
 
 ## 3. Write the analysis
 
-Use `references/analysis-template.md`. For `normal` and `high-risk` lanes, save it to
-`docs/analysis/<slug>.md` in the target project. For `tiny`, put the same sections in the reply.
+Follow `references/ticket-contract.md`. For `normal` and `high-risk` lanes, write the three files
+`docs/tickets/<id>/intent.md`, `spec.md` and `plan.md` in the target project, where `<id>` is the
+ticket id, or a slug when there is none. When the folder exists, update its files in place and
+keep the IDs. For `tiny`, put the same sections in the reply, in the inline form.
+
+- **Intent** is the why and the what: request, goal, current state, scope. No implementation.
+- **Spec** is what "done" means: criteria, edge cases, open questions, assumptions.
+- **Plan** is the how: modules, build order, not covered, test scenarios, Ready line.
 
 - **Acceptance criteria** are observable: `ACn — Given … When … Then …`. If you cannot state the
   Given, it is an open question, not a criterion.
@@ -88,7 +96,8 @@ Use `references/analysis-template.md`. For `normal` and `high-risk` lanes, save 
 ## 4. Gate
 
 The analysis is ready when every criterion has its Given, every unknown is a written question,
-and the plan names its files. Then:
+the plan names its files, and the files pass the contract check in
+`references/ticket-contract.md`. Then:
 
 - **A blocking question remains:** ask the user. Show the options and your reasoning in text
   first, then ask. If nobody can answer now, continue with the unblocked criteria only and list
@@ -98,14 +107,16 @@ and the plan names its files. Then:
 
 ## When you're done
 
-End with a **Readiness** line: `Ready: AC1–AC4 · Blocked: AC5 (Q2) · Next: <skill>`.
+End with a **Readiness** line: `Ready: AC1–AC4 · Blocked: AC5 (Q2) · Next: <skill>`. It is also
+the last line of `plan.md`.
 
-- Called from another skill: return to that skill's next step, carrying the analysis path (or
-  the inline block) and the answers.
-- Run alone: end with the exact command to run next, with the analysis path when it was saved,
-  so the next run does not depend on this conversation: `/develop-feature
-  docs/analysis/orders-new.md` (`/web-dev-stack:develop-feature …` when installed as a plugin).
-  One analysis covers one feature; a request with several features gets one analysis each.
+- Called from another skill: return to that skill's next step, carrying the folder
+  `docs/tickets/<id>/` (or the inline block) and the answers.
+- Run alone: end with the exact command to run next, with the folder, so the next run does not
+  depend on this conversation: `/web-dev-stack:develop-feature docs/tickets/412/`
+  (`/develop-feature …` when installed as project skills). To commit and push the files, run
+  `/ticket` instead. One ticket folder covers one feature; a request with several features gets
+  one folder each.
 
 ## Use this skill for
 
@@ -121,10 +132,12 @@ End with a **Readiness** line: `Ready: AC1–AC4 · Blocked: AC5 (Q2) · Next: <
 - A criterion with no Given, so nobody can test it
 - Starting a `high-risk` build before the user confirmed scope
 - Copying a secret or internal URL from the ticket into the analysis
+- Deleting a heading the contract requires instead of writing `None.`
+- Renumbering criteria on an update, so the tests and the review no longer match
 
 ## References
 
 | File | Use |
 |------|-----|
-| `references/analysis-template.md` | The analysis document, section by section |
+| `references/ticket-contract.md` | The three ticket files, section by section, the contract check and an example |
 | `references/design-input.md` | Reading an image or Figma design into regions, states and tokens |

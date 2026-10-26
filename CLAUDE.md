@@ -30,6 +30,7 @@ change it. Exact verified versions: `README.md`.
 | Lint | `eslint` / `eslint-plugin-astro` | 9 / 1 |
 | Stories | `storybook` + `@storybook/*` addons | 10 |
 | | `@storybook-astro/framework` / `@vitejs/plugin-react` | 1 / 5 |
+| Story checks | `playwright` (Chromium) | 1 |
 | Format | `prettier` / `prettier-plugin-astro` | 3 / 1 |
 | Git hooks | `husky` / `lint-staged` | 9 / 16 |
 | Duplicate detection | `jscpd` | 4 |
@@ -39,15 +40,17 @@ Not `latest`: Astro 7 and Effect 4 have different APIs from the code in the skil
 ## Workflow: every task, every size
 
 1. **Analyze**: run `analyze-task` first. It produces the request kind, the lane, acceptance
-   criteria (Given/When/Then), open questions and a plan. `code-skeleton` runs it itself, and
-   `develop-feature` runs it whenever it is given a design.
+   criteria (Given/When/Then), open questions and a plan, written to `docs/tickets/<id>/` as
+   `intent.md`, `spec.md` and `plan.md`. `code-skeleton` runs it itself, and `develop-feature`
+   runs it whenever it is given a design.
 2. **Ground**: read `package.json`, `DESIGN.md` and the neighbouring code before writing.
    Existing patterns win over defaults.
 3. **Build**: use the skill for the kind of work: `code-skeleton` for setup (`integrate-api`
    and `develop-feature` are planned).
 4. **Verify**: run `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage`
-   (≥ 80%) and `pnpm build`. Any fix restarts at lint. Never weaken a gate or lower a coverage
-   threshold to get green, and never skip the Git hooks with `--no-verify`.
+   (≥ 80%), `pnpm build` and `pnpm test:stories` (every story in light and dark, a11y clean).
+   Any fix restarts at lint; `/verify` runs that loop, then `review-code`. Never weaken a gate
+   or lower a coverage threshold to get green, and never skip the Git hooks with `--no-verify`.
 5. **Review**: run `review-code` on the change. It compares it with what already exists
    (`ui/`, `common/`, other features, helpers, services), fixes duplicates and broken
    conventions, re-runs the checks and reviews again, at most 3 rounds.
@@ -72,7 +75,7 @@ confirm scope after the analysis. Open questions are asked, never guessed.
 | Pure helpers used by two features or more, and their `__test__/` | `src/libs/<name>.ts` |
 | Fixtures for stories and tests, in the API's wire format | `src/mocks/<resource>.ts` |
 | Design tokens and UI rules | `DESIGN.md` → `src/styles/global.css` |
-| Analyses | `docs/analysis/<slug>.md` |
+| Ticket analyses: `intent.md`, `spec.md`, `plan.md` (`/ticket` commits and pushes them) | `docs/tickets/<id>/` |
 
 - No `any` and no `@ts-ignore`. API responses are decoded with Effect `Schema` before use.
 - Match the versions in `package.json`. New projects pin the majors in Tech stack versions above.

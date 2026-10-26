@@ -59,11 +59,12 @@ without the user's go-ahead.
 
 ## 4. Output
 
-Add to the analysis:
+Add to the ticket files:
 
-- the Regions table, in **Current state** or **Plan**
-- the missing states, in **Edge cases**
-- unmapped values, in **Open questions**
-- an acceptance criterion for each user-visible behavior the design implies
-- a `DESIGN.md` row in the **Plan** whenever the design fills a `TODO(design)` section (character,
+- the Regions table, in `intent.md` **Current state** (what exists) or `plan.md` **Modules**
+  (what to build)
+- the missing states, in `spec.md` **Edge cases**
+- unmapped values, in `spec.md` **Open questions**
+- an acceptance criterion in `spec.md` for each user-visible behavior the design implies
+- a `DESIGN.md` row in `plan.md` **Modules** whenever the design fills a `TODO(design)` section (character,
   screens, brand colors) or adds a token. The file must stay true to the code.
