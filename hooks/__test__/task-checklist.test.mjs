@@ -11,7 +11,7 @@ import { afterEach, beforeEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const HOOKS = join(dirname(fileURLToPath(import.meta.url)), '..');
-const GATES = ['lint', 'format:check', 'typecheck', 'test', 'build', 'test:stories'];
+const GATES = ['lint', 'format:check', 'typecheck', 'test', 'build', 'test:stories', 'test:pages'];
 
 let dir;
 let transcriptDir;
@@ -149,6 +149,15 @@ test('test:stories is its own gate, not test', () => {
     ...bash('pnpm test:stories', fail('test:stories')),
   ]);
   has(message, '[✗] test:stories', '[ ] test');
+});
+
+test('test:pages is its own gate', () => {
+  const message = checklist([
+    prompt('do'),
+    ...edit(),
+    ...bash('pnpm test:pages', fail('test:pages')),
+  ]);
+  has(message, '❌', '[✗] test:pages', '[ ] test ');
 });
 
 test('a project without test:stories does not need it', () => {

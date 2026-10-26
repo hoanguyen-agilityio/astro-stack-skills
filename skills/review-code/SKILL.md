@@ -52,8 +52,9 @@ Does NOT handle: new features, refactors outside the change, dependency upgrades
    list. → `references/inventory.md`
 3. **Run the checks.** `pnpm dup` (copy-paste detection with `jscpd`) and the gates:
    `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage`, `pnpm build`,
-   `pnpm test:stories` (every story in light and dark: render, `play`, a11y). Each failure is a
-   finding. A project without a `test:stories` script skips it and says so in the report.
+   `pnpm test:stories` (every story in light and dark: render, `play`, a11y), `pnpm test:pages`
+   (every page: SEO metadata, security headers, console, links, images, budget). Each failure
+   is a finding. A project without one of these scripts skips it and says so in the report.
 4. **Review in a fresh agent.** Start a subagent with the prompt in `references/reviewer-prompt.md`,
    the changed files, the inventory, the check output and the criteria. It did not write the
    code, so it does not assume the code is right. It returns findings in the fixed format. If no
@@ -89,6 +90,8 @@ Does NOT handle: new features, refactors outside the change, dependency upgrades
 - Moving a component to `common/` and leaving an old copy or an old import behind
 - Silencing `jscpd` with an ignore comment or a higher `minTokens`
 - Silencing `test:stories` with a `!test` tag or an a11y rule turned off in `parameters.a11y`
+- Silencing `test:pages` with `IGNORED_PATHS`, a raised budget, `noindex` on a public page or
+  `'unsafe-inline'` in the CSP
 - Looping on a finding the fix cannot clear instead of reporting it
 - Rewriting code outside the change because it "could be better"
 

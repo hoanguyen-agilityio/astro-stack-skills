@@ -71,8 +71,10 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
 
 - `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage` (≥ 80% lines,
   functions, branches, statements), `pnpm build`, `pnpm test:stories` (every story renders in
-  light and dark with no a11y violation; it builds Storybook too) and `pnpm dup` (no clones)
-  pass, with no `any`, `@ts-ignore`, disabled rule, `!test` tag or lowered threshold.
+  light and dark with no a11y violation; it builds Storybook too), `pnpm test:pages` (every page:
+  SEO metadata, security headers and CSP, no console error, no broken link, within budget; it
+  builds the site too) and `pnpm dup` (no clones) pass, with no `any`, `@ts-ignore`, disabled
+  rule, `!test` tag, `'unsafe-inline'` or lowered threshold.
 - `.husky/pre-commit` and `.husky/pre-push` exist and `git config core.hooksPath` is `.husky/_`.
 - No URL or secret in `src/` (docs links aside); `DESIGN.md` values match `global.css`; every
   component folder outside `ui/` has a story.
@@ -93,8 +95,12 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
 - `pnpm format` skipped after writing the files: `format:check` fails on `global.css`, `CLAUDE.md`, `DESIGN.md`
 - Layout or common pieces inlined into the welcome page, leaving nothing to reuse
 - `@vitest/coverage-v8` on another major than `vitest`: `test:coverage` fails to start
-- Chromium not downloaded (`pnpm exec playwright install chromium`): `test:stories` stops with
-  `Executable doesn't exist`
+- Chromium not downloaded (`pnpm exec playwright install chromium`): `test:stories` and
+  `test:pages` stop with `Executable doesn't exist`
+- The theme script written as a plain `is:inline` block: the CSP blocks it in preview and
+  production, so dark mode flashes light and `test:pages` reports the violation
+- `PUBLIC_SITE_URL` left at `localhost` in a deployed environment: canonical, Open Graph and
+  sitemap URLs point at localhost
 
 ## References
 

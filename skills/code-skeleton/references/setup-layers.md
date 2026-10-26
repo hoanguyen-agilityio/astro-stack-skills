@@ -61,7 +61,9 @@ layers.
    - pnpm ≥ 10 skips dependency build scripts unless allowed, and Astro needs `esbuild` and
      `sharp`. Allow exactly those two (pnpm 11: `allowBuilds:` map; pnpm 10:
      `onlyBuiltDependencies:` list). Say so in the report.
-2. **Astro with React islands (SSR).** Write `astro.config.mjs`; swap `@astrojs/node` for the
+2. **Astro with React islands (SSR).** Write `astro.config.mjs` (with `site` and the strict
+   `experimental.csp`), `src/middleware.ts` (security headers) and the `robots.txt` and
+   `sitemap.xml` routes; swap `@astrojs/node` for the
    deploy target's adapter when known. Pin `vite`: otherwise `@tailwindcss/vite`'s peer range
    pulls a second, newer Vite and the config fails to load.
 
@@ -113,8 +115,8 @@ layers.
    pnpm add -D vitest@^3 @vitest/coverage-v8@^3 jsdom@^26 @testing-library/react @testing-library/jest-dom @testing-library/user-event
    ```
 
-9. **Storybook and story checks.** Write `.storybook/main.ts`, `.storybook/preview.ts` and
-   `scripts/check-stories.ts`. pnpm's warning about the framework's `vitest@^4` peer is expected
+9. **Storybook, story and page checks.** Write `.storybook/main.ts`, `.storybook/preview.ts`,
+   `scripts/check-stories.ts` and `scripts/check-pages.ts` (both use Playwright's Chromium). pnpm's warning about the framework's `vitest@^4` peer is expected
    (optional integration). `playwright` installs no browser: download Chromium once per machine.
 
    ```bash
@@ -131,7 +133,7 @@ layers.
     pnpm add -D prettier@^3 prettier-plugin-astro@^1 husky@^9 lint-staged@^16
     pnpm exec husky                     # creates .husky/_ and sets core.hooksPath
     echo 'pnpm exec lint-staged' > .husky/pre-commit
-    echo 'pnpm typecheck && pnpm test:coverage && pnpm test:stories' > .husky/pre-push
+    echo 'pnpm typecheck && pnpm test:coverage && pnpm test:stories && pnpm test:pages' > .husky/pre-push
     ```
 
 11. **Folders and `DESIGN.md`.** Create the folders from `starter-ui.md`, with a `.gitkeep` in
@@ -163,6 +165,11 @@ existing files instead of overwriting them.
 - Story checks: add `playwright`, `scripts/check-stories.ts` and `test:stories`, then run it. An
   existing Storybook whose stories fail: do not tag them `!test` or turn off a11y rules; leave
   `test:stories` out of `pre-push` and report the failing stories for the user to decide.
+- Page checks: add `site`, the CSP, the middleware, the robots and sitemap routes,
+  `scripts/check-pages.ts` and `test:pages`, then run it. An existing site usually fails it at
+  first (shared descriptions, missing headers, inline scripts the CSP blocks): do not loosen
+  the CSP or add paths to `IGNORED_PATHS`; leave `test:pages` out of `pre-push`, report the
+  problems, and offer the `web-quality` skill to fix them.
 - No root `CLAUDE.md`: write it from the template. One exists: leave it, and list in the report
   the template rules it does not cover.
 - Starter UI: add `AppLayout`, `config/site.ts` and the `common/` components only where the repo

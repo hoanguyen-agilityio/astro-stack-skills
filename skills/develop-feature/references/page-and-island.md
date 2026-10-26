@@ -79,7 +79,10 @@ const filters = [
 ];
 ---
 
-<AppLayout title="Orders">
+<AppLayout
+  title="Orders"
+  description="Every order with its status; filter by status and cancel pending ones."
+>
   <Container size="md" class="flex flex-col gap-6 py-10">
     <PageHeader title="Orders" description="Every order, newest first." />
 

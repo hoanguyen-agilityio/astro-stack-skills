@@ -15,9 +15,11 @@ The whole `src/` the skeleton leaves (starter UI pieces plus the plumbing from `
 
 ```
 src/
-├── pages/                         # routes; index.astro, 404.astro, __test__/index.test.ts
+├── pages/                         # routes; index.astro, 404.astro (noindex), __test__/index.test.ts
+│   └── robots.txt.ts, sitemap.xml.ts  # crawl rules and sitemap from `site` + siteConfig.nav
+├── middleware.ts                  # security headers on every page (CSP: astro.config.mjs)
 ├── layouts/
-│   ├── BaseLayout.astro           # <html> shell: meta, favicon, theme script before paint
+│   ├── BaseLayout.astro           # <html> shell: title, description, canonical, Open Graph, noindex, theme script
 │   └── AppLayout.astro            # BaseLayout + skip link + SiteHeader + <main> + SiteFooter
 ├── config/site.ts                 # name, description, nav links: the one place to change them
 ├── components/
@@ -42,6 +44,7 @@ src/
 └── styles/global.css
 public/favicon.svg
 .storybook/main.ts, preview.ts
+scripts/check-stories.ts, check-pages.ts   # the test:stories and test:pages gates (project-files.md)
 ```
 
 `src/lib/` belongs to shadcn (`shadcn add` resolves imports from `components.json`, so never move
@@ -179,18 +182,55 @@ export const toggleTheme = (): Theme => {
 
 ```astro
 ---
+import { createHash } from 'node:crypto';
+
 import '@/styles/global.css';
 
 import { siteConfig } from '@/config/site';
 
 interface Props {
   title: string;
+  /** What this page is about, in one or two sentences. Every page passes its own. */
   description?: string | undefined;
+  /** Social preview image: a path under public/ or an absolute URL. */
+  image?: string | undefined;
+  /** Keeps the page out of search results: error pages, drafts, signed-in screens. */
+  noindex?: boolean | undefined;
 }
 
-const { title, description = siteConfig.description } = Astro.props;
+const {
+  title,
+  description = siteConfig.description,
+  image,
+  noindex = false,
+} = Astro.props;
 const fullTitle =
   title === siteConfig.name ? title : `${title} · ${siteConfig.name}`;
+// `site` in astro.config.mjs (PUBLIC_SITE_URL) makes these absolute; the query string is dropped.
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
+const imageUrl = image ? new URL(image, Astro.site ?? Astro.url) : undefined;
+
+// Sets the theme before the first paint, so a dark-mode visitor never sees a white flash. It
+// stays inline (a bundled script runs too late), so its hash goes into the CSP. Key: libs/theme.ts.
+const themeScript = `(() => {
+  let stored = null;
+  try {
+    stored = localStorage.getItem('theme');
+  } catch {
+    // Storage blocked: fall back to the system preference.
+  }
+  const dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.classList.toggle('dark', dark);
+})();`;
+try {
+  Astro.csp.insertScriptHash(
+    `sha256-${createHash('sha256').update(themeScript).digest('base64')}`,
+  );
+} catch (error) {
+  // CSP is on in `astro build` and `astro preview` only: `astro dev`, the Container API in page
+  // tests and Storybook render without it. Any other error is real.
+  if (!(error instanceof Error && error.name === 'CspNotEnabled')) throw error;
+}
 ---
 
 <!doctype html>
@@ -198,24 +238,22 @@ const fullTitle =
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{fullTitle}</title>
-    <!-- Runs before paint so a dark-mode visitor never sees a white flash. Key: libs/theme.ts. -->
-    <script is:inline>
-      (() => {
-        let stored = null;
-        try {
-          stored = localStorage.getItem('theme');
-        } catch {
-          // Storage blocked: fall back to the system preference.
-        }
-        const dark = stored
-          ? stored === 'dark'
-          : matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.classList.toggle('dark', dark);
-      })();
-    </script>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteConfig.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {imageUrl && <meta property="og:image" content={imageUrl} />}
+    <meta
+      name="twitter:card"
+      content={imageUrl ? 'summary_large_image' : 'summary'}
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline set:html={themeScript} />
   </head>
   <body class="min-h-dvh antialiased">
     <slot />
@@ -224,7 +262,14 @@ const fullTitle =
 ```
 
 The inline script repeats the storage key because `is:inline` scripts cannot import. It runs
-before the body paints, so a visitor who chose dark never sees a light flash.
+before the body paints, so a visitor who chose dark never sees a light flash. Its text lives in a
+constant so its hash can go into the Content-Security-Policy (`experimental.csp` in
+`astro.config.mjs`); without the hash the browser blocks it in `astro preview` and production.
+`Astro.csp` throws `CspNotEnabled` where the CSP is off (`astro dev`, page tests, Storybook), and
+only that error is caught.
+
+The canonical URL is the page's path on `site` (`PUBLIC_SITE_URL`), without the query string, so
+`/orders?status=paid` and `/orders` are one page for search engines.
 
 `src/layouts/AppLayout.astro`:
 
@@ -236,13 +281,15 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 
 interface Props {
   title: string;
-  description?: string | undefined;
+  /** Required: a page never falls back to the site's description (pnpm test:pages fails on duplicates). */
+  description: string;
+  noindex?: boolean | undefined;
 }
 
-const { title, description } = Astro.props;
+const { title, description, noindex } = Astro.props;
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} noindex={noindex}>
   <div class="flex min-h-dvh flex-col">
     <a
       href="#main"
@@ -1040,7 +1087,7 @@ const steps = [
 ];
 ---
 
-<AppLayout title={siteConfig.name}>
+<AppLayout title={siteConfig.name} description={siteConfig.description}>
   <Hero
     badge="Astro 5 · React 19 · Effect 3 · oRPC 1"
     title={`Welcome to ${siteConfig.name}`}
@@ -1105,7 +1152,11 @@ import { buttonVariants } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.astro';
 ---
 
-<AppLayout title="Page not found">
+<AppLayout
+  title="Page not found"
+  description="The page you asked for does not exist or has moved."
+  noindex
+>
   <Container size="sm" class="py-24">
     <PageHeader
       eyebrow="404"
@@ -1147,6 +1198,8 @@ describe('pages', () => {
     const html = await render(HomePage, 'http://localhost/');
 
     expect(html).toContain(`<title>${siteConfig.name}</title>`);
+    expect(html).toMatch(/<link rel="canonical" href="[^"]*\/"/);
+    expect(html).not.toContain('name="robots"');
     expect(html).toContain('href="#main"');
     expect(html).toMatch(/<a[^>]*href="\/"[^>]*aria-current="page"/);
     expect(html).toContain(`Welcome to ${siteConfig.name}`);
@@ -1159,6 +1212,7 @@ describe('pages', () => {
     expect(html).toContain(
       `<title>Page not found · ${siteConfig.name}</title>`,
     );
+    expect(html).toContain('<meta name="robots" content="noindex">');
     expect(html).toContain('Back to home');
   });
 });

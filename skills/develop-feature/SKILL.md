@@ -77,7 +77,10 @@ code or deployment.
    `src/components/<resource>/format.ts`. Parse URL params with `Schema.is` on the exported schema.
 3. **Page.** `src/pages/<route>.astro` runs `load<Resource>` in its frontmatter (on the server,
    per request) and renders the state as static HTML. Filters and pagination are URL params
-   (`?status=paid`), so they work without JavaScript. → `references/page-and-island.md`
+   (`?status=paid`), so they work without JavaScript. It passes its own `title` and
+   `description` to `AppLayout` (`noindex` when it is not public), and its route goes into
+   `siteConfig.nav`, which also feeds the sitemap. Images come from `astro:assets`; the one LCP
+   image is `loading="eager" fetchpriority="high"`. → `references/page-and-island.md`
 4. **Islands.** Only the parts that react to clicks or typing become React islands, each with a
    `client:*` directive chosen on purpose. A handler awaits the matching `run<Action>`; it never
    builds Effect chains or calls the client. Build from shadcn/ui; add missing primitives with
@@ -93,10 +96,12 @@ code or deployment.
 7. **Tests** in `__test__/` next to the code (`<Name>/__test__/index.test.tsx` for a component): helpers (unit), islands (Testing Library, outcome
    helper mocked), the page (Astro Container API, `load<Resource>` mocked).
    → `references/testing.md`
-8. **Run it.** `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm test:stories`
+8. **Run it.** `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm test:stories && pnpm test:pages`
    (coverage stays ≥ 80%: new helpers and islands come with their tests; `test:stories` opens
    every story in light and dark and fails on a render error, a failing `play` or an a11y
-   violation). Any failure: fix the cause and start again at `pnpm lint`. Then `pnpm dev`
+   violation; `test:pages` crawls the built site and fails on missing or duplicate titles and
+   descriptions, security headers, console errors, broken links, images without alt or size,
+   and pages over the JS/CSS budget). Any failure: fix the cause and start again at `pnpm lint`. Then `pnpm dev`
    with the backend running. Open the page and go through the criteria: filter, act, and stop the backend
    once to see the error state. Add the route to `siteConfig.nav` in `src/config/site.ts` so the
    header links to it. If you started a dev server, stop it when done.
@@ -141,6 +146,8 @@ ones by file (`@/components/orders/OrderSummary/index.astro`).
 - `review-code` ended with no `blocker` or `should` left, or the report says what is left.
 - Every component added or changed (`.astro` or React) has a story for each of its states, and
   `pnpm test:stories` passes in both themes.
+- Every new page passes its own `title` and `description` to `AppLayout` (`noindex` if it is not
+  public), is reachable from a link or the sitemap, and `pnpm test:pages` passes.
 - The user knows the page URL and how to start the backend and the dev server.
 
 ## Use this skill for
