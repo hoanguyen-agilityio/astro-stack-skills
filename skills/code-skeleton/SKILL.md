@@ -10,8 +10,8 @@ argument-hint: "[project name] [API base URL, e.g. http://localhost:8787]"
 
 # Code skeleton
 
-A project that lints, type-checks, tests, builds and builds its Storybook **before any feature
-exists**, with a shared layout and reusable components later pages build on.
+A project that lints, type-checks, tests, builds and passes its story checks (every story in
+a browser, light and dark, a11y clean) **before any feature exists**, with a shared layout and reusable components later pages build on.
 
 ## Scope
 
@@ -49,11 +49,12 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
 ## What it produces
 
 - **Pinned stack** (Node ≥ 22.19): Astro 5, React 19, Effect 3, oRPC 1, Tailwind 4, Vite 6,
-  shadcn 4, Vitest 3, Storybook 10, Prettier 3, Husky 9 + lint-staged 16, jscpd 4, installed layer by layer by hand, never through
+  shadcn 4, Vitest 3, Storybook 10, Playwright 1, Prettier 3, Husky 9 + lint-staged 16, jscpd 4, installed layer by layer by hand, never through
   `pnpm create astro`, `astro add` or `storybook init` → `references/setup-layers.md`
 - **Configs and plumbing**: `package.json`, `tsconfig.json`, `astro.config.mjs`, ESLint,
   Prettier (the `space` style), Husky hooks (lint-staged on commit, typecheck + tests with 80%
-  coverage on push), Vitest with v8 coverage, Storybook, `.env*`, `src/libs/orpcClient.ts` → `references/project-files.md`
+  coverage + story checks on push), Vitest with v8 coverage, Storybook and
+  `scripts/check-stories.ts`, `.env*`, `src/libs/orpcClient.ts` → `references/project-files.md`
 - **Starter UI**: `config/site.ts`, `libs/theme.ts`, `BaseLayout` + `AppLayout`, `common/`
   (`Container`, `PageHeader`, `LinkCard`, `ThemeToggle`), `layout/` (`SiteHeader`, `SiteFooter`),
   welcome and 404 pages, a story per component, island and page tests → `references/starter-ui.md`
@@ -69,9 +70,9 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
 ## Done when
 
 - `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage` (≥ 80% lines,
-  functions, branches, statements), `pnpm build`, `pnpm build-storybook` and `pnpm dup` (no
-  clones) pass, with no `any`,
-  `@ts-ignore`, disabled rule or lowered threshold.
+  functions, branches, statements), `pnpm build`, `pnpm test:stories` (every story renders in
+  light and dark with no a11y violation; it builds Storybook too) and `pnpm dup` (no clones)
+  pass, with no `any`, `@ts-ignore`, disabled rule, `!test` tag or lowered threshold.
 - `.husky/pre-commit` and `.husky/pre-push` exist and `git config core.hooksPath` is `.husky/_`.
 - No URL or secret in `src/` (docs links aside); `DESIGN.md` values match `global.css`; every
   component folder outside `ui/` has a story.
@@ -92,6 +93,8 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
 - `pnpm format` skipped after writing the files: `format:check` fails on `global.css`, `CLAUDE.md`, `DESIGN.md`
 - Layout or common pieces inlined into the welcome page, leaving nothing to reuse
 - `@vitest/coverage-v8` on another major than `vitest`: `test:coverage` fails to start
+- Chromium not downloaded (`pnpm exec playwright install chromium`): `test:stories` stops with
+  `Executable doesn't exist`
 
 ## References
 

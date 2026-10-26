@@ -34,6 +34,7 @@ stub oRPC server):
 | `shadcn` CLI | 4 | 4.22 |
 | `storybook`, `@storybook/builder-vite`, `@storybook/react`, `@storybook/addon-{docs,a11y,themes}` | 10 | 10.6 |
 | `@storybook-astro/framework` / `@vitejs/plugin-react` | 1 / 5 | 1.12, 1.13 / 5.2 |
+| `playwright` (story checks) | 1 | 1.64 |
 | `prettier` / `prettier-plugin-astro` | 3 / 1 | 3.9 / 1.1 |
 | `husky` / `lint-staged` | 9 / 16 | 9.1 / 16.4 |
 | `jscpd` | 4 | 4.3 |
@@ -112,12 +113,15 @@ layers.
    pnpm add -D vitest@^3 @vitest/coverage-v8@^3 jsdom@^26 @testing-library/react @testing-library/jest-dom @testing-library/user-event
    ```
 
-9. **Storybook.** Write `.storybook/main.ts` and `.storybook/preview.ts`. pnpm's warning about
-   the framework's `vitest@^4` peer is expected (optional integration).
+9. **Storybook and story checks.** Write `.storybook/main.ts`, `.storybook/preview.ts` and
+   `scripts/check-stories.ts`. pnpm's warning about the framework's `vitest@^4` peer is expected
+   (optional integration). `playwright` installs no browser: download Chromium once per machine.
 
    ```bash
    pnpm add -D storybook@^10 @storybook/builder-vite@^10 @storybook/react@^10 @storybook-astro/framework@^1 \
-     @vitejs/plugin-react@^5 @storybook/addon-docs@^10 @storybook/addon-a11y@^10 @storybook/addon-themes@^10
+     @vitejs/plugin-react@^5 @storybook/addon-docs@^10 @storybook/addon-a11y@^10 @storybook/addon-themes@^10 \
+     playwright@^1
+   pnpm exec playwright install chromium   # add --with-deps on a bare Linux or CI image
    ```
 
 10. **Prettier, EditorConfig, Husky and lint-staged.** Write `.prettierrc`, `.prettierignore`,
@@ -127,7 +131,7 @@ layers.
     pnpm add -D prettier@^3 prettier-plugin-astro@^1 husky@^9 lint-staged@^16
     pnpm exec husky                     # creates .husky/_ and sets core.hooksPath
     echo 'pnpm exec lint-staged' > .husky/pre-commit
-    echo 'pnpm typecheck && pnpm test:coverage' > .husky/pre-push
+    echo 'pnpm typecheck && pnpm test:coverage && pnpm test:stories' > .husky/pre-push
     ```
 
 11. **Folders and `DESIGN.md`.** Create the folders from `starter-ui.md`, with a `.gitkeep` in
@@ -156,6 +160,9 @@ existing files instead of overwriting them.
 - Coverage: add the `coverage` block and `test:coverage` script, then run it. Below 80% on an
   existing repo: do not lower the thresholds and do not put `test:coverage` in `pre-push`;
   report the numbers and let the user decide.
+- Story checks: add `playwright`, `scripts/check-stories.ts` and `test:stories`, then run it. An
+  existing Storybook whose stories fail: do not tag them `!test` or turn off a11y rules; leave
+  `test:stories` out of `pre-push` and report the failing stories for the user to decide.
 - No root `CLAUDE.md`: write it from the template. One exists: leave it, and list in the report
   the template rules it does not cover.
 - Starter UI: add `AppLayout`, `config/site.ts` and the `common/` components only where the repo
