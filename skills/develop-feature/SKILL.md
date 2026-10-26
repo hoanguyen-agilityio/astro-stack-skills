@@ -1,18 +1,19 @@
 ---
 name: develop-feature
-description: "Build a ticket into a tested page or component: server-loaded Astro page, small React islands, every UI state, stories and tests."
-argument-hint: "[ticket text or feature to build]"
+description: "Build a ticket or a design (image, screenshot, Figma link) into a tested page or component: server-loaded Astro page, small React islands, every UI state, stories and tests. A design is analysed with analyze-task first."
+argument-hint: "[ticket folder (docs/tickets/<id>/), ticket text, or a design plus what to build from it]"
 ---
 
 # Develop feature — ticket to tested UI
 
-Use this skill when the user gives a ticket or asks to add or change a page, screen, list, table, filter, form, button or component.
+Use this skill when the user gives a ticket or a design, or asks to add or change a page, screen, list, table, filter, form, button or component.
 
 Step 3 of the web-dev-stack chain. It uses the project layout from `code-skeleton` and the data
 layer from `integrate-api`.
 
 ```
-ticket ─► criteria ─► data in place? ─► page ─► islands ─► states ─► stories ─► tests ─► run it ─► review loop
+ticket ───────────────────┐
+design ─► analyze-task ───┴─► criteria ─► data in place? ─► page ─► islands ─► states ─► stories ─► tests ─► run it ─► review loop
 ```
 
 ## Scope
@@ -52,10 +53,26 @@ code or deployment.
 
 ## Steps
 
-1. **Criteria.** When the user names `docs/tickets/<id>/`, or that folder exists for the ticket,
-   build exactly what its `spec.md` criteria and `plan.md` say, and ask before going beyond
-   them. Otherwise rewrite the ticket as a short checklist of behaviours. Add the empty, error
-   and pending cases the ticket forgot. Ask about anything you would otherwise guess.
+1. **Criteria.** Build one feature per run, from one source:
+   - **A ticket folder** (`docs/tickets/<id>/`, named by the user, or existing for the ticket):
+     build exactly what its `spec.md` criteria and `plan.md` say, and ask before going beyond
+     them. Its blocked criteria stay out of scope.
+   - **No folder, but this conversation holds analyses from `analyze-task`:** exactly one, use
+     it and name it in the report; two or more, list them and ask which one. Never build
+     several features in one run, and never pick one by guessing.
+   - **A design without an analysis** (an image, a screenshot or a Figma link in the request):
+     run the `analyze-task` skill now, before writing any code, with the design and the
+     user's words. Scope it to what the user asked for ("component A", "the header"), not
+     everything in the image. It reads the design into regions, shadcn components and
+     `DESIGN.md` tokens, lists the states the design does not show, and picks the lane: a
+     single component is usually `tiny` (analysis inline, no files), a page `normal` (written
+     to `docs/tickets/<id>/`). Answer or ask its blocking questions, wait for the go-ahead in
+     the `high-risk` lane, then continue here from its criteria and plan. Never build straight
+     from the picture.
+   - **Ticket text only:** rewrite it as a short checklist of behaviours.
+
+   Then add the empty, error and pending cases the source forgot. Ask about anything you would
+   otherwise guess.
 2. **Helpers.** Feature-only pure functions (formatting, URL parsing) go in
    `src/components/<resource>/format.ts`. Parse URL params with `Schema.is` on the exported schema.
 3. **Page.** `src/pages/<route>.astro` runs `load<Resource>` in its frontmatter (on the server,
@@ -118,6 +135,8 @@ ones by file (`@/components/orders/OrderSummary/index.astro`).
 ## Done means
 
 - Every criterion has a test or was checked by hand in the browser, and the report says which.
+- Work from a design went through `analyze-task`; the report names the analysis (its path, or
+  "inline"), and every colour and size comes from a `DESIGN.md` token or is listed as a question.
 - The gates pass, and the empty and error states were seen in the browser.
 - `review-code` ended with no `blocker` or `should` left, or the report says what is left.
 - Every component added or changed (`.astro` or React) has a story for each of its states, and

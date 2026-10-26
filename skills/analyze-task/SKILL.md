@@ -112,9 +112,11 @@ the last line of `plan.md`.
 
 - Called from another skill: return to that skill's next step, carrying the folder
   `docs/tickets/<id>/` (or the inline block) and the answers.
-- Run alone: name the skill to run next and the command, with the folder, e.g.
-  `/web-dev-stack:develop-feature docs/tickets/412/` (`/develop-feature …` when installed as
-  project skills). To commit and push the files, run `/ticket` instead.
+- Run alone: end with the exact command to run next, with the folder, so the next run does not
+  depend on this conversation: `/web-dev-stack:develop-feature docs/tickets/412/`
+  (`/develop-feature …` when installed as project skills). To commit and push the files, run
+  `/ticket` instead. One ticket folder covers one feature; a request with several features gets
+  one folder each.
 
 ## Use this skill for
 

@@ -41,7 +41,8 @@ Not `latest`: Astro 7 and Effect 4 have different APIs from the code in the skil
 
 1. **Analyze**: run `analyze-task` first. It produces the request kind, the lane, acceptance
    criteria (Given/When/Then), open questions and a plan, written to `docs/tickets/<id>/` as
-   `intent.md`, `spec.md` and `plan.md`. The build skills call it themselves.
+   `intent.md`, `spec.md` and `plan.md`. `code-skeleton` runs it itself, and `develop-feature`
+   runs it whenever it is given a design.
 2. **Ground**: read `package.json`, `DESIGN.md` and the neighbouring code before writing.
    Existing patterns win over defaults.
 3. **Build**: use the skill for the kind of work: `code-skeleton` for setup (`integrate-api`
