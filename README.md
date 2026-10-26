@@ -145,7 +145,8 @@ hooks/
 ├── worktree.mjs       # working-tree snapshots shared by the two above
 └── __test__/          # node:test cases for the checklist and branch hooks (`pnpm test`)
 skills/
-├── analyze-task/      # SKILL.md + references/{analysis-template,design-input}.md
+├── analyze-task/      # SKILL.md + references/{ticket-contract,design-input}.md
+├── ticket/            # SKILL.md: /ticket <id> → docs/tickets/<id>/ pushed on docs/ticket-<id>
 ├── code-skeleton/     # SKILL.md + references/{project-files,design-md-template,claude-md-template}.md
 ├── integrate-api/     # SKILL.md + references/{client,service,calling}.md
 ├── develop-feature/   # SKILL.md + references/{page-and-island,testing}.md
@@ -157,6 +158,7 @@ skills/
 | # | Skill | Status | Use it when |
 |---|-------|--------|-------------|
 | 0 | `analyze-task` | ready | Turning a ticket, design or loose request into acceptance criteria and a plan |
+| 0 | `ticket` | ready | Writing one ticket's intent, spec and plan to `docs/tickets/<id>/` and pushing them for review |
 | 1 | `code-skeleton` | ready | Starting a project, or bringing an Astro repo up to the stack |
 | 2 | `integrate-api` | ready | Calling oRPC procedures through Effect services |
 | 3 | `develop-feature` | ready | Building a ticket into a tested page or island |
@@ -178,8 +180,29 @@ next.
 Classifies the request (`setup`, `api` or `feature`) and its risk lane (`tiny`, `normal` or
 `high-risk`). It reads a design if one was given, then writes acceptance criteria as
 Given/When/Then, edge cases, open questions and a build plan. Lanes `normal` and `high-risk` save
-the result to `docs/analysis/<slug>.md`. A `high-risk` lane waits for the user to confirm scope
-before anything is built.
+the result as three files in `docs/tickets/<id>/` (`<id>` is the ticket id, or a slug):
+
+| File | Holds |
+|------|-------|
+| `intent.md` | Request, Goal, Current state, Scope |
+| `spec.md` | Acceptance criteria, Edge cases, Open questions, Assumptions |
+| `plan.md` | Modules, Build order, Not covered, Test scenarios, Ready line |
+
+The headings, their order and the ID rules are a contract
+(`skills/analyze-task/references/ticket-contract.md`), so the build skills and `review-code` can
+rely on them. A `high-risk` lane waits for the user to confirm scope before anything is built.
+
+### `ticket`
+
+Runs `analyze-task` on one ticket, always writes the three files, checks them against the
+contract, commits only those files on `docs/ticket-<id>` and pushes the branch. Open a merge
+request from it to review the analysis, then start the build with the folder. Only you can run
+it: Claude does not start it on its own.
+
+```text
+/web-dev-stack:ticket 412 On /orders, let support filter the list by status. Pending orders should stand out.
+/web-dev-stack:develop-feature docs/tickets/412/
+```
 
 ### `code-skeleton`
 

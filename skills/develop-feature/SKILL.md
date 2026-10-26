@@ -52,8 +52,10 @@ code or deployment.
 
 ## Steps
 
-1. **Criteria.** Rewrite the ticket as a short checklist of behaviours. Add the empty, error and
-   pending cases the ticket forgot. Ask about anything you would otherwise guess.
+1. **Criteria.** When the user names `docs/tickets/<id>/`, or that folder exists for the ticket,
+   build exactly what its `spec.md` criteria and `plan.md` say, and ask before going beyond
+   them. Otherwise rewrite the ticket as a short checklist of behaviours. Add the empty, error
+   and pending cases the ticket forgot. Ask about anything you would otherwise guess.
 2. **Helpers.** Feature-only pure functions (formatting, URL parsing) go in
    `src/components/<resource>/format.ts`. Parse URL params with `Schema.is` on the exported schema.
 3. **Page.** `src/pages/<route>.astro` runs `load<Resource>` in its frontmatter (on the server,

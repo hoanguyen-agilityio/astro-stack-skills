@@ -39,7 +39,7 @@ Does NOT handle: new features, refactors outside the change, dependency upgrades
 | Input | Default when not given |
 |-------|------------------------|
 | What to review | `git diff <base>...HEAD` plus uncommitted and untracked files; base is the default branch (`origin/HEAD`, else `main` or `master`) |
-| Acceptance criteria | the `analyze-task` analysis (`docs/analysis/<slug>.md` or inline) |
+| Acceptance criteria | `docs/tickets/<id>/spec.md` from `analyze-task` (or its inline block) |
 | Mode | **loop** when called by a build skill (fix and re-review); **report** when the user asks to review someone else's branch (findings only, fix on request) |
 
 ## Workflow
