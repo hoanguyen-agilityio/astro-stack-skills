@@ -1,6 +1,6 @@
 ---
 name: incident
-description: Write up a production incident as docs/incidents/<id>/report.md, rca.md and actions.md, with evidence from the code and git history, check them against the incident contract, then commit and push them on their own branch.
+description: Write up a production incident as docs/incidents/{id}/report.md, rca.md and actions.md, with evidence from the code and git history, check them against the incident contract, then commit and push them on their own branch.
 argument-hint: "[incident id] <what happened, logs, links or files>"
 disable-model-invocation: true
 ---
