@@ -34,7 +34,8 @@ tokens are in `DESIGN.md`.
    Existing patterns win over defaults.
 3. **Build**: `integrate-api` for API services, `develop-feature` for pages and islands.
 4. **Verify**: run `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage`
-   (≥ 80%), `pnpm build` and `pnpm test:stories` (every story in light and dark, a11y clean).
+   (≥ 80%), `pnpm build`, `pnpm test:stories` (every story in light and dark, a11y clean) and
+   `pnpm test:pages` (every page: SEO metadata, security headers, console, links, budget).
    Any fix restarts at lint; `/verify` runs that loop, then `review-code`. Never weaken a gate
    or lower a coverage threshold to get green, and never skip the Git hooks with `--no-verify`.
 5. **Review**: run `review-code` on the change. It compares it with what already exists

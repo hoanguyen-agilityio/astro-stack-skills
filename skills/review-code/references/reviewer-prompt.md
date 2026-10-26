@@ -63,7 +63,7 @@ Rounds: 2 of 3 · stopped: no blocker or should left
 | 2 | should | convention | products/ProductList:14 | raw hex colour | fixed: text-muted-foreground |
 | 3 | nit | nit | products/format.ts:3 | unclear name `formatP` | left |
 
-Checks after the last round: pnpm dup — no clones · lint, format:check, typecheck, test:coverage (91%), build, test:stories (44/44) — pass
+Checks after the last round: pnpm dup — no clones · lint, format:check, typecheck, test:coverage (91%), build, test:stories (44/44), test:pages (6 pages, 0 problems) — pass
 ```
 
 A finding left after 3 rounds, or one the fix could not clear, is listed with `left` and the

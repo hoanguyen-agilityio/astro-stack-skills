@@ -18,6 +18,8 @@ Read `package.json` and run, in this order, each of these scripts it has:
 4. `pnpm test:coverage` (or `pnpm test` when there is no `test:coverage`)
 5. `pnpm build`
 6. `pnpm test:stories` (every story in light and dark: render, `play`, a11y)
+7. `pnpm test:pages` (every page: SEO metadata, security headers and CSP, console errors,
+   broken links, images, JS/CSS budget)
 
 Run them as `pnpm lint && pnpm format:check && …` so pnpm's output shows which one failed. A
 missing script is skipped and named in the report; never add one here.
@@ -32,8 +34,10 @@ missing script is skipped and named in the report; never add one here.
 
 Never weaken a gate to get green: no lowered coverage threshold, no disabled ESLint rule, no
 `any` or `@ts-ignore`, no `!test` tag on a story, no a11y rule turned off in `parameters.a11y`,
-no `--no-verify`. `test:stories` stops with `Executable doesn't exist`: Chromium is missing; ask
-the user to run `pnpm exec playwright install chromium` instead of skipping the gate.
+no `--no-verify`, no path added to `IGNORED_PATHS`, no raised budget, no `'unsafe-inline'` in
+the CSP. `test:stories` or `test:pages` stops with `Executable doesn't exist`: Chromium is
+missing; ask the user to run `pnpm exec playwright install chromium` instead of skipping the
+gate.
 
 ## Review
 

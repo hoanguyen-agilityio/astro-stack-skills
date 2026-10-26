@@ -157,7 +157,8 @@ skills/
 ├── code-skeleton/     # SKILL.md + references/{project-files,design-md-template,claude-md-template}.md
 ├── integrate-api/     # SKILL.md + references/{client,service,calling}.md
 ├── develop-feature/   # SKILL.md + references/{page-and-island,testing}.md
-└── review-code/       # SKILL.md + references/{inventory,checklist,duplicates,reviewer-prompt}.md
+├── review-code/       # SKILL.md + references/{inventory,checklist,duplicates,reviewer-prompt}.md
+└── web-quality/       # SKILL.md + references/{performance,accessibility,seo,best-practices}.md
 ```
 
 ## Skills
@@ -171,6 +172,7 @@ skills/
 | 2 | `integrate-api` | ready | Calling oRPC procedures through Effect services |
 | 3 | `develop-feature` | ready | Building a ticket into a tested page or island |
 | 4 | `review-code` | ready | Reviewing a change for duplicates and broken conventions, then fixing it in a loop |
+| — | `web-quality` | ready | Auditing or improving pages for performance, Core Web Vitals, accessibility, SEO and security headers |
 
 Every workflow follows the same steps: **analyze → ground → build → verify → review → report**.
 `integrate-api` and `develop-feature` end with `review-code`, which loops review → fix → review
@@ -236,7 +238,7 @@ run it.
 
 ### `code-skeleton`
 
-Produces a project that passes `lint`, `typecheck`, `test:coverage`, `build` and `test:stories` before any feature code
+Produces a project that passes `lint`, `typecheck`, `test:coverage`, `build`, `test:stories` and `test:pages` before any feature code
 exists. In an empty directory (only `.claude/`, `.git/` and the like) it runs in **init** mode
 and creates the project layer by layer: package and git, Astro + React, TypeScript, Tailwind,
 Effect + oRPC, shadcn, ESLint, Vitest, Storybook. Called with no arguments there, it takes the
@@ -258,6 +260,13 @@ in **retrofit** mode and adds only the missing layers. It includes:
 - `pnpm test:stories` (`scripts/check-stories.ts`, Playwright): opens every story in Chromium in
   light and dark, and fails on a render error, a failing `play` function or an a11y violation, so
   Claude fixes what used to be checked by eye in Storybook
+- `pnpm test:pages` (`scripts/check-pages.ts`, Playwright): builds the site, crawls every page
+  from `/` and the sitemap under `astro preview`, and fails on missing or duplicate titles and
+  descriptions, a wrong canonical, missing security headers or CSP, console errors (CSP
+  violations included), broken links, images without alt or size, and JS/CSS over the budget
+- SEO and security from the start: `BaseLayout` writes title, description, canonical, Open Graph
+  and `noindex`; `robots.txt` and `sitemap.xml` routes; `src/middleware.ts` sets security
+  headers; Astro's `experimental.csp` sends a strict hash-based Content-Security-Policy
 - a starter UI built from reusable pieces: `AppLayout` (sticky header with nav and a dark-mode
   toggle, footer, skip link), `common/` components (`Container`, `PageHeader`, `LinkCard`,
   `ThemeToggle`), `src/config/site.ts` for the name and nav, a welcome page in the style of the
@@ -308,6 +317,21 @@ Both are verified on the same [set](#tech-stack-versions) as `code-skeleton`: li
 typecheck, tests and build pass, and the `/orders` example ran against a local oRPC server
 through the `/rpc` proxy.
 
+### `web-quality`
+
+Audits pages for performance and Core Web Vitals, accessibility beyond axe, SEO and security
+best practices, and fixes what it finds in a loop of at most three rounds (or only reports, when
+asked to audit). Evidence comes from `test:pages` and `test:stories` first, then from the
+source, then from a live browser when one is available (Chrome DevTools MCP or Lighthouse against
+`pnpm preview`). Every finding says whether it was measured or is a hypothesis; field Core Web
+Vitals, screen readers and zoom are reported as not verified rather than claimed. Adapted from
+[addyosmani/web-quality-skills](https://github.com/addyosmani/web-quality-skills) (MIT) for
+this stack.
+
+```text
+/web-dev-stack:web-quality Audit /orders and fix what you find
+```
+
 ### `review-code`
 
 Each feature built on the skeleton tends to add its own card, badge or `formatPrice` next to
@@ -321,7 +345,9 @@ change ─► inventory ─► pnpm dup + gates ─► review (fresh subagent) �
 - **Inventory**: lists what already exists (`ui/`, `common/`, feature components, helpers,
   services, Schemas) so the change is compared with it, not reviewed alone.
 - **Checks**: `pnpm dup` runs `jscpd` for copied code (`.astro` included) and fails on any clone;
-  then the six gates (`test:stories` included).
+  then the seven gates (`test:stories` and `test:pages` included).
+- **Web quality**: for pages and islands in the change, what the gates cannot see (LCP image,
+  island directives, headings, forms, CSP entries), from the `web-quality` skill's references.
 - **Review**: a subagent that did not write the code goes through a checklist: duplicates and
   cross-feature imports, conventions (`DESIGN.md` tokens, island boundary, stories, layout),
   criteria without proof, and bugs. Findings are `blocker`, `should` or `nit`.
@@ -363,7 +389,7 @@ Tasks (from Claude's report):
 Changed (2):
   • src/pages/orders.astro (+42 −3)
   • src/services/orders.ts (new)
-Gates: [x] lint  [x] format:check  [x] typecheck  [x] test  [x] build  [x] test:stories
+Gates: [x] lint  [x] format:check  [x] typecheck  [x] test  [x] build  [x] test:stories  [x] test:pages
 ```
 
 - Tasks come from the `## Result` block Claude ends with: **Did** items are `[x]`, **Not done**
@@ -377,7 +403,7 @@ Gates: [x] lint  [x] format:check  [x] typecheck  [x] test  [x] build  [x] test:
   `pnpm add`) count too. Files that were already changed and stayed the same are left out.
   Line counts come from `git`.
 - Gates are the `package.json` scripts among `lint`, `format:check`, `typecheck`, `test`,
-  `build` and `test:stories`. A gate counts only if it ran and passed after the last edit; otherwise the verdict
+  `build`, `test:stories` and `test:pages`. A gate counts only if it ran and passed after the last edit; otherwise the verdict
   names it (`[✗]` failed, `[~]` passed before a later edit, `[?]` result hidden, `[ ]` not run).
   `pnpm test:coverage` counts as `test`.
 - The icon follows the gates only: ✅ all passed, ❌ `Gates failing: …`, ⚠️ `Gates to check: …`

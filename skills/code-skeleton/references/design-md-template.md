@@ -149,7 +149,7 @@ Use these before writing layout markup. Each has a story per variant.
 `SiteFooter`. A page is:
 
 ```astro
-<AppLayout title="Orders">
+<AppLayout title="Orders" description="Every order with its status.">
   <Container class="flex flex-col gap-8 py-10">
     <PageHeader title="Orders" description="…"><a slot="actions" …>New order</a></PageHeader>
     <!-- feature components -->
@@ -238,8 +238,25 @@ the design actually uses.
   opens each one in light and dark and fails on an a11y violation; fix the token or the markup.
 - Import order: external packages → `@/` aliases → relative imports.
 - No `any` and no `@ts-ignore`. API data is decoded with Effect `Schema` before it reaches UI.
+- Every page passes its own `title` and `description` to `AppLayout`, and `noindex` when it is
+  not public. Images come from `astro:assets` (`<Image>`), with the one LCP image `eager` and
+  `fetchpriority="high"`.
 - Verify with `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage`,
-  `pnpm build` and `pnpm test:stories`. Commits run ESLint and Prettier on staged files (Husky +
-  lint-staged); pushes run typecheck, tests with 80% coverage and the story checks. Never skip them with `--no-verify`.
+  `pnpm build`, `pnpm test:stories` and `pnpm test:pages`. Commits run ESLint and Prettier on
+  staged files (Husky + lint-staged); pushes run typecheck, tests with 80% coverage, the story
+  checks and the page checks. Never skip them with `--no-verify`.
 - When a design changes tokens or adds a pattern, update this file in the same change.
+
+## Performance budget
+
+Per page, compressed. `scripts/check-pages.ts` (`BUDGET_KB`) enforces the same numbers; change
+both together.
+
+| Resource | Budget |
+|----------|--------|
+| JavaScript | 300 KB |
+| CSS | 100 KB |
+
+Core Web Vitals targets, at the 75th percentile of real visits: LCP ≤ 2.5 s, INP ≤ 200 ms,
+CLS ≤ 0.1. The gates cannot measure them; the `web-quality` skill does with a browser trace.
 ```

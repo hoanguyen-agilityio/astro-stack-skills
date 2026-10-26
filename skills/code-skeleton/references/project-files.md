@@ -14,12 +14,15 @@ parts in rather than overwriting it.
 | `eslint.config.js` | flat config; bans `any` and `@ts-ignore`, requires a final newline |
 | `.jscpd.json` | copy-paste detection for `pnpm dup`, used by `review-code` |
 | `.prettierrc`, `.prettierignore`, `.editorconfig` | the team's `space` style: single quotes, trailing commas, 80 columns, Astro plugin |
-| `.husky/pre-commit`, `.husky/pre-push`, `.lintstagedrc` | ESLint + Prettier on staged files before a commit; typecheck, tests with 80% coverage and story checks before a push |
+| `.husky/pre-commit`, `.husky/pre-push`, `.lintstagedrc` | ESLint + Prettier on staged files before a commit; typecheck, tests with 80% coverage, story and page checks before a push |
 | `vitest.config.ts`, `vitest.setup.ts` | `getViteConfig`, jsdom, jest-dom, v8 coverage with 80% thresholds |
 | `.env.example`, `.env`, `src/env.d.ts` | `PUBLIC_API_URL` placeholder, local copy (gitignored), its type |
 | `src/libs/orpcClient.ts` | client factory: `RPCLink` to `${PUBLIC_API_URL}/rpc`, auth header; router type starts empty |
 | `.storybook/main.ts`, `preview.ts` | `@storybook-astro/framework` + `react()`; `global.css`, theme toggle, a11y, `createOrpcClient` mocked |
 | `scripts/check-stories.ts` | `pnpm test:stories`: every story in Chromium, light and dark; fails on a render error, a failing `play` or an a11y violation |
+| `src/middleware.ts` | security headers on every page; the CSP itself comes from `experimental.csp` |
+| `src/pages/robots.txt.ts`, `src/pages/sitemap.xml.ts` | crawl rules and the sitemap, built from `site` and `siteConfig.nav` |
+| `scripts/check-pages.ts` | `pnpm test:pages`: crawls the built site; fails on SEO metadata, security headers, console errors, broken links, images without alt or size, JS/CSS over budget |
 
 `PUBLIC_API_URL` holds the base **without** `/rpc`, even when the user gives
 `http://localhost:8787/rpc`: the client appends `/rpc` and the dev proxy forwards it. The router
@@ -52,6 +55,7 @@ Dependencies are added by the `pnpm add` commands of each layer in `setup-layers
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test:stories": "storybook build --quiet && node scripts/check-stories.ts",
+    "test:pages": "astro build && node scripts/check-pages.ts",
     "prepare": "husky"
   }
 }
@@ -132,16 +136,33 @@ import node from '@astrojs/node';
 import tailwindcss from '@tailwindcss/vite';
 import { loadEnv } from 'vite';
 
-const { PUBLIC_API_URL } = loadEnv(
+const { PUBLIC_API_URL, PUBLIC_SITE_URL } = loadEnv(
   process.env.NODE_ENV ?? 'development',
   process.cwd(),
   '',
 );
 
 export default defineConfig({
+  // Absolute canonical, Open Graph and sitemap URLs. Set PUBLIC_SITE_URL per environment.
+  site: PUBLIC_SITE_URL || 'http://localhost:4321',
   output: 'server',
   adapter: node({ mode: 'standalone' }),
   integrations: [react()],
+  // A strict Content-Security-Policy: a hash for every script and style Astro renders, and
+  // nothing from another origin. A third-party script is added on purpose (web-quality skill).
+  experimental: {
+    csp: {
+      directives: [
+        "default-src 'self'",
+        "img-src 'self' data:",
+        "connect-src 'self'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+      ],
+    },
+  },
   vite: {
     plugins: [tailwindcss()],
     server: {
@@ -156,6 +177,13 @@ export default defineConfig({
 
 On Tailwind v3 the repo uses the `@astrojs/tailwind` integration instead of the Vite plugin.
 In production, put the same `/rpc` forwarding in the host's proxy or in Astro middleware.
+
+`experimental.csp` (Astro ≥ 5.9) applies in `astro build` and `astro preview`, not in
+`astro dev`. Astro hashes the scripts and styles it bundles; an `is:inline` script needs its
+hash added with `Astro.csp.insertScriptHash`, which `BaseLayout` does for the theme script. A
+CSP violation is a console error, so `pnpm test:pages` fails on it. On Astro < 5.9, leave the
+`experimental` block out and send the same directives as a `Content-Security-Policy` header from
+the middleware, with a hash for each inline script; never fall back to `'unsafe-inline'`.
 
 ## `src/styles/global.css`
 
@@ -274,11 +302,14 @@ afterEach(() => {
 ```bash
 # Base URL of the oRPC server (no trailing slash, no /rpc). Copy to .env.
 PUBLIC_API_URL=http://localhost:8787
+# Public URL of this site (no trailing slash): canonical links, Open Graph and the sitemap.
+PUBLIC_SITE_URL=http://localhost:4321
 ```
 
 ```ts
 interface ImportMetaEnv {
   readonly PUBLIC_API_URL: string;
+  readonly PUBLIC_SITE_URL: string;
 }
 
 interface ImportMeta {
@@ -721,6 +752,394 @@ process.exit(failures.length > 0 ? 1 : 0);
 - About 20 seconds for 20 stories, most of it the Storybook build. It runs before every push,
   not on every save.
 
+## Security headers, robots and sitemap
+
+`src/middleware.ts`:
+
+```ts
+import { defineMiddleware } from 'astro:middleware';
+
+// Headers every page response gets. The Content-Security-Policy itself is the <meta> that
+// `experimental.csp` in astro.config.mjs writes, with a hash of each script and style.
+const SECURITY_HEADERS: Record<string, string> = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  // A <meta> CSP cannot set frame-ancestors, so framing is refused here.
+  'X-Frame-Options': 'DENY',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+};
+
+export const onRequest = defineMiddleware(async (_context, next) => {
+  const response = await next();
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    response.headers.set(name, value);
+  }
+  return response;
+});
+```
+
+`src/pages/robots.txt.ts`:
+
+```ts
+import type { APIRoute } from 'astro';
+
+export const GET: APIRoute = ({ site, url }) => {
+  const sitemap = new URL('/sitemap.xml', site ?? url);
+  return new Response(`User-agent: *\nAllow: /\n\nSitemap: ${sitemap.href}\n`, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
+};
+```
+
+`src/pages/sitemap.xml.ts`:
+
+```ts
+import type { APIRoute } from 'astro';
+
+import { siteConfig } from '@/config/site';
+
+// The public pages are the ones in the navigation; add others here if they should be indexed.
+export const GET: APIRoute = ({ site, url }) => {
+  const entries = siteConfig.nav
+    .map(
+      ({ href }) =>
+        `  <url><loc>${new URL(href, site ?? url).href}</loc></url>`,
+    )
+    .join('\n');
+  const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</urlset>\n`;
+  return new Response(body, {
+    headers: { 'Content-Type': 'application/xml; charset=utf-8' },
+  });
+};
+```
+
+- The headers apply to page responses; `/_astro/` files are served by the adapter with
+  `Cache-Control: public, max-age=31536000, immutable` already.
+- A public page outside the navigation is added to the sitemap by hand; a `noindex` page never.
+
+## Page checks: `scripts/check-pages.ts`
+
+`pnpm test:pages` is the gate for what a person used to check in DevTools and Lighthouse. It
+builds the site, starts `astro preview` on a free port, crawls every page linked from `/` and
+listed in the sitemap (up to 50), and fails on: `robots.txt` without a `Sitemap` line; a page
+that does not answer 200; a missing `lang`, viewport, title, description, canonical or `<h1>`;
+`<meta charset>` not first; no CSP; a missing `X-Content-Type-Options`, `Referrer-Policy` or
+`X-Frame-Options`; a console error or uncaught exception (CSP violations included); a
+same-origin request that answers 4xx/5xx; a request to another origin over `http:`; an image
+without `alt`, `width` or `height`; JavaScript or CSS over the budget; the same title or
+description on two indexable pages; a `noindex` page in the sitemap; and a missing page that
+does not answer 404 with `noindex`. Each problem names the page, and a broken link names the
+page that links to it.
+
+```ts
+// Starts the built site with `astro preview`, crawls every page reachable from `/` and the
+// sitemap, and fails on what a person would otherwise check by hand in DevTools: missing or
+// duplicate SEO metadata, console errors, broken links, missing security headers, images
+// without alt or size, and JavaScript or CSS over the budget.
+// `pnpm test:pages` builds the site first, then runs this file with Node's type stripping.
+import { spawn } from 'node:child_process';
+import { createServer } from 'node:net';
+import { gzipSync } from 'node:zlib';
+import { chromium, type Page, type Response } from 'playwright';
+
+// Compressed budgets per page; the same numbers are in DESIGN.md (Performance budget).
+const BUDGET_KB = { js: 300, css: 100 };
+const MAX_PAGES = 50;
+const START_TIMEOUT_MS = 30_000;
+// API calls: with no backend behind `astro preview` they fail, and the page shows its error
+// state. Their failures belong to the service tests, not to this gate.
+const IGNORED_PATHS = ['/rpc/'];
+const SECURITY_HEADERS: Record<string, (value: string) => boolean> = {
+  'x-content-type-options': (value) => value === 'nosniff',
+  'referrer-policy': (value) => value.length > 0,
+  'x-frame-options': (value) => /deny|sameorigin/i.test(value),
+};
+
+interface Head {
+  lang: string;
+  charsetFirst: boolean;
+  viewport: boolean;
+  title: string;
+  description: string;
+  canonical: string;
+  noindex: boolean;
+  csp: boolean;
+  h1: number;
+  imagesWithoutAlt: string[];
+  imagesWithoutSize: string[];
+  links: string[];
+}
+
+const freePort = (): Promise<number> =>
+  new Promise((resolve, reject) => {
+    const server = createServer();
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+      server.close(() =>
+        typeof address === 'object' && address
+          ? resolve(address.port)
+          : reject(new Error('no port')),
+      );
+    });
+  });
+
+const port = await freePort();
+const origin = `http://127.0.0.1:${port}`;
+const preview = spawn(
+  'node_modules/.bin/astro',
+  ['preview', '--host', '127.0.0.1', '--port', String(port)],
+  { stdio: ['ignore', 'pipe', 'pipe'] },
+);
+let previewOutput = '';
+preview.stdout.on(
+  'data',
+  (chunk: Buffer) => (previewOutput += chunk.toString()),
+);
+preview.stderr.on(
+  'data',
+  (chunk: Buffer) => (previewOutput += chunk.toString()),
+);
+
+const stop = (code: number) => {
+  preview.kill();
+  process.exit(code);
+};
+
+const waitForServer = async () => {
+  const deadline = Date.now() + START_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    try {
+      await fetch(origin);
+      return;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
+  console.error(
+    `astro preview did not start on ${origin}. Run pnpm build first.\n${previewOutput}`,
+  );
+  stop(1);
+};
+await waitForServer();
+
+const problems: string[] = [];
+const fail = (where: string, problem: string) =>
+  problems.push(`${where}: ${problem}`);
+
+// robots.txt and the sitemap, whose pages seed the crawl.
+const robots = await fetch(`${origin}/robots.txt`);
+if (!robots.ok) fail('/robots.txt', `status ${robots.status}`);
+else if (!/^Sitemap:\s*\S+/im.test(await robots.text()))
+  fail('/robots.txt', 'no Sitemap line');
+
+const sitemapPaths: string[] = [];
+const sitemap = await fetch(`${origin}/sitemap.xml`);
+if (!sitemap.ok) fail('/sitemap.xml', `status ${sitemap.status}`);
+else {
+  for (const [, loc] of (await sitemap.text()).matchAll(
+    /<loc>([^<]+)<\/loc>/g,
+  )) {
+    if (loc) sitemapPaths.push(new URL(loc).pathname);
+  }
+  if (sitemapPaths.length === 0) fail('/sitemap.xml', 'lists no page');
+}
+
+const browser = await chromium.launch();
+// Each page to visit, with where its link was found.
+const queue = [...new Set(['/', ...sitemapPaths])].map((path) => ({
+  path,
+  from: path === '/' ? 'start' : '/sitemap.xml',
+}));
+const seen = new Set(queue.map(({ path }) => path));
+const heads = new Map<string, Head>();
+
+const readHead = (page: Page) =>
+  page.evaluate((): Head => {
+    const meta = (selector: string) =>
+      document.querySelector<HTMLMetaElement>(selector)?.content.trim() ?? '';
+    const images = [...document.images];
+    const name = (image: HTMLImageElement) => image.currentSrc || image.src;
+    return {
+      lang: document.documentElement.lang,
+      charsetFirst:
+        document.head.firstElementChild?.matches('meta[charset]') ?? false,
+      viewport: meta('meta[name="viewport"]').includes('width=device-width'),
+      title: document.title.trim(),
+      description: meta('meta[name="description"]'),
+      canonical:
+        document.querySelector<HTMLLinkElement>('link[rel="canonical"]')
+          ?.href ?? '',
+      noindex: /noindex/i.test(meta('meta[name="robots"]')),
+      csp:
+        document.querySelector(
+          'meta[http-equiv="content-security-policy" i]',
+        ) !== null,
+      h1: document.querySelectorAll('h1').length,
+      imagesWithoutAlt: images
+        .filter((image) => !image.hasAttribute('alt'))
+        .map(name),
+      imagesWithoutSize: images
+        .filter(
+          (image) =>
+            !image.getAttribute('width') || !image.getAttribute('height'),
+        )
+        .map(name),
+      links: [...document.querySelectorAll<HTMLAnchorElement>('a[href]')].map(
+        (a) => a.href,
+      ),
+    };
+  });
+
+const gzipKb = async (response: Response) => {
+  try {
+    return gzipSync(await response.body()).length / 1024;
+  } catch {
+    return 0;
+  }
+};
+
+const visit = async (path: string, from: string) => {
+  const page = await browser.newPage();
+  const assets: Response[] = [];
+  const pageProblems: string[] = [];
+  // Kept apart until the page answers 200: a broken link reports only the link.
+  const report = (problem: string) => pageProblems.push(`${path}: ${problem}`);
+  page.on('console', (message) => {
+    if (message.type() !== 'error') return;
+    const source = message.location().url;
+    if (IGNORED_PATHS.some((p) => source.startsWith(origin + p))) return;
+    report(`console error: ${message.text().split('\n')[0]}`);
+  });
+  page.on('pageerror', (error) =>
+    report(`uncaught error: ${error.message.split('\n')[0]}`),
+  );
+  page.on('response', (response) => {
+    const url = new URL(response.url());
+    if (
+      url.origin !== origin ||
+      IGNORED_PATHS.some((p) => url.pathname.startsWith(p))
+    )
+      return;
+    if (response.status() >= 400)
+      report(`${url.pathname} answered ${response.status()}`);
+    if (['script', 'stylesheet'].includes(response.request().resourceType()))
+      assets.push(response);
+  });
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (url.protocol === 'http:' && url.origin !== origin) {
+      report(`insecure request to ${url.href} (use https)`);
+    }
+  });
+
+  const response = await page.goto(origin + path, { waitUntil: 'networkidle' });
+  if (!response || response.status() !== 200) {
+    // Only the broken link counts, not the console noise of the error page it leads to.
+    problems.push(
+      `${from}: links to ${path}, which answers ${response?.status() ?? 'nothing'}`,
+    );
+    await page.close();
+    return;
+  }
+  const headers = response.headers();
+  for (const [name, valid] of Object.entries(SECURITY_HEADERS)) {
+    if (!valid(headers[name] ?? '')) report(`missing or weak ${name} header`);
+  }
+
+  const head = await readHead(page);
+  heads.set(path, head);
+  if (!head.lang) report('<html> has no lang');
+  if (!head.charsetFirst)
+    report('<meta charset> is not the first element in <head>');
+  if (!head.viewport) report('no responsive viewport meta');
+  if (!head.title) report('empty <title>');
+  if (!head.description) report('no meta description');
+  if (!headers['content-security-policy'] && !head.csp)
+    report('no Content-Security-Policy');
+  if (!head.canonical) report('no canonical link');
+  else if (new URL(head.canonical).pathname !== path) {
+    report(`canonical points to ${head.canonical}`);
+  }
+  if (head.h1 === 0) report('no <h1>');
+  for (const image of head.imagesWithoutAlt)
+    report(`image without alt: ${image}`);
+  for (const image of head.imagesWithoutSize) {
+    report(`image without width and height (layout shift): ${image}`);
+  }
+
+  let js = 0;
+  let css = 0;
+  for (const asset of assets) {
+    const kb = await gzipKb(asset);
+    if (asset.request().resourceType() === 'script') js += kb;
+    else css += kb;
+  }
+  if (js > BUDGET_KB.js)
+    report(`JavaScript ${js.toFixed(0)} KB gzip, budget ${BUDGET_KB.js} KB`);
+  if (css > BUDGET_KB.css)
+    report(`CSS ${css.toFixed(0)} KB gzip, budget ${BUDGET_KB.css} KB`);
+
+  for (const link of head.links) {
+    const url = new URL(link);
+    if (url.origin !== origin || seen.size >= MAX_PAGES) continue;
+    if (/\.\w+$/.test(url.pathname) || seen.has(url.pathname)) continue;
+    seen.add(url.pathname);
+    queue.push({ path: url.pathname, from: path });
+  }
+  problems.push(...pageProblems);
+  await page.close();
+};
+
+for (let next = queue.shift(); next; next = queue.shift()) {
+  await visit(next.path, next.from);
+}
+
+// A missing page answers 404 and stays out of search results.
+const missing = await browser.newPage();
+const notFound = await missing.goto(`${origin}/check-pages-missing-page`);
+if (notFound?.status() !== 404)
+  fail('404 page', `status ${notFound?.status() ?? 'none'}, expected 404`);
+else if (!(await readHead(missing)).noindex)
+  fail('404 page', 'no <meta name="robots" content="noindex">');
+await missing.close();
+await browser.close();
+
+// Titles and descriptions are unique among the pages search engines may index.
+const indexed = [...heads].filter(([, head]) => !head.noindex);
+for (const field of ['title', 'description'] as const) {
+  const byValue = new Map<string, string[]>();
+  for (const [path, head] of indexed) {
+    if (head[field])
+      byValue.set(head[field], [...(byValue.get(head[field]) ?? []), path]);
+  }
+  for (const [value, paths] of byValue) {
+    if (paths.length > 1) fail(paths.join(', '), `same ${field} "${value}"`);
+  }
+}
+for (const path of sitemapPaths) {
+  if (heads.get(path)?.noindex)
+    fail('/sitemap.xml', `lists ${path}, which is noindex`);
+}
+
+for (const problem of [...new Set(problems)]) console.error(`✗ ${problem}`);
+console.log(
+  `${heads.size} pages checked, ${new Set(problems).size} problem(s) ` +
+    `(SEO, security headers, console, links, images, budget JS ${BUDGET_KB.js} KB / CSS ${BUDGET_KB.css} KB)`,
+);
+stop(problems.length > 0 ? 1 : 0);
+```
+
+- About 10 seconds for a small site, most of it `astro build`. It runs before every push.
+- `IGNORED_PATHS` holds `/rpc/`: islands that call the API get no answer behind `astro preview`,
+  and the page shows its error state, which the page and island tests cover. Add nothing else
+  to it to get green.
+- `BUDGET_KB` matches `DESIGN.md`'s Performance budget. Change both together, with the user.
+- It needs `astro preview`, which the Node adapter supports. With an adapter that has no
+  preview (Vercel, Netlify), start the built server the adapter's way instead.
+- Page-level axe is not part of it (that needs `@axe-core/playwright`, a dependency to agree
+  first); component a11y is `test:stories`.
+
 ## Prettier, EditorConfig, Husky and lint-staged
 
 Same settings as the team's `space` repo, so code moves between repos without reformatting.
@@ -783,13 +1202,14 @@ pnpm exec lint-staged
 ```
 
 ```sh
-pnpm typecheck && pnpm test:coverage && pnpm test:stories
+pnpm typecheck && pnpm test:coverage && pnpm test:stories && pnpm test:pages
 ```
 
 - ESLint in the hook has no `--fix`: a lint error (an `any`, a missing final newline) blocks the
   commit instead of being silently rewritten. Prettier does rewrite, then lint-staged re-stages.
-- The push runs the tests with coverage and the story checks, so a push below 80%, or with a
-  broken story or an a11y violation, fails.
+- The push runs the tests with coverage, the story checks and the page checks, so a push below
+  80%, or with a broken story, an a11y violation, missing SEO metadata or security headers, a
+  console error or a page over budget, fails.
 - The config needs no `eslint-config-prettier`: `typescript-eslint` strict and
   `eslint-plugin-astro` recommended carry no formatting rules.
 - `prettier --write .` also formats the `CLAUDE.md` and `DESIGN.md` the skill writes, and the

@@ -141,7 +141,7 @@ describe('/orders', () => {
 ## Run before calling it done
 
 ```bash
-pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm test:stories
+pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm test:stories && pnpm test:pages
 ```
 
 `test:coverage` fails below 80% (lines, functions, branches, statements). Add tests for the

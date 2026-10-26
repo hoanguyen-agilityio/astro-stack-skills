@@ -52,7 +52,25 @@ Name the input that breaks it. Fix it and add a test that fails without the fix.
 
 Any failing gate or `pnpm dup` clone in the changed files. Fix the cause; never weaken the gate.
 A `test:stories` failure names the story, the theme and the a11y rule: fix the markup or the
-token in `DESIGN.md`, never tag the story `!test` or turn the rule off.
+token in `DESIGN.md`, never tag the story `!test` or turn the rule off. A `test:pages` failure
+names the page: fix the metadata, header, link or asset it points at.
+
+## 6. Web quality (`should`, `blocker` where marked)
+
+What the gates cannot see, for the pages and islands in the change. The `web-quality` skill's
+references explain each point and its fix.
+
+| Look for | Fix |
+|----------|-----|
+| A page without its own `title` and `description`, or a public page marked `noindex` (`blocker`) | Pass both to `AppLayout`; `noindex` only for error, draft and signed-in pages (`seo.md`) |
+| The LCP image lazy or without `fetchpriority="high"`; an image not from `astro:assets` | `<Image>` with `loading="eager" fetchpriority="high"` for the one hero image (`performance.md`) |
+| `client:load` on an island that is below the fold or not needed at once | `client:visible` or `client:idle` (`performance.md`) |
+| An island whose loading state is smaller than its content (layout shift) | A `Skeleton` with the final size |
+| A heading level chosen for its size; a second `<h1>`; "Click here" link text | Headings in order; descriptive link text (`seo.md`, `accessibility.md`) |
+| A form error not tied to its field, or not announced (`blocker`) | `aria-invalid`, `aria-describedby`, `role="alert"`, focus the first error (`accessibility.md`) |
+| A target smaller than 24 px; motion without `motion-safe:`/`motion-reduce:` | `size-6` minimum; motion utilities (`accessibility.md`) |
+| An inline script or a third-party origin without its CSP entry (`blocker`) | `Astro.csp.insertScriptHash` or a bundled `<script>`; the origin in the CSP directives, agreed with the user (`best-practices.md`) |
+| `console.log`, `document.write`, a non-passive scroll listener | Remove; `{ passive: true }` (`best-practices.md`) |
 
 ## Nits (`nit`)
 
