@@ -147,6 +147,7 @@ hooks/
 skills/
 ├── analyze-task/      # SKILL.md + references/{ticket-contract,design-input}.md
 ├── ticket/            # SKILL.md: /ticket <id> → docs/tickets/<id>/ pushed on docs/ticket-<id>
+├── incident/          # SKILL.md + references/incident-contract.md: /incident → docs/incidents/<id>/ pushed on docs/incident-<id>
 ├── code-skeleton/     # SKILL.md + references/{project-files,design-md-template,claude-md-template}.md
 ├── integrate-api/     # SKILL.md + references/{client,service,calling}.md
 ├── develop-feature/   # SKILL.md + references/{page-and-island,testing}.md
@@ -159,6 +160,7 @@ skills/
 |---|-------|--------|-------------|
 | 0 | `analyze-task` | ready | Turning a ticket, design or loose request into acceptance criteria and a plan |
 | 0 | `ticket` | ready | Writing one ticket's intent, spec and plan to `docs/tickets/<id>/` and pushing them for review |
+| — | `incident` | ready | Writing up a production incident (report, root cause, actions) in `docs/incidents/<id>/` and pushing it for review |
 | 1 | `code-skeleton` | ready | Starting a project, or bringing an Astro repo up to the stack |
 | 2 | `integrate-api` | ready | Calling oRPC procedures through Effect services |
 | 3 | `develop-feature` | ready | Building a ticket into a tested page or island |
@@ -202,6 +204,28 @@ it: Claude does not start it on its own.
 ```text
 /web-dev-stack:ticket 412 On /orders, let support filter the list by status. Pending orders should stand out.
 /web-dev-stack:develop-feature docs/tickets/412/
+```
+
+### `incident`
+
+Writes up something that broke for users as three files in `docs/incidents/<id>/`, where `<id>`
+is the incident id you give or `<date>-<slug>`:
+
+| File | Holds |
+|------|-------|
+| `report.md` | Status, severity, Summary, Impact, Timeline, Detection |
+| `rca.md` | Trigger, Root cause, Contributing factors, Why it was not caught, Open questions |
+| `actions.md` | Mitigation, Fix, Prevention (owner, type, ticket), Lessons |
+
+It reads your description and logs, looks for evidence in the code and the git history without
+changing anything, and keeps the write-up blameless: every cause has evidence or is marked
+`Hypothesis:`, and tokens or customer data from the logs are redacted. It checks the files
+against `skills/incident/references/incident-contract.md`, commits only them on
+`docs/incident-<id>` and pushes the branch. The fix itself goes through `/ticket`. Only you can
+run it.
+
+```text
+/web-dev-stack:incident /orders returned 500 for everyone from 09:10 to 09:40, rolled back at 09:40. Log: ./logs/orders-500.txt
 ```
 
 ### `code-skeleton`

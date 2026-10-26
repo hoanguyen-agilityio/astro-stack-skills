@@ -61,6 +61,7 @@ confirm scope after the analysis. Open questions are asked, never guessed.
 | Fixtures for stories and tests, in the API's wire format | `src/mocks/<resource>.ts` |
 | Design tokens and UI rules | `DESIGN.md` → `src/styles/global.css` |
 | Ticket analyses: `intent.md`, `spec.md`, `plan.md` (`/ticket` commits and pushes them) | `docs/tickets/<id>/` |
+| Incident write-ups: `report.md`, `rca.md`, `actions.md` (`/incident` commits and pushes them) | `docs/incidents/<id>/` |
 
 - No `any` and no `@ts-ignore`. API responses are decoded with Effect `Schema` before use.
 - Keep the majors in `package.json` (Astro 5, Effect 3, oRPC 1, Vite 6). Node ≥ 22.19.

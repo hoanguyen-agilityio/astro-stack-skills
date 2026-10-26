@@ -18,6 +18,7 @@ astro-stack-skills/                 one repo = marketplace "astro-stack" = plugi
 │   │   ├── SKILL.md
 │   │   └── references/{ticket-contract,design-input}.md
 │   ├── ticket/                     /ticket <id>: analyze-task + contract check + push on docs/ticket-<id>
+│   ├── incident/                   /incident: read-only investigation + incident contract + push on docs/incident-<id>
 │   ├── code-skeleton/              part 1 of the brief
 │   │   ├── SKILL.md
 │   │   └── references/{setup-layers,project-files,starter-ui,design-md-template,claude-md-template}.md
@@ -68,6 +69,7 @@ request ──► analyze-task ──► ground ──► build ──► verify
 |-----------|----------|
 | `analyze-task` → build skill | `docs/tickets/<id>/` (or the inline block) in the shape `references/ticket-contract.md` fixes: intent (request, goal, scope), spec (ACs, edge cases, questions, assumptions), plan (modules, order, tests, Ready line) |
 | `/ticket` → team | the same three files, committed on `docs/ticket-<id>` and pushed for a merge request |
+| `/incident` → team, `/ticket` | `docs/incidents/<id>/` (`references/incident-contract.md`): report, root cause, actions on `docs/incident-<id>`; each prevention action that needs code names the ticket that carries it |
 | `code-skeleton` → `integrate-api` | `PUBLIC_API_URL`; `src/libs/orpcClient.ts` with an empty `AppRouterClient` and a `Procedure<Input>` type whose output is `unknown` |
 | `code-skeleton` → `develop-feature` | `DESIGN.md` (tokens, components, island rules, states), shadcn in `src/components/ui/` |
 | `code-skeleton` → `review-code` | `.jscpd.json` and `pnpm dup`; a starter with no clones, so the first clone comes from new code |
@@ -81,6 +83,7 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | Analysis is its own skill, called by the build skills | One place for the intake rules, reusable by every build skill, and it still runs when the user names only a build skill |
 | One folder per ticket with `intent.md`, `spec.md`, `plan.md`, replacing `docs/analysis/<slug>.md` | The mentor's review: the analysis is reviewed in a merge request before the build. Splitting why, done-means and how lets each reviewer read their part, and a fixed heading list (`None.` instead of a deleted section, stable AC numbers) lets the build skills, `review-code` and a grep check rely on it. Named by ticket id, so a build is started with the folder (`/develop-feature docs/tickets/412/`) rather than "the analysis above" |
 | `/ticket` commits only the three files and pushes `docs/ticket-<id>`, but opens no merge request | Pushing gets the analysis in front of the team; the push guard keeps it off `dev`, `stag` and `prod`. The user opens the merge request, since the target branch and reviewers are the team's call. `disable-model-invocation` keeps Claude from pushing on its own when a ticket is only mentioned |
+| Incidents get their own three files and `/incident`, in the same shape as tickets | The mentor's review asked for incident contracts. Splitting what happened, why and what we do lets support, developers and leads each read their part. The contract makes the write-up blameless, separates facts (a commit, `file:line`, a log line) from `Hypothesis:`, redacts what logs carry (tokens, emails, customer data), and ties every prevention action to a gap found in the root cause. `/incident` investigates read-only and never fixes: the fix is reviewed as a ticket, not inside a write-up. Folders default to `<date>-<slug>` because most teams have no incident numbering |
 | Pin Astro 5 / Effect 3 / oRPC 1 / Vite 6 | `latest` is Astro 7 / Effect 4, whose APIs differ. These majors match the team's kitchen app and were verified end to end |
 | Pin `vite@^6` explicitly | `@tailwindcss/vite`'s peer range otherwise pulls Vite 8 next to Astro's Vite 6, and the config fails to load |
 | Let `shadcn init -t astro -b radix -p nova` write `components.json` | A hand-written one diverged from shadcn 4 (which uses the `cn` package). `-p` avoids an interactive prompt that stalls agents |
