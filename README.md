@@ -134,12 +134,13 @@ eslint.config.js, .prettierrc, .lintstagedrc, .husky/   # checks for the repo's 
 ├── marketplace.json   # marketplace "astro-stack", lists the plugin at ./
 └── plugin.json        # plugin "web-dev-stack"
 hooks/
-├── hooks.json         # UserPromptSubmit + PostToolUse + Stop hooks, loaded with the plugin
+├── hooks.json         # UserPromptSubmit + PreToolUse + PostToolUse + Stop hooks, loaded with the plugin
 ├── turn-snapshot.mjs  # records the working tree when a turn starts
+├── protect-branches.mjs # blocks git pushes to dev, stag and prod
 ├── post-edit-lint.mjs # newline, ESLint, Prettier on each edited file
 ├── task-checklist.mjs # checklist + success signal after a turn that changed files
 ├── worktree.mjs       # working-tree snapshots shared by the two above
-└── __test__/          # node:test cases for the checklist hook (`pnpm test`)
+└── __test__/          # node:test cases for the checklist and branch hooks (`pnpm test`)
 skills/
 ├── analyze-task/      # SKILL.md + references/{analysis-template,design-input}.md
 ├── code-skeleton/     # SKILL.md + references/{project-files,design-md-template,claude-md-template}.md
@@ -262,12 +263,13 @@ branch:
 
 ## Hooks
 
-The plugin ships three Claude Code hooks. They complement the project's Git hooks (Husky), which
+The plugin ships four Claude Code hooks. They complement the project's Git hooks (Husky), which
 only run at commit and push.
 
 | Hook | When | What |
 |------|------|------|
 | `UserPromptSubmit` (`turn-snapshot.mjs`) | when a prompt is sent | Records which files differ from git and their content, so `Stop` can tell what the turn changed. Prints nothing |
+| `PreToolUse` (`protect-branches.mjs`) | before each `Bash` call | Blocks a `git push` that would update or delete `dev`, `stag` or `prod` (exit 2), including `--force`, `--no-verify`, `HEAD:dev`, `--delete` and a bare `git push` from one of those branches. Claude is told to push a feature branch and open a merge request instead |
 | `PostToolUse` (`post-edit-lint.mjs`) | after each `Edit`/`Write` | Checks that one file: final newline, the project's ESLint, Prettier. Problems go back to Claude (exit 2) so it fixes them before moving on |
 | `Stop` (`task-checklist.mjs`) | end of a turn that changed files | Checklist of changed files and gates, plus a success signal |
 
