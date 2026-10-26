@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // PostToolUse hook: lint the file Claude just edited or wrote, and send problems back to Claude.
 //
-// Checks, on that one file only: a final newline, then the project's own ESLint and Prettier
-// (from its node_modules/.bin, skipped when not installed). Problems go to stderr with exit
+// Checks, on that one file only: a final newline, then the project's own ESLint, Oxlint (the
+// anti-slop rules) and Prettier (from its node_modules/.bin, each skipped when not installed). Problems go to stderr with exit
 // code 2, which Claude Code feeds back to Claude so it fixes them right away. Typecheck and tests
 // are too slow per edit; they stay with the Stop checklist and the pre-push hook.
 
@@ -72,6 +72,11 @@ const main = () => {
     if (eslint && ESLINT_EXTENSIONS.has(extname(file))) {
       const result = runBin(eslint, ['--no-warn-ignored', target], root);
       if (!result.ok) problems.push(`ESLint:\n${result.output}`);
+    }
+    const oxlint = bin(root, 'oxlint');
+    if (oxlint && ESLINT_EXTENSIONS.has(extname(file))) {
+      const result = runBin(oxlint, [target], root);
+      if (!result.ok) problems.push(`Oxlint (anti-slop):\n${result.output}`);
     }
     const prettier = bin(root, 'prettier');
     if (prettier) {

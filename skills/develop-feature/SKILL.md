@@ -135,7 +135,10 @@ ones by file (`@/components/orders/OrderSummary/index.astro`).
 - Use shadcn theme tokens (`text-muted-foreground`, `text-destructive`), not raw colours.
 - Accessible markup: real `<button>`, `<a>` and `<label>`, `role="alert"` on error text,
   `aria-current` on the active filter.
-- No `any`, no `@ts-ignore`, no weakened lint rule to get green.
+- No `any`, no `@ts-ignore`, no weakened lint rule to get green. `pnpm lint` includes the
+  anti-slop rules (Oxlint): no `unknown` in your own function contracts, no `as unknown as`, a
+  `// SAFETY:` line above any other assertion, `satisfies` instead of a widening annotation,
+  `Match.valueTags` instead of `switch (error._tag)`.
 
 ## Done means
 

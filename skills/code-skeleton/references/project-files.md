@@ -12,6 +12,7 @@ parts in rather than overwriting it.
 | `astro.config.mjs` | React integration, Tailwind Vite plugin, adapter, dev proxy `/rpc` → API |
 | `src/styles/global.css` | Tailwind entry; shadcn adds its theme, the starter UI its `brand` token |
 | `eslint.config.js` | flat config; bans `any` and `@ts-ignore`, requires a final newline |
+| `oxlint.config.ts`, `tools/oxlint/anti-slop/` | anti-slop rules (vendored, MIT): loose `unknown` contracts, unexplained type assertions, widened dictionaries, hand-rolled Effect `_tag` handling |
 | `.jscpd.json` | copy-paste detection for `pnpm dup`, used by `review-code` |
 | `.prettierrc`, `.prettierignore`, `.editorconfig` | the team's `space` style: single quotes, trailing commas, 80 columns, Astro plugin |
 | `.husky/pre-commit`, `.husky/pre-push`, `.lintstagedrc` | ESLint + Prettier on staged files before a commit; typecheck, tests with 80% coverage, story and page checks before a push |
@@ -46,7 +47,7 @@ Dependencies are added by the `pnpm add` commands of each layer in `setup-layers
     "build": "astro build",
     "preview": "astro preview",
     "typecheck": "astro check",
-    "lint": "eslint .",
+    "lint": "eslint . && oxlint",
     "dup": "jscpd",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -109,7 +110,7 @@ onlyBuiltDependencies:
 {
   "extends": "astro/tsconfigs/strictest",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "storybook-static"],
+  "exclude": ["dist", "storybook-static", ".claude", "tools/oxlint/anti-slop"],
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
@@ -206,7 +207,18 @@ import astro from 'eslint-plugin-astro';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default defineConfig(
-  { ignores: ['dist', '.astro', 'node_modules', 'storybook-static', 'coverage'] },
+  {
+    ignores: [
+      'dist',
+      '.astro',
+      'node_modules',
+      'storybook-static',
+      'coverage',
+      // Copies of the skills, and vendored lint rules: checked where they come from.
+      '.claude',
+      'tools/oxlint/anti-slop',
+    ],
+  },
   js.configs.recommended,
   tseslint.configs.strict,
   astro.configs.recommended,
@@ -225,10 +237,115 @@ export default defineConfig(
 );
 ```
 
+`.claude/` holds the skills and hooks `npx … init` copied in (some are TypeScript), and
+`tools/oxlint/anti-slop/` is third-party code kept as upstream wrote it: neither is linted,
+type-checked or formatted as project code.
+
 `eol-last` makes `pnpm lint` and the pre-commit hook report a missing final newline instead of
 Prettier fixing it silently. It is one of ESLint's deprecated formatting rules, still shipped in
 ESLint 9; it needs no extra plugin and does not conflict with Prettier, which writes the same
 newline.
+
+## Anti-slop: `oxlint.config.ts` and `tools/oxlint/anti-slop/`
+
+ESLint stays the general linter. Oxlint runs only the anti-slop rules
+([dmmulroy/anti-slop](https://github.com/dmmulroy/anti-slop), MIT), which reject the
+low-evidence TypeScript generated code tends to contain: `unknown` in function contracts,
+`as unknown as T`, assertions without a reason, open dictionaries that hide a known type,
+ad hoc `typeof` checks instead of parsing at the boundary, and hand-rolled `_tag` handling where
+Effect has `Predicate.isTagged` and `Match`. They read the syntax tree, not types, so they stay
+fast (well under a second) and cover the frontmatter of `.astro` files too.
+
+Copy the skill's `assets/anti-slop/` folder to `tools/oxlint/anti-slop/` unchanged (its
+`LICENSE` and `UPSTREAM.md` go with it). From then on the project owns its copy.
+
+`oxlint.config.ts`:
+
+```ts
+import { defineConfig } from 'oxlint';
+
+// anti-slop (vendored in tools/oxlint/anti-slop, MIT): rules against the loose types and
+// hand-rolled Effect code that generated TypeScript tends to contain. ESLint stays the
+// general linter; Oxlint runs only these rules.
+export default defineConfig({
+  categories: { correctness: 'off' },
+  ignorePatterns: [
+    '.claude/**',
+    'tools/oxlint/anti-slop/**',
+    'dist/**',
+    'storybook-static/**',
+    'coverage/**',
+    'src/components/ui/**',
+    'src/lib/**',
+  ],
+  jsPlugins: [
+    { name: 'anti-slop', specifier: './tools/oxlint/anti-slop/index.ts' },
+    {
+      name: 'anti-slop-effect',
+      specifier: './tools/oxlint/anti-slop/effect/index.ts',
+    },
+  ],
+  rules: {
+    'anti-slop/no-array-filter-map': 'error',
+    'anti-slop/no-reduce-accumulator-copy': 'error',
+    'anti-slop/no-chained-type-assertions': 'error',
+    'anti-slop/no-conditional-empty-object-spread': 'error',
+    'anti-slop/no-known-value-widening': 'error',
+    'anti-slop/no-object-parameters': 'error',
+    'anti-slop/no-reflect-apply': 'error',
+    'anti-slop/no-reflect-get': 'error',
+    'anti-slop/no-runtime-typeof': 'error',
+    'anti-slop/no-shape-in-symbol-names': 'error',
+    'anti-slop/no-unknown-parameters': 'error',
+    'anti-slop/no-unknown-returns': 'error',
+    'anti-slop/no-unknown-type-aliases': 'error',
+    'anti-slop/no-unsafe-dictionary-type': 'error',
+    'anti-slop/no-widen-then-assert': 'error',
+    'anti-slop/require-safety-comment-for-type-assertion': 'error',
+    // Tests mock modules on purpose (vi.mock, sb.mock): page and island tests depend on it.
+    'anti-slop/no-module-mocking': 'off',
+    // Blank lines are Prettier's business, not a type-safety rule.
+    'anti-slop/require-readable-spacing': 'off',
+    'anti-slop-effect/no-manual-effect-error-tag': 'error',
+    'anti-slop-effect/no-manual-tag-comparison': 'error',
+    'anti-slop-effect/no-manual-tagged-construction': 'error',
+    'anti-slop-effect/no-service-constructor-imports': 'error',
+    'anti-slop-effect/prefer-effect-match': 'error',
+    'oxc/no-accumulating-spread': 'error',
+  },
+  overrides: [
+    {
+      // Fakes stand in for the API's wire format (unknown until decoded) and for partial
+      // clients, matchers are plain objects, and a test asserts on elements it just found.
+      files: ['**/__test__/**', '**/*.stories.tsx', 'src/mocks/**'],
+      rules: {
+        'anti-slop/no-unknown-returns': 'off',
+        'anti-slop/no-unknown-parameters': 'off',
+        'anti-slop/no-chained-type-assertions': 'off',
+        'anti-slop/require-safety-comment-for-type-assertion': 'off',
+        'anti-slop-effect/no-manual-tagged-construction': 'off',
+      },
+    },
+  ],
+});
+```
+
+- `pnpm lint` runs `eslint . && oxlint`; the pre-commit hook and the `post-edit-lint` hook run
+  both on each file, so Claude fixes a finding while it writes the code.
+- How to satisfy the usual findings:
+
+  | Finding | Fix |
+  |---------|-----|
+  | `no-known-value-widening` on `const X: Record<string, string> = {…}` | `{…} satisfies Record<string, string>`; a `Map` when the code looks keys up by a runtime value |
+  | `require-safety-comment-for-type-assertion` | Parse instead of asserting; when the assertion is right, a `// SAFETY: <why it holds>` line just above it |
+  | `no-manual-tag-comparison` (`e._tag === 'X'`, `switch (e._tag)`) | `Predicate.isTagged(e, 'X')`; `Match.valueTags(e, { X: () => …, Y: () => … })` |
+  | `no-unknown-returns` on the one place a service receives the raw response | `// oxlint-disable-next-line anti-slop/no-unknown-returns -- <reason>`: that is where `Schema` decodes it. Anywhere else, return the decoded type |
+  | `no-runtime-typeof` | Decode the value with `Schema` where it enters, then branch on the domain type |
+
+- A rule turned off for the whole project, or a disable comment without a reason after `--`,
+  is weakening a gate. Disable one line, say why.
+- `no-module-mocking` and `require-readable-spacing` are off on purpose (see the comments). The
+  rules list and their reasons are in `tools/oxlint/anti-slop/UPSTREAM.md` and upstream's README.
 
 ## `.jscpd.json`
 
@@ -544,15 +661,17 @@ const THEMES = ['light', 'dark'];
 const TIMEOUT_MS = 15_000;
 const PAGES = 4;
 
-const TYPES: Record<string, string> = {
-  '.html': 'text/html',
-  '.js': 'text/javascript',
-  '.css': 'text/css',
-  '.json': 'application/json',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.woff2': 'font/woff2',
-};
+const TYPES = new Map(
+  Object.entries({
+    '.html': 'text/html',
+    '.js': 'text/javascript',
+    '.css': 'text/css',
+    '.json': 'application/json',
+    '.svg': 'image/svg+xml',
+    '.png': 'image/png',
+    '.woff2': 'font/woff2',
+  }),
+);
 
 interface Entry {
   id: string;
@@ -594,7 +713,7 @@ const serve = (): Promise<Server> =>
       const path = join(ROOT, normalize(decodeURIComponent(url.pathname)));
       readFile(path)
         .then((body) => {
-          const type = TYPES[extname(path)] ?? 'application/octet-stream';
+          const type = TYPES.get(extname(path)) ?? 'application/octet-stream';
           res.writeHead(200, { 'content-type': type });
           res.end(body);
         })
@@ -652,6 +771,7 @@ const describe = (event: string, payload: StoryEvent | undefined) => {
   return problems;
 };
 
+// SAFETY: index.json is written by `storybook build` a moment earlier, in this shape.
 const index = JSON.parse(await readFile(join(ROOT, 'index.json'), 'utf8')) as {
   entries: Record<string, Entry>;
 };
@@ -665,6 +785,7 @@ if (stories.length === 0) {
 }
 
 const server = await serve();
+// SAFETY: a server listening on a TCP port reports an AddressInfo, never a pipe name.
 const { port } = server.address() as AddressInfo;
 const browser = await chromium.launch();
 const visits = THEMES.flatMap((theme) =>
@@ -761,13 +882,13 @@ import { defineMiddleware } from 'astro:middleware';
 
 // Headers every page response gets. The Content-Security-Policy itself is the <meta> that
 // `experimental.csp` in astro.config.mjs writes, with a hash of each script and style.
-const SECURITY_HEADERS: Record<string, string> = {
+const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   // A <meta> CSP cannot set frame-ancestors, so framing is refused here.
   'X-Frame-Options': 'DENY',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-};
+} satisfies Record<string, string>;
 
 export const onRequest = defineMiddleware(async (_context, next) => {
   const response = await next();
@@ -838,7 +959,7 @@ page that links to it.
 // without alt or size, and JavaScript or CSS over the budget.
 // `pnpm test:pages` builds the site first, then runs this file with Node's type stripping.
 import { spawn } from 'node:child_process';
-import { createServer } from 'node:net';
+import { createServer, type AddressInfo } from 'node:net';
 import { gzipSync } from 'node:zlib';
 import { chromium, type Page, type Response } from 'playwright';
 
@@ -849,11 +970,11 @@ const START_TIMEOUT_MS = 30_000;
 // API calls: with no backend behind `astro preview` they fail, and the page shows its error
 // state. Their failures belong to the service tests, not to this gate.
 const IGNORED_PATHS = ['/rpc/'];
-const SECURITY_HEADERS: Record<string, (value: string) => boolean> = {
+const SECURITY_HEADERS = {
   'x-content-type-options': (value) => value === 'nosniff',
   'referrer-policy': (value) => value.length > 0,
   'x-frame-options': (value) => /deny|sameorigin/i.test(value),
-};
+} satisfies Record<string, (value: string) => boolean>;
 
 interface Head {
   lang: string;
@@ -875,12 +996,9 @@ const freePort = (): Promise<number> =>
     const server = createServer();
     server.once('error', reject);
     server.listen(0, '127.0.0.1', () => {
-      const address = server.address();
-      server.close(() =>
-        typeof address === 'object' && address
-          ? resolve(address.port)
-          : reject(new Error('no port')),
-      );
+      // SAFETY: a server listening on a TCP port reports an AddressInfo, never a pipe name.
+      const { port } = server.address() as AddressInfo;
+      server.close(() => resolve(port));
     });
   });
 
@@ -976,15 +1094,14 @@ const readHead = (page: Page) =>
           'meta[http-equiv="content-security-policy" i]',
         ) !== null,
       h1: document.querySelectorAll('h1').length,
-      imagesWithoutAlt: images
-        .filter((image) => !image.hasAttribute('alt'))
-        .map(name),
-      imagesWithoutSize: images
-        .filter(
-          (image) =>
-            !image.getAttribute('width') || !image.getAttribute('height'),
-        )
-        .map(name),
+      imagesWithoutAlt: images.flatMap((image) =>
+        image.hasAttribute('alt') ? [] : [name(image)],
+      ),
+      imagesWithoutSize: images.flatMap((image) =>
+        image.getAttribute('width') && image.getAttribute('height')
+          ? []
+          : [name(image)],
+      ),
       links: [...document.querySelectorAll<HTMLAnchorElement>('a[href]')].map(
         (a) => a.href,
       ),
@@ -1166,6 +1283,9 @@ dist/
 storybook-static/
 coverage/
 pnpm-lock.yaml
+# Skill copies and vendored lint rules: kept as their source writes them.
+.claude/
+tools/oxlint/anti-slop/
 # Generated by shadcn: keep them as shadcn writes them, so `shadcn add` diffs stay readable.
 src/components/ui/
 src/lib/
@@ -1189,7 +1309,7 @@ insert_final_newline = true
 
 ```json
 {
-  "*.{js,mjs,ts,tsx,astro}": ["eslint", "prettier --write"],
+  "*.{js,mjs,ts,tsx,astro}": ["eslint", "oxlint", "prettier --write"],
   "*.{css,json,md,yml,yaml}": "prettier --write"
 }
 ```

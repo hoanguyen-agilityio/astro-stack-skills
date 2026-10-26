@@ -34,6 +34,7 @@ change it. Exact verified versions: `README.md`.
 | Format | `prettier` / `prettier-plugin-astro` | 3 / 1 |
 | Git hooks | `husky` / `lint-staged` | 9 / 16 |
 | Duplicate detection | `jscpd` | 4 |
+| Anti-slop rules | `oxlint`, `@oxlint/plugins` (exact) | 1.78.0 |
 
 Not `latest`: Astro 7 and Effect 4 have different APIs from the code in the skills.
 
@@ -80,6 +81,10 @@ confirm scope after the analysis. Open questions are asked, never guessed.
 | Incident write-ups: `report.md`, `rca.md`, `actions.md` (`/incident` commits and pushes them) | `docs/incidents/<id>/` |
 
 - No `any` and no `@ts-ignore`. API responses are decoded with Effect `Schema` before use.
+- `pnpm lint` also runs the anti-slop rules (Oxlint, `oxlint.config.ts`): no `unknown` in
+  function contracts, no `as unknown as`, `// SAFETY:` above other assertions, `satisfies`
+  over widening annotations, `Predicate.isTagged`/`Match` over `_tag` checks. Disable one line
+  with a reason (`-- why`), never a rule for the whole project.
 - Match the versions in `package.json`. New projects pin the majors in Tech stack versions above.
 - Pages use `AppLayout` + `Container` + `PageHeader`. A feature never imports from another
   feature; a component needed twice moves to `src/components/common/` with generic props, a

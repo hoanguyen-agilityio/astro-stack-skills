@@ -38,6 +38,7 @@ stub oRPC server):
 | `prettier` / `prettier-plugin-astro` | 3 / 1 | 3.9 / 1.1 |
 | `husky` / `lint-staged` | 9 / 16 | 9.1 / 16.4 |
 | `jscpd` | 4 | 4.3 |
+| `oxlint`, `@oxlint/plugins` (anti-slop, exact) | 1.78.0 | 1.78.0 |
 
 `lint-staged` stays on 16: 17 needs Node ≥ 22.22.1, above this skill's 22.19 floor.
 
@@ -108,6 +109,19 @@ layers.
    pnpm add -D eslint@^9 @eslint/js@^9 typescript-eslint eslint-plugin-astro@^1 eslint-plugin-react-hooks jscpd@^4
    ```
 
+   Then the anti-slop rules: copy this skill's `assets/anti-slop/` folder to
+   `tools/oxlint/anti-slop/` as it is, write `oxlint.config.ts`, and install Oxlint. Both
+   packages at exactly the same version: the vendored rules import `@oxlint/plugins`, and a
+   mismatch fails when Oxlint loads them.
+
+   ```bash
+   mkdir -p tools/oxlint && cp -R <this skill's folder>/assets/anti-slop tools/oxlint/anti-slop
+   pnpm add -D -E oxlint@1.78.0 @oxlint/plugins@1.78.0
+   ```
+
+   The skill's folder is `.claude/skills/code-skeleton` after `npx … init`, or
+   `${CLAUDE_PLUGIN_ROOT}/skills/code-skeleton` in a plugin install.
+
 8. **Vitest and Testing Library.** Write `vitest.config.ts` and `vitest.setup.ts`. Keep
    `@vitest/coverage-v8` on the same major as `vitest`.
 
@@ -162,6 +176,10 @@ existing files instead of overwriting them.
 - Coverage: add the `coverage` block and `test:coverage` script, then run it. Below 80% on an
   existing repo: do not lower the thresholds and do not put `test:coverage` in `pre-push`;
   report the numbers and let the user decide.
+- Anti-slop: add the vendored rules, `oxlint.config.ts` and `oxlint` to `lint`, then run
+  `pnpm exec oxlint`. An existing codebase usually has findings: fix the ones in code the task
+  touches, report the count per rule for the rest, and keep `oxlint` out of `lint` until the
+  user decides. Never switch a rule off project-wide to get green.
 - Story checks: add `playwright`, `scripts/check-stories.ts` and `test:stories`, then run it. An
   existing Storybook whose stories fail: do not tag them `!test` or turn off a11y rules; leave
   `test:stories` out of `pre-push` and report the failing stories for the user to decide.

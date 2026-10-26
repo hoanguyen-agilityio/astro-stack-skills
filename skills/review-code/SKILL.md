@@ -90,6 +90,8 @@ Does NOT handle: new features, refactors outside the change, dependency upgrades
 - Moving a component to `common/` and leaving an old copy or an old import behind
 - Silencing `jscpd` with an ignore comment or a higher `minTokens`
 - Silencing `test:stories` with a `!test` tag or an a11y rule turned off in `parameters.a11y`
+- Silencing an anti-slop finding with a rule turned off in `oxlint.config.ts`, or an
+  `oxlint-disable` comment without a reason after `--`
 - Silencing `test:pages` with `IGNORED_PATHS`, a raised budget, `noindex` on a public page or
   `'unsafe-inline'` in the CSP
 - Looping on a finding the fix cannot clear instead of reporting it
