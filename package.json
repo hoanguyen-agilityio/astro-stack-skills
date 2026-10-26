@@ -22,7 +22,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "node --test \"hooks/__test__/*.test.mjs\" \"bin/__test__/*.test.mjs\"",
+    "test": "node --test \"__test__/*.test.mjs\" \"hooks/__test__/*.test.mjs\" \"bin/__test__/*.test.mjs\"",
+    "validate": "claude plugin validate .",
     "prepare": "husky || true"
   },
   "devDependencies": {

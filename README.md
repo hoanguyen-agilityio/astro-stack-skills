@@ -106,8 +106,14 @@ To try local changes without installing anything, start Claude Code with
 pnpm install     # also sets up the Git hooks (Husky)
 pnpm lint        # ESLint on bin/ and hooks/
 pnpm format      # Prettier (Markdown is left as written)
-pnpm test        # node:test cases for the checklist hook and the installer
+pnpm test        # node:test cases for the skills, the checklist hook and the installer
+pnpm validate    # `claude plugin validate .`: Claude Code's own plugin and marketplace checks
 ```
+
+`pnpm test` also validates every `skills/*/SKILL.md` and `commands/*.md` (`__test__/skills.test.mjs`),
+with the rules of Claude Code and the skill-creator validator: frontmatter, a `name` equal to the
+folder, a description under 1024 characters without `<` or `>`, under 500 lines, and every
+`references/<file>` it points to present.
 
 A commit runs ESLint and Prettier on the staged `.js`, `.mjs` and `.json` files. A push runs
 `pnpm lint`, `pnpm format:check` and `pnpm test`.
@@ -227,6 +233,13 @@ helpers, islands and the page (Astro Container API).
 
 ```text
 /web-dev-stack:develop-feature /orders lists orders with a status filter; pending orders have a Cancel button
+```
+
+After `analyze-task`, pass the analysis file it saved instead of the ticket. One run builds one
+feature; without a file and with several analyses in the session, it asks which one:
+
+```text
+/web-dev-stack:develop-feature docs/analysis/orders-new.md
 ```
 
 Both are verified on the same [set](#tech-stack-versions) as `code-skeleton`: lint,

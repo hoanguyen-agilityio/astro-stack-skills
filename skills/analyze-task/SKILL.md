@@ -102,8 +102,10 @@ End with a **Readiness** line: `Ready: AC1–AC4 · Blocked: AC5 (Q2) · Next: <
 
 - Called from another skill: return to that skill's next step, carrying the analysis path (or
   the inline block) and the answers.
-- Run alone: name the skill to run next and the command, e.g.
-  `/web-dev-stack:code-skeleton` (`/code-skeleton` when installed as project skills).
+- Run alone: end with the exact command to run next, with the analysis path when it was saved,
+  so the next run does not depend on this conversation: `/develop-feature
+  docs/analysis/orders-new.md` (`/web-dev-stack:develop-feature …` when installed as a plugin).
+  One analysis covers one feature; a request with several features gets one analysis each.
 
 ## Use this skill for
 

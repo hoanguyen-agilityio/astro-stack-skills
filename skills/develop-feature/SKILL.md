@@ -1,7 +1,7 @@
 ---
 name: develop-feature
 description: "Build a ticket into a tested page or component: server-loaded Astro page, small React islands, every UI state, stories and tests."
-argument-hint: "[ticket text or feature to build]"
+argument-hint: "[analysis file (docs/analysis/<slug>.md) or ticket text]"
 ---
 
 # Develop feature — ticket to tested UI
@@ -52,8 +52,16 @@ code or deployment.
 
 ## Steps
 
-1. **Criteria.** Rewrite the ticket as a short checklist of behaviours. Add the empty, error and
-   pending cases the ticket forgot. Ask about anything you would otherwise guess.
+1. **Criteria.** Build one feature per run, from one source:
+   - **An analysis file** (`docs/analysis/<slug>.md` from `analyze-task`): read it and use its
+     criteria, answered questions and plan as written. Its blocked criteria stay out of scope.
+   - **No file, but this conversation holds analyses from `analyze-task`:** exactly one, use it
+     and name it in the report; two or more, list them and ask which one. Never build several
+     features in one run, and never pick one by guessing.
+   - **Ticket text only:** rewrite it as a short checklist of behaviours.
+
+   Then add the empty, error and pending cases the source forgot. Ask about anything you would
+   otherwise guess.
 2. **Helpers.** Feature-only pure functions (formatting, URL parsing) go in
    `src/components/<resource>/format.ts`. Parse URL params with `Schema.is` on the exported schema.
 3. **Page.** `src/pages/<route>.astro` runs `load<Resource>` in its frontmatter (on the server,
