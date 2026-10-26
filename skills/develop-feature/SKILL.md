@@ -74,9 +74,10 @@ code or deployment.
 7. **Tests** in `__test__/` next to the code (`<Name>/__test__/index.test.tsx` for a component): helpers (unit), islands (Testing Library, outcome
    helper mocked), the page (Astro Container API, `load<Resource>` mocked).
    → `references/testing.md`
-8. **Run it.** `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:coverage && pnpm build`
-   (coverage stays ≥ 80%: new helpers and islands come with their tests), then `pnpm storybook` to
-   look at each new story in light and dark with the Accessibility panel clean, then `pnpm dev`
+8. **Run it.** `pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm test:stories`
+   (coverage stays ≥ 80%: new helpers and islands come with their tests; `test:stories` opens
+   every story in light and dark and fails on a render error, a failing `play` or an a11y
+   violation). Any failure: fix the cause and start again at `pnpm lint`. Then `pnpm dev`
    with the backend running. Open the page and go through the criteria: filter, act, and stop the backend
    once to see the error state. Add the route to `siteConfig.nav` in `src/config/site.ts` so the
    header links to it. If you started a dev server, stop it when done.
@@ -117,8 +118,8 @@ ones by file (`@/components/orders/OrderSummary/index.astro`).
 - Every criterion has a test or was checked by hand in the browser, and the report says which.
 - The gates pass, and the empty and error states were seen in the browser.
 - `review-code` ended with no `blocker` or `should` left, or the report says what is left.
-- Every component added or changed (`.astro` or React) has a story for each of its states, seen in
-  both themes.
+- Every component added or changed (`.astro` or React) has a story for each of its states, and
+  `pnpm test:stories` passes in both themes.
 - The user knows the page URL and how to start the backend and the dev server.
 
 ## Use this skill for

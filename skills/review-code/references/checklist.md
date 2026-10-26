@@ -51,6 +51,8 @@ Name the input that breaks it. Fix it and add a test that fails without the fix.
 ## 5. Checks (`blocker`)
 
 Any failing gate or `pnpm dup` clone in the changed files. Fix the cause; never weaken the gate.
+A `test:stories` failure names the story, the theme and the a11y rule: fix the markup or the
+token in `DESIGN.md`, never tag the story `!test` or turn the rule off.
 
 ## Nits (`nit`)
 

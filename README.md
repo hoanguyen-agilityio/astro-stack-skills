@@ -26,6 +26,7 @@ passed on. Source: `skills/code-skeleton/references/setup-layers.md`.
 | Lint | `eslint` / `eslint-plugin-astro` | 9 / 1 | 9.39 / 1.7 |
 | Stories | `storybook` + `@storybook/{builder-vite,react,addon-docs,addon-a11y,addon-themes}` | 10 | 10.6 |
 | | `@storybook-astro/framework` / `@vitejs/plugin-react` | 1 / 5 | 1.12, 1.13 / 5.2 |
+| Story checks | `playwright` (Chromium) | 1 | 1.64 |
 | Format | `prettier` / `prettier-plugin-astro` | 3 / 1 | 3.9 / 1.1 |
 | Git hooks | `husky` / `lint-staged` | 9 / 16 | 9.1 / 16.4 |
 | Duplicate detection | `jscpd` | 4 | 4.3 |
@@ -133,6 +134,8 @@ eslint.config.js, .prettierrc, .lintstagedrc, .husky/   # checks for the repo's 
 .claude-plugin/
 ├── marketplace.json   # marketplace "astro-stack", lists the plugin at ./
 └── plugin.json        # plugin "web-dev-stack"
+commands/
+└── verify.md          # /verify: gates in a loop (fix, re-run from lint), then review-code
 hooks/
 ├── hooks.json         # UserPromptSubmit + PreToolUse + PostToolUse + Stop hooks, loaded with the plugin
 ├── turn-snapshot.mjs  # records the working tree when a turn starts
@@ -162,6 +165,9 @@ skills/
 Every workflow follows the same steps: **analyze → ground → build → verify → review → report**.
 `integrate-api` and `develop-feature` end with `review-code`, which loops review → fix → review
 until nothing is left to fix (at most 3 rounds).
+For work done without a build skill (a quick fix, a hand edit), `/verify` runs the same loop:
+the six gates until they pass (fix, then again from `lint`, at most 5 runs), then `review-code`.
+`/verify --no-review` stops after the gates.
 `code-skeleton` runs `analyze-task` as its step 0, so calling `/code-skeleton` alone still starts
 with the analysis. `integrate-api` and `develop-feature` start with their own "Look first" step
 and do not call `analyze-task` yet. Running `analyze-task` on its own stops after the plan and names the skill to run
@@ -177,7 +183,7 @@ before anything is built.
 
 ### `code-skeleton`
 
-Produces a project that passes `lint`, `typecheck`, `test:coverage` and `build` before any feature code
+Produces a project that passes `lint`, `typecheck`, `test:coverage`, `build` and `test:stories` before any feature code
 exists. In an empty directory (only `.claude/`, `.git/` and the like) it runs in **init** mode
 and creates the project layer by layer: package and git, Astro + React, TypeScript, Tailwind,
 Effect + oRPC, shadcn, ESLint, Vitest, Storybook. Called with no arguments there, it takes the
@@ -190,11 +196,15 @@ in **retrofit** mode and adds only the missing layers. It includes:
 - shadcn/ui on Tailwind v4
 - ESLint, which bans `any` and `@ts-ignore` and requires a final newline
 - Prettier with the team's `space` settings, and Husky + lint-staged: ESLint and Prettier on
-  staged files before each commit, typecheck and tests with 80% coverage before each push
+  staged files before each commit; typecheck, tests with 80% coverage and story checks before
+  each push
 - Vitest with Testing Library and v8 coverage (80% thresholds, `pnpm test:coverage`): tests for
   the two islands and a Container API test for the pages
 - Storybook 10 through `@storybook-astro/framework`, so `.astro` and React components both get
   stories; light/dark toggle, a11y addon, the oRPC client mocked
+- `pnpm test:stories` (`scripts/check-stories.ts`, Playwright): opens every story in Chromium in
+  light and dark, and fails on a render error, a failing `play` function or an a11y violation, so
+  Claude fixes what used to be checked by eye in Storybook
 - a starter UI built from reusable pieces: `AppLayout` (sticky header with nav and a dark-mode
   toggle, footer, skip link), `common/` components (`Container`, `PageHeader`, `LinkCard`,
   `ThemeToggle`), `src/config/site.ts` for the name and nav, a welcome page in the style of the
@@ -247,7 +257,7 @@ change ─► inventory ─► pnpm dup + gates ─► review (fresh subagent) �
 - **Inventory**: lists what already exists (`ui/`, `common/`, feature components, helpers,
   services, Schemas) so the change is compared with it, not reviewed alone.
 - **Checks**: `pnpm dup` runs `jscpd` for copied code (`.astro` included) and fails on any clone;
-  then the five gates.
+  then the six gates (`test:stories` included).
 - **Review**: a subagent that did not write the code goes through a checklist: duplicates and
   cross-feature imports, conventions (`DESIGN.md` tokens, island boundary, stories, layout),
   criteria without proof, and bugs. Findings are `blocker`, `should` or `nit`.
@@ -289,7 +299,7 @@ Tasks (from Claude's report):
 Changed (2):
   • src/pages/orders.astro (+42 −3)
   • src/services/orders.ts (new)
-Gates: [x] lint  [x] format:check  [x] typecheck  [x] test  [x] build
+Gates: [x] lint  [x] format:check  [x] typecheck  [x] test  [x] build  [x] test:stories
 ```
 
 - Tasks come from the `## Result` block Claude ends with: **Did** items are `[x]`, **Not done**
@@ -302,8 +312,8 @@ Gates: [x] lint  [x] format:check  [x] typecheck  [x] test  [x] build
   snapshot taken when the prompt was sent, so files written by Bash (`printf > file`, codegen,
   `pnpm add`) count too. Files that were already changed and stayed the same are left out.
   Line counts come from `git`.
-- Gates are the `package.json` scripts among `lint`, `format:check`, `typecheck`, `test` and
-  `build`. A gate counts only if it ran and passed after the last edit; otherwise the verdict
+- Gates are the `package.json` scripts among `lint`, `format:check`, `typecheck`, `test`,
+  `build` and `test:stories`. A gate counts only if it ran and passed after the last edit; otherwise the verdict
   names it (`[✗]` failed, `[~]` passed before a later edit, `[?]` result hidden, `[ ]` not run).
   `pnpm test:coverage` counts as `test`.
 - The icon follows the gates only: ✅ all passed, ❌ `Gates failing: …`, ⚠️ `Gates to check: …`
