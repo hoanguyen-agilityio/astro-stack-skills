@@ -1,14 +1,15 @@
 ---
 name: ticket
-description: Analyze one ticket into docs/tickets/{id}/intent.md, spec.md and plan.md, check them against the ticket contract, then commit and push them on their own branch.
-argument-hint: "<ticket id> <ticket text, file or link>"
+description: Analyze one ticket, or several in parallel from a file or folder, into docs/tickets/{id}/intent.md, spec.md and plan.md, check them against the ticket contract, then commit and push each on its own branch.
+argument-hint: "<ticket id> <ticket text, file or link> | <tickets file or folder>"
 disable-model-invocation: true
 ---
 
 # Ticket — ticket → intent, spec, plan → pushed branch
 
-Use this skill when the user runs `/ticket 412 <ticket>`: the team wants the ticket's analysis
-in the repository, reviewed in a merge request, before anyone builds it.
+Use this skill when the user runs `/ticket 412 <ticket>`, or `/ticket tickets.md` for several:
+the team wants each ticket's analysis in the repository, reviewed in a merge request, before
+anyone builds it.
 
 It runs `analyze-task` on the ticket, writes the three files the ticket contract defines,
 checks them, and pushes them on a `docs/ticket-<id>` branch. It never writes application code
@@ -35,6 +36,11 @@ Does **not** handle: building the ticket, opening the merge request, or reading 
   `dev`, `stag`, `prod` or the default branch.
 
 ## 0. Read the input
+
+**Several tickets?** The argument is a folder, or a Markdown file with more than one `## `
+section, and no ticket id comes first: follow `references/parallel.md` instead of the steps
+below. It runs one subagent per ticket, each in its own git worktree and branch, and ends with
+one summary table.
 
 1. **Ticket id**: the first argument (`412`, `PROJ-412`, `#412`). Normalise it as the contract's
    **Folder name** section says. No id at all: ask once whether there is one; without one, use
@@ -98,6 +104,7 @@ Then the open questions, each with who can answer it.
 ## Use this skill for
 
 - "/ticket 412 …", "write up ticket 412", "analyze this ticket and push it"
+- "/ticket tickets.md", "/ticket ./tickets/", "write up these tickets in parallel"
 - getting a ticket's intent, spec and plan reviewed before the build
 
 ## Common failure modes
@@ -107,9 +114,13 @@ Then the open questions, each with who can answer it.
 - A heading missing or renamed, so the contract check fails after the push
 - Renumbering ACs on an update
 - Pushing to the default branch or an environment branch instead of `docs/ticket-<id>`
+- Several tickets: running subagents in the user's working tree instead of one worktree each,
+  so their commits collide
+- Several tickets: trusting a subagent's reply without checking its commit and remote branch
 
 ## References
 
 | File | Use |
 |------|-----|
 | `../analyze-task/references/ticket-contract.md` | The three files, the contract check and an example |
+| `references/parallel.md` | Several tickets: input formats, one worktree and subagent per ticket, checks, clean-up, summary |
