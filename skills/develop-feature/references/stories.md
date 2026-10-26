@@ -138,12 +138,23 @@ Give width-dependent components a realistic width: in React stories a decorator
 (`decorators: [(Story) => <div className="w-80">{Story()}</div>]`); for `.astro` stories, size the
 component's own root or accept the padded canvas.
 
-## Review before calling it done
+## Check before calling it done
 
 ```bash
-pnpm storybook
+pnpm test:stories
 ```
 
-Open each new story. Switch the theme toolbar to dark, and check the Accessibility panel shows no
-violations. If you changed `.storybook/` (for example, a new `sb.mock`), also run
-`pnpm build-storybook` once to prove the config still loads.
+It builds Storybook and opens every story in Chromium, in light and in dark. A story fails when
+it throws while rendering, its `play` function fails, or the a11y addon finds a violation. Each
+failure names the story, the theme and the rule, with the first element it hit:
+
+```text
+✗ orders-statusbadge--pending [light] ./src/components/orders/StatusBadge/StatusBadge.stories.tsx
+    a11y color-contrast (serious): Elements must meet minimum color contrast ratio thresholds, 1 node(s), first: .inline-flex
+```
+
+Fix the cause: a token with too little contrast goes back to `DESIGN.md` and `global.css`, a
+missing label goes into the markup. Then run the gate again. Never tag a story `!test` or turn
+off an a11y rule in `parameters.a11y` to get green; that is weakening a gate.
+
+`pnpm storybook` is for looking around while you build; the gate is what proves it.

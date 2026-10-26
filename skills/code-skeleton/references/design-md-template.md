@@ -234,12 +234,12 @@ the design actually uses.
   `parameters: { renderer: 'react' }`), and `__test__/index.test.tsx`. Feature helpers
   (`format.ts`, `load<Resource>.ts`) sit beside the component folders with their own `__test__/`.
   Query tests by role and accessible name.
-- Stories show every state with fixtures from `src/mocks/`, never the network. Check each new
-  story in light and dark (theme toolbar) with a clean Accessibility panel: `pnpm storybook`.
+- Stories show every state with fixtures from `src/mocks/`, never the network. `pnpm test:stories`
+  opens each one in light and dark and fails on an a11y violation; fix the token or the markup.
 - Import order: external packages → `@/` aliases → relative imports.
 - No `any` and no `@ts-ignore`. API data is decoded with Effect `Schema` before it reaches UI.
-- Verify with `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage` and
-  `pnpm build`. Commits run ESLint and Prettier on staged files (Husky + lint-staged); pushes run
-  typecheck and tests with 80% coverage. Never skip them with `--no-verify`.
+- Verify with `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage`,
+  `pnpm build` and `pnpm test:stories`. Commits run ESLint and Prettier on staged files (Husky +
+  lint-staged); pushes run typecheck, tests with 80% coverage and the story checks. Never skip them with `--no-verify`.
 - When a design changes tokens or adds a pattern, update this file in the same change.
 ```

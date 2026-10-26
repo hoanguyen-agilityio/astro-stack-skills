@@ -14,11 +14,12 @@ parts in rather than overwriting it.
 | `eslint.config.js` | flat config; bans `any` and `@ts-ignore`, requires a final newline |
 | `.jscpd.json` | copy-paste detection for `pnpm dup`, used by `review-code` |
 | `.prettierrc`, `.prettierignore`, `.editorconfig` | the team's `space` style: single quotes, trailing commas, 80 columns, Astro plugin |
-| `.husky/pre-commit`, `.husky/pre-push`, `.lintstagedrc` | ESLint + Prettier on staged files before a commit; typecheck + tests with 80% coverage before a push |
+| `.husky/pre-commit`, `.husky/pre-push`, `.lintstagedrc` | ESLint + Prettier on staged files before a commit; typecheck, tests with 80% coverage and story checks before a push |
 | `vitest.config.ts`, `vitest.setup.ts` | `getViteConfig`, jsdom, jest-dom, v8 coverage with 80% thresholds |
 | `.env.example`, `.env`, `src/env.d.ts` | `PUBLIC_API_URL` placeholder, local copy (gitignored), its type |
 | `src/libs/orpcClient.ts` | client factory: `RPCLink` to `${PUBLIC_API_URL}/rpc`, auth header; router type starts empty |
 | `.storybook/main.ts`, `preview.ts` | `@storybook-astro/framework` + `react()`; `global.css`, theme toggle, a11y, `createOrpcClient` mocked |
+| `scripts/check-stories.ts` | `pnpm test:stories`: every story in Chromium, light and dark; fails on a render error, a failing `play` or an a11y violation |
 
 `PUBLIC_API_URL` holds the base **without** `/rpc`, even when the user gives
 `http://localhost:8787/rpc`: the client appends `/rpc` and the dev proxy forwards it. The router
@@ -50,6 +51,7 @@ Dependencies are added by the `pnpm add` commands of each layer in `setup-layers
     "test:coverage": "vitest run --coverage",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "test:stories": "storybook build --quiet && node scripts/check-stories.ts",
     "prepare": "husky"
   }
 }
@@ -482,9 +484,242 @@ export default preview;
 - Install by hand (`setup-layers.md`, layer 9). `storybook init` does not recognise Astro, asks questions, and adds
   example stories.
 - pnpm warns that the framework wants `vitest@^4`. That peer is for its optional Vitest
-  integration; Storybook and the stories work on the skeleton's Vitest 3.
+  integration; Storybook and the stories work on the skeleton's Vitest 3, and
+  `scripts/check-stories.ts` runs them in a browser without it.
 - Fixtures shared by stories and tests live in `src/mocks/<resource>.ts`, in the wire format the
   API sends, so stories go through the same Schema decoding as the app.
+
+## Story checks: `scripts/check-stories.ts`
+
+`pnpm test:stories` is the gate for what a person used to check by eye in Storybook. It builds
+Storybook, serves `storybook-static/`, and opens every story in Chromium (Playwright) once per
+theme. A story fails when it throws while rendering, its `play` function fails, or the a11y
+addon reports a violation (`a11y: { test: 'error' }` in `preview.ts`). It exits 1 and prints the
+story, the theme and each problem, so Claude can fix it and run the gate again.
+
+```ts
+// Opens every story of the built Storybook in Chromium, once per theme, and fails when a story
+// does not render, its play function throws, or the a11y addon reports a violation.
+// `pnpm test:stories` builds Storybook, then runs this file with Node's type stripping.
+import { readFile } from 'node:fs/promises';
+import { createServer, type Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { extname, join, normalize } from 'node:path';
+import { chromium, type Page } from 'playwright';
+
+const ROOT = 'storybook-static';
+// The `theme` global of withThemeByClassName in .storybook/preview.ts.
+const THEMES = ['light', 'dark'];
+const TIMEOUT_MS = 15_000;
+const PAGES = 4;
+
+const TYPES: Record<string, string> = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.woff2': 'font/woff2',
+};
+
+interface Entry {
+  id: string;
+  type: string;
+  importPath: string;
+  tags?: string[];
+}
+
+interface Violation {
+  id: string;
+  impact: string | null;
+  help: string;
+  nodes: { target: string[] }[];
+}
+
+interface StoryEvent {
+  storyId?: string;
+  status?: string;
+  description?: string;
+  message?: string;
+  reporters?: { result?: { violations?: Violation[] } }[];
+}
+
+type OnEvent = (event: string, payload: StoryEvent | undefined) => void;
+
+declare global {
+  interface Window {
+    __STORYBOOK_ADDONS_CHANNEL__?: {
+      on: (event: string, listener: (payload: StoryEvent) => void) => void;
+    };
+    storyEvent: OnEvent;
+  }
+}
+
+const serve = (): Promise<Server> =>
+  new Promise((resolve) => {
+    const server = createServer((req, res) => {
+      const url = new URL(req.url ?? '/', 'http://localhost');
+      const path = join(ROOT, normalize(decodeURIComponent(url.pathname)));
+      readFile(path)
+        .then((body) => {
+          const type = TYPES[extname(path)] ?? 'application/octet-stream';
+          res.writeHead(200, { 'content-type': type });
+          res.end(body);
+        })
+        .catch(() => {
+          res.writeHead(404);
+          res.end();
+        });
+    });
+    server.listen(0, '127.0.0.1', () => resolve(server));
+  });
+
+// Runs in the preview before Storybook starts: freezes colours and forwards channel events.
+const listen = () => {
+  // A theme switch animates colours through `transition-colors`; axe must see the final ones.
+  const still = document.createElement('style');
+  still.textContent =
+    '*, *::before, *::after { transition: none !important; animation: none !important; }';
+  document.addEventListener('DOMContentLoaded', () =>
+    document.head.append(still),
+  );
+  const events = [
+    'storyFinished',
+    'storyErrored',
+    'storyThrewException',
+    'playFunctionThrewException',
+  ];
+  const wait = setInterval(() => {
+    const channel = window.__STORYBOOK_ADDONS_CHANNEL__;
+    if (!channel) return;
+    clearInterval(wait);
+    for (const event of events) {
+      channel.on(event, (payload) => window.storyEvent(event, payload));
+    }
+  }, 5);
+};
+
+const describe = (event: string, payload: StoryEvent | undefined) => {
+  if (event !== 'storyFinished') {
+    const message = payload?.description ?? payload?.message ?? 'no message';
+    return [`${event}: ${message.split('\n')[0]}`];
+  }
+  const problems: string[] = [];
+  for (const reporter of payload?.reporters ?? []) {
+    for (const violation of reporter.result?.violations ?? []) {
+      const target = violation.nodes[0]?.target.join(' ') ?? '';
+      problems.push(
+        `a11y ${violation.id} (${violation.impact}): ${violation.help}, ` +
+          `${violation.nodes.length} node(s), first: ${target}`,
+      );
+    }
+  }
+  if (payload?.status === 'error' && problems.length === 0) {
+    problems.push('story finished with status error');
+  }
+  return problems;
+};
+
+const index = JSON.parse(await readFile(join(ROOT, 'index.json'), 'utf8')) as {
+  entries: Record<string, Entry>;
+};
+// A story tagged `!test` loses the `test` tag and is skipped, as in Storybook's test runners.
+const stories = Object.values(index.entries).filter(
+  (entry) => entry.type === 'story' && (entry.tags ?? []).includes('test'),
+);
+if (stories.length === 0) {
+  console.error(`No stories in ${ROOT}/index.json. Run pnpm build-storybook.`);
+  process.exit(1);
+}
+
+const server = await serve();
+const { port } = server.address() as AddressInfo;
+const browser = await chromium.launch();
+const visits = THEMES.flatMap((theme) =>
+  stories.map((story) => ({ story, theme })),
+);
+const failures: { story: Entry; theme: string; problems: string[] }[] = [];
+
+const check = async (
+  page: Page,
+  setListener: (listener: OnEvent) => void,
+  story: Entry,
+  theme: string,
+) => {
+  const problems: string[] = [];
+  const finished = new Promise<'done'>((resolve) => {
+    setListener((event, payload) => {
+      if (payload?.storyId !== undefined && payload.storyId !== story.id)
+        return;
+      problems.push(...describe(event, payload));
+      if (event === 'storyFinished' || event === 'storyErrored')
+        resolve('done');
+    });
+  });
+  const timeout = new Promise<'timeout'>((resolve) =>
+    setTimeout(() => resolve('timeout'), TIMEOUT_MS),
+  );
+  await page.goto(
+    `http://127.0.0.1:${port}/iframe.html?id=${story.id}&viewMode=story&globals=theme:${theme}`,
+  );
+  if ((await Promise.race([finished, timeout])) === 'timeout') {
+    problems.push(`did not finish within ${TIMEOUT_MS} ms`);
+  }
+  return [...new Set(problems)];
+};
+
+const worker = async () => {
+  const page = await browser.newPage();
+  let listener: OnEvent = () => undefined;
+  await page.exposeFunction('storyEvent', ((event, payload) =>
+    listener(event, payload)) satisfies OnEvent);
+  await page.addInitScript(listen);
+  for (let visit = visits.shift(); visit; visit = visits.shift()) {
+    const { story, theme } = visit;
+    const problems = await check(
+      page,
+      (next) => (listener = next),
+      story,
+      theme,
+    );
+    if (problems.length > 0) failures.push({ story, theme, problems });
+  }
+  await page.close();
+};
+
+await Promise.all(Array.from({ length: PAGES }, worker));
+await browser.close();
+server.close();
+
+for (const { story, theme, problems } of failures) {
+  console.error(`✗ ${story.id} [${theme}] ${story.importPath}`);
+  for (const problem of problems) console.error(`    ${problem}`);
+}
+const total = stories.length * THEMES.length;
+console.log(
+  `${total - failures.length}/${total} story checks passed ` +
+    `(${stories.length} stories × ${THEMES.join(', ')})`,
+);
+process.exit(failures.length > 0 ? 1 : 0);
+```
+
+- Node ≥ 22.18 runs `.ts` files directly (type stripping), so the script needs no build step and
+  goes through `pnpm lint` and `pnpm typecheck` like the rest of the code. Keep it to syntax Node
+  can strip: no `enum`, no `namespace`, no parameter properties.
+- It reads the results of the a11y addon that is already installed, so a rule turned off for one
+  story in `parameters.a11y` is off here too, and the Accessibility panel shows the same
+  violations. Disabling a rule to get green is weakening a gate: fix the markup or the token.
+- Transitions and animations are switched off before axe runs. Without that, the dark theme is
+  checked while `transition-colors` is still fading from the light colours, and the contrast
+  results are wrong.
+- A story tagged `!test` is skipped. Use it only for a story that cannot render on its own, and
+  say why in a comment.
+- `playwright` brings no browser. Run `pnpm exec playwright install chromium` once per machine
+  (`--with-deps` on a bare Linux or CI image). Without it the script stops with
+  `Executable doesn't exist`.
+- About 20 seconds for 20 stories, most of it the Storybook build. It runs before every push,
+  not on every save.
 
 ## Prettier, EditorConfig, Husky and lint-staged
 
@@ -548,12 +783,13 @@ pnpm exec lint-staged
 ```
 
 ```sh
-pnpm typecheck && pnpm test:coverage
+pnpm typecheck && pnpm test:coverage && pnpm test:stories
 ```
 
 - ESLint in the hook has no `--fix`: a lint error (an `any`, a missing final newline) blocks the
   commit instead of being silently rewritten. Prettier does rewrite, then lint-staged re-stages.
-- The push runs the tests with coverage, so a push below 80% fails.
+- The push runs the tests with coverage and the story checks, so a push below 80%, or with a
+  broken story or an a11y violation, fails.
 - The config needs no `eslint-config-prettier`: `typescript-eslint` strict and
   `eslint-plugin-astro` recommended carry no formatting rules.
 - `prettier --write .` also formats the `CLAUDE.md` and `DESIGN.md` the skill writes, and the

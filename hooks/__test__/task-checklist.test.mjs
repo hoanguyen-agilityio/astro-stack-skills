@@ -11,7 +11,7 @@ import { afterEach, beforeEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const HOOKS = join(dirname(fileURLToPath(import.meta.url)), '..');
-const GATES = ['lint', 'format:check', 'typecheck', 'test', 'build'];
+const GATES = ['lint', 'format:check', 'typecheck', 'test', 'build', 'test:stories'];
 
 let dir;
 let transcriptDir;
@@ -140,6 +140,25 @@ test('similar script names are not gates', () => {
 test('test:coverage counts as test', () => {
   const output = `${header('test:coverage')}ok\n`;
   has(checklist([prompt('do'), ...edit(), ...bash('pnpm test:coverage', output)]), '[x] test');
+});
+
+test('test:stories is its own gate, not test', () => {
+  const message = checklist([
+    prompt('do'),
+    ...edit(),
+    ...bash('pnpm test:stories', fail('test:stories')),
+  ]);
+  has(message, '[✗] test:stories', '[ ] test');
+});
+
+test('a project without test:stories does not need it', () => {
+  const gates = GATES.filter((gate) => gate !== 'test:stories');
+  const scripts = Object.fromEntries(gates.map((gate) => [gate, 'x']));
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ scripts }));
+  const command = gates.map((gate) => `pnpm ${gate}`).join(' && ');
+  const message = checklist([prompt('do'), ...edit(), ...bash(command, gates.map(ok).join(''))]);
+  has(message, '✅');
+  lacks(message, 'test:stories');
 });
 
 // Gate results read from pnpm's output

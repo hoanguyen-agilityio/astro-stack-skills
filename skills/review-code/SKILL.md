@@ -51,8 +51,9 @@ Does NOT handle: new features, refactors outside the change, dependency upgrades
    `src/types/`, each with its props or exports. The review compares the change against this
    list. → `references/inventory.md`
 3. **Run the checks.** `pnpm dup` (copy-paste detection with `jscpd`) and the gates:
-   `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage`, `pnpm build`.
-   Each failure is a finding.
+   `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage`, `pnpm build`,
+   `pnpm test:stories` (every story in light and dark: render, `play`, a11y). Each failure is a
+   finding. A project without a `test:stories` script skips it and says so in the report.
 4. **Review in a fresh agent.** Start a subagent with the prompt in `references/reviewer-prompt.md`,
    the changed files, the inventory, the check output and the criteria. It did not write the
    code, so it does not assume the code is right. It returns findings in the fixed format. If no
@@ -78,7 +79,7 @@ Does NOT handle: new features, refactors outside the change, dependency upgrades
 ## Done when
 
 - The last round has no `blocker` or `should`, or the report lists what is left and why.
-- `pnpm dup` reports no clone in the changed files, and all five gates pass.
+- `pnpm dup` reports no clone in the changed files, and all six gates pass.
 - Every acceptance criterion maps to a test or a manual check.
 
 ## Common failure modes
@@ -87,6 +88,7 @@ Does NOT handle: new features, refactors outside the change, dependency upgrades
 - Fixing a duplicate by importing from another feature instead of moving the piece to `common/`
 - Moving a component to `common/` and leaving an old copy or an old import behind
 - Silencing `jscpd` with an ignore comment or a higher `minTokens`
+- Silencing `test:stories` with a `!test` tag or an a11y rule turned off in `parameters.a11y`
 - Looping on a finding the fix cannot clear instead of reporting it
 - Rewriting code outside the change because it "could be better"
 
