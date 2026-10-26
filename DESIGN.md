@@ -16,7 +16,8 @@ astro-stack-skills/                 one repo = marketplace "astro-stack" = plugi
 ├── skills/
 │   ├── analyze-task/               step 0 of every workflow
 │   │   ├── SKILL.md
-│   │   └── references/{analysis-template,design-input}.md
+│   │   └── references/{ticket-contract,design-input}.md
+│   ├── ticket/                     /ticket <id>: analyze-task + contract check + push on docs/ticket-<id>
 │   ├── code-skeleton/              part 1 of the brief
 │   │   ├── SKILL.md
 │   │   └── references/{setup-layers,project-files,starter-ui,design-md-template,claude-md-template}.md
@@ -52,7 +53,8 @@ request ──► analyze-task ──► ground ──► build ──► verify
   failure modes and references. `code-skeleton` takes its inputs from an `analyze-task`
   analysis.
 - **Lanes control the ceremony.** In `tiny`, the analysis stays inline. In `normal`, it is saved
-  to `docs/analysis/<slug>.md`. In `high-risk`, the build waits for the user to confirm scope.
+  to `docs/tickets/<id>/` as `intent.md`, `spec.md` and `plan.md`. In `high-risk`, the build
+  waits for the user to confirm scope.
 - **Verify loops.** Any fix restarts at the first gate. A failing gate is reported as failing.
 - **Review loops.** `review-code` runs after verify: a fresh subagent reviews the change against
   an inventory of existing code, the findings are fixed, and checks and review run again, at
@@ -64,7 +66,8 @@ request ──► analyze-task ──► ground ──► build ──► verify
 
 | From → to | Contract |
 |-----------|----------|
-| `analyze-task` → build skill | analysis (file path or inline block): kind, ACs, assumptions, plan, Ready line |
+| `analyze-task` → build skill | `docs/tickets/<id>/` (or the inline block) in the shape `references/ticket-contract.md` fixes: intent (request, goal, scope), spec (ACs, edge cases, questions, assumptions), plan (modules, order, tests, Ready line) |
+| `/ticket` → team | the same three files, committed on `docs/ticket-<id>` and pushed for a merge request |
 | `code-skeleton` → `integrate-api` | `PUBLIC_API_URL`; `src/libs/orpcClient.ts` with an empty `AppRouterClient` and a `Procedure<Input>` type whose output is `unknown` |
 | `code-skeleton` → `develop-feature` | `DESIGN.md` (tokens, components, island rules, states), shadcn in `src/components/ui/` |
 | `code-skeleton` → `review-code` | `.jscpd.json` and `pnpm dup`; a starter with no clones, so the first clone comes from new code |
@@ -76,6 +79,8 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | Decision | Why |
 |----------|-----|
 | Analysis is its own skill, called by the build skills | One place for the intake rules, reusable by every build skill, and it still runs when the user names only a build skill |
+| One folder per ticket with `intent.md`, `spec.md`, `plan.md`, replacing `docs/analysis/<slug>.md` | The mentor's review: the analysis is reviewed in a merge request before the build. Splitting why, done-means and how lets each reviewer read their part, and a fixed heading list (`None.` instead of a deleted section, stable AC numbers) lets the build skills, `review-code` and a grep check rely on it. Named by ticket id, so a build is started with the folder (`/develop-feature docs/tickets/412/`) rather than "the analysis above" |
+| `/ticket` commits only the three files and pushes `docs/ticket-<id>`, but opens no merge request | Pushing gets the analysis in front of the team; the push guard keeps it off `dev`, `stag` and `prod`. The user opens the merge request, since the target branch and reviewers are the team's call. `disable-model-invocation` keeps Claude from pushing on its own when a ticket is only mentioned |
 | Pin Astro 5 / Effect 3 / oRPC 1 / Vite 6 | `latest` is Astro 7 / Effect 4, whose APIs differ. These majors match the team's kitchen app and were verified end to end |
 | Pin `vite@^6` explicitly | `@tailwindcss/vite`'s peer range otherwise pulls Vite 8 next to Astro's Vite 6, and the config fails to load |
 | Let `shadcn init -t astro -b radix -p nova` write `components.json` | A hand-written one diverged from shadcn 4 (which uses the `cn` package). `-p` avoids an interactive prompt that stalls agents |

@@ -27,7 +27,8 @@ tokens are in `DESIGN.md`.
 ## Workflow: every task, every size
 
 1. **Analyze**: run `analyze-task` first. It produces the request kind, the lane, acceptance
-   criteria (Given/When/Then), open questions and a plan.
+   criteria (Given/When/Then), open questions and a plan, written to `docs/tickets/<id>/` as
+   `intent.md`, `spec.md` and `plan.md`.
 2. **Ground**: read `package.json`, `DESIGN.md` and the neighbouring code before writing.
    Existing patterns win over defaults.
 3. **Build**: `integrate-api` for API services, `develop-feature` for pages and islands.
@@ -58,7 +59,7 @@ confirm scope after the analysis. Open questions are asked, never guessed.
 | Pure helpers used by two features or more, and their `__test__/` | `src/libs/<name>.ts` |
 | Fixtures for stories and tests, in the API's wire format | `src/mocks/<resource>.ts` |
 | Design tokens and UI rules | `DESIGN.md` → `src/styles/global.css` |
-| Analyses | `docs/analysis/<slug>.md` |
+| Ticket analyses: `intent.md`, `spec.md`, `plan.md` (`/ticket` commits and pushes them) | `docs/tickets/<id>/` |
 
 - No `any` and no `@ts-ignore`. API responses are decoded with Effect `Schema` before use.
 - Keep the majors in `package.json` (Astro 5, Effect 3, oRPC 1, Vite 6). Node ≥ 22.19.
