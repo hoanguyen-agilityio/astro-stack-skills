@@ -84,6 +84,10 @@ outcome helpers.
 ## Rules
 
 - No `any`, no `@ts-ignore`, no `as` on API data. The Schema is the only source of response types.
+- Branch on tagged errors with `Predicate.isTagged(error, 'X')` or `Match.valueTags(error, {…})`,
+  never `error._tag === 'X'` or `switch (error._tag)`: the anti-slop rules in `pnpm lint`
+  reject them. The one raw `unknown` is the client's response inside the service, right before
+  `Schema` decodes it; it carries a disable comment with that reason.
 - Never turn a failure into an empty list. Empty data and a failed call must look different.
 - Browser calls go to same-origin `/rpc`. The dev server proxies it; production needs the same
   forwarding in the host or in middleware.

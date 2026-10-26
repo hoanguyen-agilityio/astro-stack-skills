@@ -30,6 +30,7 @@ passed on. Source: `skills/code-skeleton/references/setup-layers.md`.
 | Format | `prettier` / `prettier-plugin-astro` | 3 / 1 | 3.9 / 1.1 |
 | Git hooks | `husky` / `lint-staged` | 9 / 16 | 9.1 / 16.4 |
 | Duplicate detection | `jscpd` | 4 | 4.3 |
+| Anti-slop rules | `oxlint`, `@oxlint/plugins` (exact, rules vendored) | 1.78.0 | 1.78.0 |
 
 Notes:
 
@@ -261,6 +262,11 @@ in **retrofit** mode and adds only the missing layers. It includes:
 - Effect and oRPC installed, with `src/libs/orpcClient.ts` pointing at `PUBLIC_API_URL`
 - shadcn/ui on Tailwind v4
 - ESLint, which bans `any` and `@ts-ignore` and requires a final newline
+- the anti-slop rules ([dmmulroy/anti-slop](https://github.com/dmmulroy/anti-slop), MIT,
+  vendored in `tools/oxlint/anti-slop/` and run by Oxlint in `pnpm lint` and on every edit):
+  no `unknown` in function contracts, no `as unknown as`, a `// SAFETY:` reason above other
+  assertions, `satisfies` over widening annotations, Effect `Predicate.isTagged`/`Match` over
+  hand-written `_tag` checks. `no-module-mocking` and `require-readable-spacing` are off
 - Prettier with the team's `space` settings, and Husky + lint-staged: ESLint and Prettier on
   staged files before each commit; typecheck, tests with 80% coverage and story checks before
   each push

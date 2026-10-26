@@ -69,7 +69,7 @@ skeleton's ESLint config rejects `{}` as a type.
 ## src/services/orders.ts — one function per procedure
 
 ```ts
-import { Duration, Effect, Schedule, Schema } from 'effect';
+import { Duration, Effect, Predicate, Schedule, Schema } from 'effect';
 
 import { createOrpcClient, type AppRouterClient } from '@/libs/orpcClient';
 import { OrderListDto, type Order, type OrderStatus } from '@/types/order';
@@ -93,7 +93,8 @@ const resilient = <A, E extends { readonly _tag: string }, R>(self: Effect.Effec
     Effect.retry({
       schedule: Schedule.exponential('200 millis'),
       times: 2,
-      while: (e) => e._tag === 'NetworkError' || e._tag === 'TimeoutException',
+      while: (e) =>
+        Predicate.isTagged(e, 'NetworkError') || Predicate.isTagged(e, 'TimeoutException'),
     }),
   );
 

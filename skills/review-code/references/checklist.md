@@ -31,6 +31,8 @@ added optional prop.
 | Hand-written markup where shadcn has a primitive | `DESIGN.md` |
 | API data used without `Schema` decoding, `as` on API data | `integrate-api` Rules |
 | A page or island calling the client or building Effect chains | `integrate-api` Rules |
+| An `oxlint-disable` without a reason, or an anti-slop rule switched off in `oxlint.config.ts` | `project-files.md` Anti-slop (fix the code; disable one line with a reason) |
+| A `// SAFETY:` comment that does not say why the assertion holds | Anti-slop: parse instead, or state the checked invariant |
 
 Fix by following the rule; the source file has the details.
 

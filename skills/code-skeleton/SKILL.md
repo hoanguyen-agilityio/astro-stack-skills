@@ -49,7 +49,7 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
 ## What it produces
 
 - **Pinned stack** (Node ≥ 22.19): Astro 5, React 19, Effect 3, oRPC 1, Tailwind 4, Vite 6,
-  shadcn 4, Vitest 3, Storybook 10, Playwright 1, Prettier 3, Husky 9 + lint-staged 16, jscpd 4, installed layer by layer by hand, never through
+  shadcn 4, Vitest 3, Storybook 10, Playwright 1, Oxlint 1.78 (anti-slop rules), Prettier 3, Husky 9 + lint-staged 16, jscpd 4, installed layer by layer by hand, never through
   `pnpm create astro`, `astro add` or `storybook init` → `references/setup-layers.md`
 - **Configs and plumbing**: `package.json`, `tsconfig.json`, `astro.config.mjs`, ESLint,
   Prettier (the `space` style), Husky hooks (lint-staged on commit, typecheck + tests with 80%
@@ -69,7 +69,7 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
 
 ## Done when
 
-- `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage` (≥ 80% lines,
+- `pnpm lint` (ESLint and the anti-slop rules), `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage` (≥ 80% lines,
   functions, branches, statements), `pnpm build`, `pnpm test:stories` (every story renders in
   light and dark with no a11y violation; it builds Storybook too), `pnpm test:pages` (every page:
   SEO metadata, security headers and CSP, no console error, no broken link, within budget; it
@@ -95,6 +95,10 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
 - `pnpm format` skipped after writing the files: `format:check` fails on `global.css`, `CLAUDE.md`, `DESIGN.md`
 - Layout or common pieces inlined into the welcome page, leaving nothing to reuse
 - `@vitest/coverage-v8` on another major than `vitest`: `test:coverage` fails to start
+- `oxlint` and `@oxlint/plugins` on different versions, or installed with `^`: Oxlint fails to
+  load `tools/oxlint/anti-slop`
+- `.claude/` not ignored by ESLint, `tsconfig` and Prettier: the TypeScript in the copied skills
+  breaks `pnpm lint` and `pnpm typecheck`
 - Chromium not downloaded (`pnpm exec playwright install chromium`): `test:stories` and
   `test:pages` stop with `Executable doesn't exist`
 - The theme script written as a plain `is:inline` block: the CSP blocks it in preview and
@@ -111,3 +115,4 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
 | `references/starter-ui.md` | Folder layout, reuse rules, layouts, `common/` and `layout/` components, welcome + 404 pages, stories, tests |
 | `references/design-md-template.md` | The project's `DESIGN.md` |
 | `references/claude-md-template.md` | The project's `CLAUDE.md`, including the workflow every task follows |
+| `assets/anti-slop/` | The anti-slop Oxlint rules (MIT, vendored), copied to `tools/oxlint/anti-slop/` |
