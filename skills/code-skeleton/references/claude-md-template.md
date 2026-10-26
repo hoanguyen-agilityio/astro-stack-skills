@@ -27,7 +27,8 @@ tokens are in `DESIGN.md`.
 ## Workflow: every task, every size
 
 1. **Analyze**: run `analyze-task` first. It produces the request kind, the lane, acceptance
-   criteria (Given/When/Then), open questions and a plan.
+   criteria (Given/When/Then), open questions and a plan. `develop-feature` runs it itself
+   when it is given a design (image, screenshot or Figma link).
 2. **Ground**: read `package.json`, `DESIGN.md` and the neighbouring code before writing.
    Existing patterns win over defaults.
 3. **Build**: `integrate-api` for API services, `develop-feature` for pages and islands.

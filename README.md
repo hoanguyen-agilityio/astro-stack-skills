@@ -235,6 +235,13 @@ helpers, islands and the page (Astro Container API).
 /web-dev-stack:develop-feature /orders lists orders with a status filter; pending orders have a Cancel button
 ```
 
+Given a design (image, screenshot or Figma link) and what to build from it, it runs
+`analyze-task` on that part of the design first, then builds from the analysis:
+
+```text
+/web-dev-stack:develop-feature [design image] Implement the order summary card
+```
+
 After `analyze-task`, pass the analysis file it saved instead of the ticket. One run builds one
 feature; without a file and with several analyses in the session, it asks which one:
 
