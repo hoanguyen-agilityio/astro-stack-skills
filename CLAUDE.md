@@ -13,28 +13,35 @@ instructions either way. Project-specific facts belong in the project's own `CLA
 Pin each package to its major (`astro@^5`). A repo on another major: tell the user, never
 change it. Exact verified versions: `README.md`.
 
+**Runtime and UI** (ships to users):
+
 | Layer | Package | Version |
 |-------|---------|---------|
-| Runtime | Node | ≥ 22.19 |
-| Package manager | pnpm | 8, 10, 11 |
+| Runtime (server) | Node | ≥ 22.19 |
 | Framework | `astro` | 5 |
 | | `@astrojs/react` / `@astrojs/node` (SSR adapter) | 4 / 9 |
 | UI library | `react`, `react-dom` | 19 |
-| Language | `typescript` (strictest) | 5 |
 | Async, errors, validation | `effect` (with `Schema`) | 3 (≥ 3.10) |
 | API client | `@orpc/client` | 1 |
 | Styling | `tailwindcss`, `@tailwindcss/vite` | 4 |
-| Components | `shadcn` CLI | 4 |
+| Components (code copied into `src/`) | `shadcn` CLI | 4 |
+
+**Dev tooling** (build, tests and checks only):
+
+| Layer | Package | Version |
+|-------|---------|---------|
+| Package manager | pnpm | 8, 10, 11 |
+| Language | `typescript` (strictest) | 5 |
 | Bundler | `vite` (pinned explicitly) | 6 |
 | Tests | `vitest`, `@vitest/coverage-v8` / `jsdom` + Testing Library | 3 / 26 |
 | Lint | `eslint` / `eslint-plugin-astro` | 9 / 1 |
+| Anti-slop rules | `oxlint`, `@oxlint/plugins` (exact) | 1.78.0 |
+| Format | `prettier` / `prettier-plugin-astro` | 3 / 1 |
 | Stories | `storybook` + `@storybook/*` addons | 10 |
 | | `@storybook-astro/framework` / `@vitejs/plugin-react` | 1 / 5 |
-| Story checks | `playwright` (Chromium) | 1 |
-| Format | `prettier` / `prettier-plugin-astro` | 3 / 1 |
+| Story and page checks | `playwright` (Chromium) | 1 |
 | Git hooks | `husky` / `lint-staged` | 9 / 16 |
 | Duplicate detection | `jscpd` | 4 |
-| Anti-slop rules | `oxlint`, `@oxlint/plugins` (exact) | 1.78.0 |
 
 Not `latest`: Astro 7 and Effect 4 have different APIs from the code in the skills.
 
