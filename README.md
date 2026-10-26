@@ -152,7 +152,7 @@ hooks/
 └── __test__/          # node:test cases for the checklist and branch hooks (`pnpm test`)
 skills/
 ├── analyze-task/      # SKILL.md + references/{ticket-contract,design-input}.md
-├── ticket/            # SKILL.md: /ticket <id> → docs/tickets/<id>/ pushed on docs/ticket-<id>
+├── ticket/            # SKILL.md + references/parallel.md: /ticket <id> → docs/tickets/<id>/ pushed on docs/ticket-<id>; several tickets in parallel
 ├── incident/          # SKILL.md + references/incident-contract.md: /incident → docs/incidents/<id>/ pushed on docs/incident-<id>
 ├── code-skeleton/     # SKILL.md + references/{project-files,design-md-template,claude-md-template}.md
 ├── integrate-api/     # SKILL.md + references/{client,service,calling}.md
@@ -165,7 +165,7 @@ skills/
 | # | Skill | Status | Use it when |
 |---|-------|--------|-------------|
 | 0 | `analyze-task` | ready | Turning a ticket, design or loose request into acceptance criteria and a plan |
-| 0 | `ticket` | ready | Writing one ticket's intent, spec and plan to `docs/tickets/<id>/` and pushing them for review |
+| 0 | `ticket` | ready | Writing one ticket's intent, spec and plan to `docs/tickets/<id>/` and pushing them for review, or several tickets in parallel |
 | — | `incident` | ready | Writing up a production incident (report, root cause, actions) in `docs/incidents/<id>/` and pushing it for review |
 | 1 | `code-skeleton` | ready | Starting a project, or bringing an Astro repo up to the stack |
 | 2 | `integrate-api` | ready | Calling oRPC procedures through Effect services |
@@ -210,6 +210,17 @@ it: Claude does not start it on its own.
 ```text
 /web-dev-stack:ticket 412 On /orders, let support filter the list by status. Pending orders should stand out.
 /web-dev-stack:develop-feature docs/tickets/412/
+```
+
+Several tickets at once: give a Markdown file with one `## <id> <title>` section per ticket, or a
+folder with one file per ticket (`412.md`, `PROJ-77.md`). After you confirm the list, each ticket
+gets its own subagent, git worktree (`.claude/worktrees/ticket-<id>`) and branch, so the
+analyses run in parallel without touching your working tree. The subagents only write files;
+Claude then checks, commits and pushes each ticket itself, removes the worktrees, and ends with
+one table (branch, Ready, Blocked, push) and the open questions of all tickets.
+
+```text
+/web-dev-stack:ticket ./tickets/
 ```
 
 ### `incident`
