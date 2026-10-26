@@ -1,7 +1,7 @@
 {
   "name": "web-dev-stack",
   "version": "0.1.0",
-  "description": "Project-agnostic skills for the Astro + React islands + strict TypeScript + Effect (Schema) + oRPC + shadcn/ui stack. Ships analyze-task (request to acceptance criteria and plan in docs/tickets/<id>/), ticket (one ticket's intent, spec and plan, checked and pushed on its own branch), incident (a blameless report, root cause and actions for something that broke, pushed on its own branch), code-skeleton (a runnable project with lint, typecheck, tests and build passing; runs analyze-task first), integrate-api (oRPC services through Effect), develop-feature (ticket to tested page and islands) and review-code (review, fix and re-review a change for duplicates and broken conventions).",
+  "description": "Project-agnostic skills for the Astro + React islands + strict TypeScript + Effect (Schema) + oRPC + shadcn/ui stack. Ships analyze-task (request to acceptance criteria and plan in docs/tickets/<id>/), ticket (one ticket's intent, spec and plan, or several in parallel, checked and pushed on their own branches), incident (a blameless report, root cause and actions for something that broke, pushed on its own branch), code-skeleton (a runnable project with lint, typecheck, tests and build passing; runs analyze-task first), integrate-api (oRPC services through Effect), develop-feature (ticket to tested page and islands) and review-code (review, fix and re-review a change for duplicates and broken conventions).",
   "author": {
     "name": "Granbull Team"
   }
