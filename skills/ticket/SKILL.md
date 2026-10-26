@@ -1,6 +1,6 @@
 ---
 name: ticket
-description: Analyze one ticket into docs/tickets/<id>/intent.md, spec.md and plan.md, check them against the ticket contract, then commit and push them on their own branch.
+description: Analyze one ticket into docs/tickets/{id}/intent.md, spec.md and plan.md, check them against the ticket contract, then commit and push them on their own branch.
 argument-hint: "<ticket id> <ticket text, file or link>"
 disable-model-invocation: true
 ---

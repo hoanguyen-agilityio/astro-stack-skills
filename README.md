@@ -107,8 +107,14 @@ To try local changes without installing anything, start Claude Code with
 pnpm install     # also sets up the Git hooks (Husky)
 pnpm lint        # ESLint on bin/ and hooks/
 pnpm format      # Prettier (Markdown is left as written)
-pnpm test        # node:test cases for the checklist hook and the installer
+pnpm test        # node:test cases for the skills, the checklist hook and the installer
+pnpm validate    # `claude plugin validate .`: Claude Code's own plugin and marketplace checks
 ```
+
+`pnpm test` also validates every `skills/*/SKILL.md` and `commands/*.md` (`__test__/skills.test.mjs`),
+with the rules of Claude Code and the skill-creator validator: frontmatter, a `name` equal to the
+folder, a description under 1024 characters without `<` or `>`, under 500 lines, and every
+`references/<file>` it points to present.
 
 A commit runs ESLint and Prettier on the staged `.js`, `.mjs` and `.json` files. A push runs
 `pnpm lint`, `pnpm format:check` and `pnpm test`.
@@ -286,6 +292,17 @@ helpers, islands and the page (Astro Container API).
 ```text
 /web-dev-stack:develop-feature /orders lists orders with a status filter; pending orders have a Cancel button
 ```
+
+Given a design (image, screenshot or Figma link) and what to build from it, it runs
+`analyze-task` on that part of the design first, then builds from the analysis:
+
+```text
+/web-dev-stack:develop-feature [design image] Implement the order summary card
+```
+
+After `analyze-task` or `/ticket`, pass the ticket folder instead (`develop-feature
+docs/tickets/412/`, as above). One run builds one feature; without a folder and with several
+analyses in the session, it asks which one.
 
 Both are verified on the same [set](#tech-stack-versions) as `code-skeleton`: lint,
 typecheck, tests and build pass, and the `/orders` example ran against a local oRPC server
