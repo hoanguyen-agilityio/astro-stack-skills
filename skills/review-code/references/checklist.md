@@ -62,6 +62,11 @@ names the page: fix the metadata, header, link or asset it points at.
 What the gates cannot see, for the pages and islands in the change. The `web-quality` skill's
 references explain each point and its fix.
 
+For accessibility, when the change has `.astro`, `.tsx`, `.jsx` or `.css` files, run the external
+`accessibility` skill on them the way `web-quality` step 4 says: its WCAG findings join this
+category. Not installed: say "a11y not checked" in the report with the install command, and
+install nothing.
+
 | Look for | Fix |
 |----------|-----|
 | A page without its own `title` and `description`, or a public page marked `noindex` (`blocker`) | Pass both to `AppLayout`; `noindex` only for error, draft and signed-in pages (`seo.md`) |

@@ -1,71 +1,38 @@
-# Accessibility beyond the story checks
+# Accessibility in this stack
 
-`pnpm test:stories` runs axe on every story, in light and dark: contrast, names, roles, labels
-and ARIA misuse inside one component. `pnpm test:pages` checks the page shell: `lang`, an `<h1>`,
-`alt` on every image. Automated checks find only part of the barriers (WCAG 2.2 AA is the
-target). What they cannot see is listed here; findings from it are hypotheses until checked in a
-browser.
+The WCAG review is not written here. It comes from the `accessibility` skill of
+[addyosmani/web-quality-skills](https://github.com/addyosmani/web-quality-skills) (MIT), used as
+it is: `web-quality` step 4 calls it on the UI files in scope when it is installed, and asks the
+user to install it when it is not. This file holds only what that skill cannot know about this
+stack, so the two never repeat each other.
 
-A passing axe run, or a Lighthouse accessibility score of 100, is not WCAG conformance. Report
-the manual checks below as done or not done, never as implied.
+## Already checked by the gates
 
-## Page level
+| Gate | Covers |
+|------|--------|
+| `pnpm test:stories` | axe on every story, light and dark: contrast, names, roles, labels, ARIA misuse inside a component |
+| `pnpm test:pages` | `lang`, one `<h1>`, `alt` on every image, per page |
 
-- One `<main id="main">`, the skip link to it, and `SiteHeader`'s `<nav aria-label="Main">`
-  come from `AppLayout`. A page never adds a second `<main>` or `<nav>` without a label.
-- Headings: one `<h1>` per page from `PageHeader`, then `h2`/`h3` in order, never chosen for
-  their size. Size comes from classes.
-- `aria-current="page"` on the active navigation link and `aria-current="true"` on the active
-  filter, so the state is not shown by colour alone.
+A passing axe run is not WCAG conformance. Say which manual checks (keyboard only, 200% zoom,
+screen reader, reduced motion) were done, and list the rest as not verified.
 
-## Keyboard and focus
+## Where the stack already does it
 
-- Every action is a `<button>` or a link (`<a href>`), never a clickable `<div>`. shadcn's
-  primitives are already keyboard-ready; keep their markup.
-- Focus is visible on every control: shadcn's `focus-visible:ring-*` classes with the `ring`
-  token. Never `outline-none` without a replacement.
-- Focus is not hidden under the sticky header: anchor targets and focusable sections get
-  `scroll-mt-*` the header's height.
-- Dialogs (`AlertDialog`, `Dialog`) trap focus and return it to the trigger; do not rebuild
-  them by hand.
+- **Landmarks:** `AppLayout` gives one `<main id="main">`, the skip link to it and
+  `SiteHeader`'s `<nav aria-label="Main">`. A page never adds another `<main>`, and a second
+  `<nav>` gets its own label.
+- **Headings:** `PageHeader` renders the page's `<h1>`; sections continue with `h2`/`h3`.
+- **Focus and targets:** shadcn primitives carry `focus-visible:ring-*` with the `ring` token and
+  sizes of at least `size-6`. Keep them; never `outline-none` without a replacement.
+- **Dialogs and menus:** use shadcn's `Dialog`, `AlertDialog`, `Select`; they trap and return
+  focus. Do not rebuild them by hand.
+- **Forms:** `<Label htmlFor>` on every input; an invalid field gets `aria-invalid` and
+  `aria-describedby` to its message in `text-destructive`; results are announced from a
+  `role="status"` (success) or `role="alert"` (error) region already in the DOM.
+- **Motion:** decorative animation is `motion-safe:`; large movement gets `motion-reduce:`.
+- **State not by colour alone:** `aria-current` on the active navigation link and filter.
 
-## Target size and motion
+## Fixing a finding
 
-- Interactive targets are at least 24 × 24 px (`size-6`). Icon buttons use one of shadcn's
-  `size="icon"` variants, which are larger; never shrink them below `size-6`. Inline text links
-  are exempt.
-- Animations and transitions respect the user's setting: `motion-safe:animate-*` for anything
-  decorative, `motion-reduce:transition-none` on large movements.
-- No auto-advancing content; anything that moves on its own has a pause control.
-
-## Forms
-
-- Every input has a `<Label htmlFor>`; placeholder text is not a label.
-- Errors: the field gets `aria-invalid="true"` and `aria-describedby` pointing at the message;
-  the message uses `text-destructive` and says how to fix it ("Enter a phone number like 912 345
-  678"), not only "Invalid".
-- On submit with errors, focus moves to the first invalid field.
-- A message that appears after an action (saved, failed) is in a `role="status"` region for
-  success and `role="alert"` for errors, already in the DOM before it changes.
-- `autocomplete` on personal fields (`email`, `tel`, `given-name`) and never block paste in
-  password fields.
-
-## Images and media
-
-- `alt` describes what the image tells the user; `alt=""` for decoration. Icons inside a
-  labelled button are `aria-hidden="true"`.
-- Charts have a text equivalent: a visible summary or an accessible table.
-- Video has captions.
-
-## Manual checks (say which were done)
-
-| Check | How |
-|-------|-----|
-| Keyboard only | Tab through the page: every control reachable, order follows the layout, no trap |
-| Zoom 200% and 320 px width | Nothing cut off, no horizontal scroll for text |
-| Screen reader | VoiceOver or NVDA on the main flow: names, states, error announcements |
-| Reduced motion | OS setting on: nothing large moves |
-
-With a browser tool, read the accessibility tree of the page (names, roles, states) and run
-Lighthouse's accessibility category against `pnpm preview` for page-level issues axe in a story
-cannot see.
+Fix the markup or the token in `DESIGN.md`, then run `pnpm test:stories` again. Never tag a story
+`!test` or turn an a11y rule off in `parameters.a11y` to get green.
