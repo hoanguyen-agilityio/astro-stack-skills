@@ -32,7 +32,7 @@ either to see the changes first. `init --plugin` installs a plugin instead (skil
 | `integrate-api` | Call oRPC through Effect services: Schema types, typed errors, retry, `load…`/`run…` helpers | `/integrate-api orders.list and orders.cancel` |
 | `develop-feature` | Build one feature: server page, small islands, every state, stories, tests. A design is analysed first | `/develop-feature docs/tickets/412/` |
 | `review-code` | Find duplicates, broken conventions and unproven criteria; fix and review again, ≤ 3 rounds | `/review-code` |
-| `web-quality` | Audit and fix performance, Core Web Vitals, accessibility, SEO and security headers | `/web-quality Audit /orders` |
+| `web-quality` | Audit and fix performance, Core Web Vitals, accessibility, SEO and security headers. The WCAG review uses the external [`accessibility`](https://github.com/addyosmani/web-quality-skills) skill when it is installed | `/web-quality Audit /orders` |
 | `incident` | Write up a production incident (report, root cause, actions) and push it for review | `/incident INC-7 /orders 500s since 09:10` |
 
 `/verify` is a command, not a skill: it runs the seven gates in a loop, then `review-code`. Each
