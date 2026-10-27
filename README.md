@@ -7,6 +7,14 @@ a report.
 
 **Guide with a skill map and examples:** [Astro Stack Skills Setup](https://claude.ai/artifact/EZjLx2BqWtSBN2Qoajr6sE?sk=cCyeozeLvsW5lYgPlPhYqQ)
 
+## Skill map
+
+![Skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /ticket feeds /analyze-task, /verify then runs /review-code; /incident and the 4 hooks stand alone](docs/skill-map.png)
+
+The numbers are the usual order on a new project. The [interactive map](https://claude.ai/artifact/EZjLx2BqWtSBN2Qoajr6sE?sk=cCyeozeLvsW5lYgPlPhYqQ)
+in the guide opens each skill's steps, gates and hooks. The image is exported from it (Export →
+PNG); export it again when a skill is added or renamed.
+
 ## Install
 
 From the root of the project that will use the skills (or an empty folder), not in this repo.
@@ -107,4 +115,5 @@ A commit runs ESLint and Prettier on staged files; a push runs lint, format and 
 | `commands/`, `hooks/` | `/verify`; the four hooks and `hooks.json` |
 | `bin/` | The `npx … init` / `update` installer |
 | `spec.md`, `DESIGN.md`, `CLAUDE.md` | Intent; design decisions and why; the contract for projects using the skills |
+| `docs/skill-map.png` | The skill map in this README, exported from the guide's interactive map |
 | [`astro-stack-playground`](https://gitlab.asoft-python.com/hoa.nguyen/astro-stack-playground) | A project built with the skills, with the headless run, gate logs and screenshots |
