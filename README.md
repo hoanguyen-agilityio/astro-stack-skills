@@ -21,7 +21,7 @@
 
 </div>
 
-<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="The skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /ticket feeds /analyze-task, /verify then runs /review-code; /incident and the 4 hooks stand alone" width="100%"></a></p>
+<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="The skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /incident hands its fix to /ticket, which feeds /analyze-task; the 4 hooks guard every edit in /develop-feature; /verify then runs /review-code" width="100%"></a></p>
 <p align="center"><sub>The skill map. Click it to open the full-size SVG and zoom in your browser.</sub></p>
 
 Every change ends in the same loop: seven gates, then a review, then a report. Strict
@@ -118,9 +118,10 @@ pnpm test        # skill validation, hook and installer tests
 pnpm validate    # claude plugin validate .
 ```
 
-The README map is `docs/skill-map.svg`, the guide map's Export → SVG with a `<style>` block added
-at the top for the flowing edges; export it again (and keep that block) when a skill is added or
-renamed.
+The README map is `docs/skill-map.svg`, the guide map's Export → SVG plus a `<style>` block and
+dots at the end for the animation (cards appear in turn, edges flow, a dot runs along each edge;
+all off with reduced motion). When a skill is added or renamed, export it again and copy that
+style block and the dots across.
 
 A commit runs ESLint and Prettier on staged files; a push runs lint, format and tests. Merge to
 `main`: `update` reads `main`, and there is no version to bump. Try unpushed changes with
