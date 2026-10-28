@@ -21,7 +21,7 @@
 
 </div>
 
-<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="The skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /ticket feeds /analyze-task, /verify then runs /review-code; /incident and the 4 hooks stand alone" width="100%"></a></p>
+<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="Skill map: start (/ticket, /analyze-task, /code-skeleton once), build every feature (/integrate-api, /develop-feature, a report), check every change (/verify, /review-code, /web-quality); 4 hooks always on; /incident when production breaks" width="100%"></a></p>
 <p align="center"><sub>The skill map. Click it to open the full-size SVG and zoom in your browser.</sub></p>
 
 Every change ends in the same loop: seven gates, then a review, then a report. Strict
@@ -118,9 +118,9 @@ pnpm test        # skill validation, hook and installer tests
 pnpm validate    # claude plugin validate .
 ```
 
-The README map is `docs/skill-map.svg`, the guide map's Export → SVG with a `<style>` block added
-at the top for the flowing edges; export it again (and keep that block) when a skill is added or
-renamed.
+The README map is `docs/skill-map.svg`, a hand-written SVG (cards appear in turn, edges flow, dots
+run along the main route; all off with reduced motion). Edit it when a skill is added, renamed or
+re-wired, and keep it in step with the interactive map in the guide.
 
 A commit runs ESLint and Prettier on staged files; a push runs lint, format and tests. Merge to
 `main`: `update` reads `main`, and there is no version to bump. Try unpushed changes with
@@ -132,5 +132,5 @@ A commit runs ESLint and Prettier on staged files; a push runs lint, format and 
 | `commands/`, `hooks/` | `/verify`; the four hooks and `hooks.json` |
 | `bin/` | The `npx … init` / `update` installer |
 | `spec.md`, `DESIGN.md`, `CLAUDE.md` | Intent; design decisions and why; the contract for projects using the skills |
-| `docs/skill-map.svg` | The animated skill map in this README, exported from the guide's interactive map |
+| `docs/skill-map.svg` | The animated skill map in this README (hand-written SVG) |
 | [`astro-stack-playground`](https://gitlab.asoft-python.com/hoa.nguyen/astro-stack-playground) | A project built with the skills, with the headless run, gate logs and screenshots |
