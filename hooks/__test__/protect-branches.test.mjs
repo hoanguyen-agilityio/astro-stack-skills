@@ -50,6 +50,7 @@ test('blocks a push that names a protected branch', () => {
   assertBlocked('git push --no-verify origin dev', 'dev');
   assertBlocked('git push origin +prod', 'prod');
   assertBlocked('git push origin refs/heads/stag', 'stag');
+  assertBlocked('git push origin main', 'main');
 });
 
 test('blocks a refspec whose destination is protected', () => {
@@ -69,6 +70,8 @@ test('blocks a bare push from a protected branch', () => {
   assertBlocked('git push', 'dev');
   assertBlocked('git push origin', 'dev');
   assertBlocked('git push origin HEAD', 'dev');
+  checkout('main');
+  assertBlocked('git push', 'main');
 });
 
 test('blocks pushing every branch at once', () => {
@@ -95,7 +98,7 @@ test('allows pushes to other branches', () => {
   assertAllowed('git push');
   assertAllowed('git push -u origin feat/orders');
   assertAllowed('git push origin HEAD');
-  assertAllowed('git push origin develop production staging');
+  assertAllowed('git push origin develop production staging mainline');
   assertAllowed('git push origin feat/dev-tools');
   assertAllowed('git push origin dev:feat/orders');
   assertAllowed('git push --tags origin');

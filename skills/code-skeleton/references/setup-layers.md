@@ -85,8 +85,9 @@ layers.
    pnpm add tailwindcss@^4 @tailwindcss/vite@^4
    ```
 
-5. **Effect and oRPC.** Write `src/libs/orpcClient.ts` and `.env.example`, then copy it to
-   `.env`. Store the base URL without `/rpc`.
+5. **Effect and oRPC.** Write `src/libs/orpcClient.ts` and `.env.example`, then create `.env`
+   with `cp .env.example .env` (the `protect-files` hook allows only this first copy; after that
+   `.env` is the user's to edit). Store the base URL without `/rpc`.
 
    ```bash
    pnpm add effect@^3 @orpc/client@^1
