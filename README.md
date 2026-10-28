@@ -1,19 +1,32 @@
-# astro-stack-skills
+<div align="center">
 
-Claude Code skills that take a project from a ticket to reviewed, tested code on one stack:
-**Astro 5** · **React 19** islands · strict **TypeScript** · **Effect 3** (Schema) · **oRPC 1** ·
-**shadcn/ui** on Tailwind 4. Every change ends in the same loop: seven gates, then a review, then
-a report.
+<h1>astro-stack-skills</h1>
 
-**Guide with a skill map and examples:** [Astro Stack Skills Setup](https://claude.ai/artifact/EZjLx2BqWtSBN2Qoajr6sE?sk=cCyeozeLvsW5lYgPlPhYqQ)
+<p><strong>From a ticket to reviewed, tested code, on one stack.</strong></p>
 
-## Skill map
+<p>8 skills · 1 command (<code>/verify</code>) · 4 hooks · 7 gates in a loop</p>
 
-![Skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /ticket feeds /analyze-task, /verify then runs /review-code; /incident and the 4 hooks stand alone](docs/skill-map.png)
+<p>
+<img alt="Astro 5" src="https://img.shields.io/badge/Astro-5-bc52ee?style=flat-square">
+<img alt="React 19" src="https://img.shields.io/badge/React-19-0969da?style=flat-square">
+<img alt="Effect 3" src="https://img.shields.io/badge/Effect-3-1f2328?style=flat-square">
+<img alt="oRPC 1" src="https://img.shields.io/badge/oRPC-1-1f883d?style=flat-square">
+<img alt="shadcn/ui on Tailwind 4" src="https://img.shields.io/badge/shadcn%2Fui-Tailwind%204-d97757?style=flat-square">
+<img alt="Claude Code skills" src="https://img.shields.io/badge/Claude%20Code-skills-d97757?style=flat-square">
+</p>
 
-The numbers are the usual order on a new project. The [interactive map](https://claude.ai/artifact/EZjLx2BqWtSBN2Qoajr6sE?sk=cCyeozeLvsW5lYgPlPhYqQ)
-in the guide opens each skill's steps, gates and hooks. The image is exported from it (Export →
-PNG); export it again when a skill is added or renamed.
+<p><a href="https://claude.ai/artifact/EZjLx2BqWtSBN2Qoajr6sE?sk=cCyeozeLvsW5lYgPlPhYqQ"><strong>📖 Guide: skill map, examples, install</strong></a></p>
+
+<p><a href="#install">Install</a> · <a href="#skills">Skills</a> · <a href="#the-check-loop">Check loop</a> · <a href="#tech-stack">Tech stack</a> · <a href="#working-on-this-repo">Working on this repo</a></p>
+
+</div>
+
+<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="The skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /ticket feeds /analyze-task, /verify then runs /review-code; /incident and the 4 hooks stand alone" width="100%"></a></p>
+<p align="center"><sub>The skill map. Click it to open the full-size SVG and zoom in your browser.</sub></p>
+
+Every change ends in the same loop: seven gates, then a review, then a report. Strict
+**TypeScript**, **Effect** Schema for API data, **oRPC** through Effect services, **shadcn/ui**
+components, and a story and tests for every state.
 
 ## Install
 
@@ -105,6 +118,10 @@ pnpm test        # skill validation, hook and installer tests
 pnpm validate    # claude plugin validate .
 ```
 
+The README map is `docs/skill-map.svg`, the guide map's Export → SVG with a `<style>` block added
+at the top for the flowing edges; export it again (and keep that block) when a skill is added or
+renamed.
+
 A commit runs ESLint and Prettier on staged files; a push runs lint, format and tests. Merge to
 `main`: `update` reads `main`, and there is no version to bump. Try unpushed changes with
 `update --source <path to your checkout>` or `claude --plugin-dir <this repo>`.
@@ -115,5 +132,5 @@ A commit runs ESLint and Prettier on staged files; a push runs lint, format and 
 | `commands/`, `hooks/` | `/verify`; the four hooks and `hooks.json` |
 | `bin/` | The `npx … init` / `update` installer |
 | `spec.md`, `DESIGN.md`, `CLAUDE.md` | Intent; design decisions and why; the contract for projects using the skills |
-| `docs/skill-map.png` | The skill map in this README, exported from the guide's interactive map |
+| `docs/skill-map.svg` | The animated skill map in this README, exported from the guide's interactive map |
 | [`astro-stack-playground`](https://gitlab.asoft-python.com/hoa.nguyen/astro-stack-playground) | A project built with the skills, with the headless run, gate logs and screenshots |
