@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// PreToolUse hook: stop Claude from pushing to the shared environment branches.
+// PreToolUse hook: stop Claude from pushing to the shared branches.
 //
-// dev, stag and prod deploy to real environments, so changes reach them through a merge
-// request, never a push from a Claude session. The hook reads the Bash command, finds every
+// main is the reviewed trunk and dev, stag and prod deploy to real environments, so changes
+// reach them through a merge request, never a push from a Claude session. The hook reads the Bash command, finds every
 // `git push` in it and works out which branches each one would update or delete: the refspecs
 // given, or the current branch when there are none. A push that touches a protected branch
 // exits 2 with the reason on stderr, which blocks the call and tells Claude why. `--no-verify`
@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import process from 'node:process';
 
-const PROTECTED = ['dev', 'stag', 'prod'];
+const PROTECTED = ['main', 'dev', 'stag', 'prod'];
 
 // `git push` options whose value is the next word when not written as `--opt=value`.
 const PUSH_OPTIONS_WITH_VALUE = new Set([
@@ -152,7 +152,7 @@ const main = () => {
   const names = [...blocked].map((branch) => `\`${branch}\``).join(', ');
   process.stderr.write(
     `Blocked: this push would update ${names}. ${PROTECTED.join(', ')} are protected ` +
-      'environment branches and only change through a merge request.\n' +
+      'shared branches and only change through a merge request.\n' +
       'Push a feature branch instead (`git push -u origin <feature-branch>`) and tell the user ' +
       'which branch to open the merge request from. Do not retry the push another way.\n',
   );

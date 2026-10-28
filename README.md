@@ -4,7 +4,7 @@
 
 <p><strong>From a ticket to reviewed, tested code, on one stack.</strong></p>
 
-<p>8 skills · 1 command (<code>/verify</code>) · 4 hooks · 7 gates in a loop</p>
+<p>8 skills · 1 command (<code>/verify</code>) · 5 hooks · 7 gates in a loop</p>
 
 <p>
 <img alt="Astro 5" src="https://img.shields.io/badge/Astro-5-bc52ee?style=flat-square">
@@ -17,11 +17,11 @@
 
 <p><a href="https://claude.ai/artifact/EZjLx2BqWtSBN2Qoajr6sE?sk=cCyeozeLvsW5lYgPlPhYqQ"><strong>📖 Guide: skill map, examples, install</strong></a></p>
 
-<p><a href="#install">Install</a> · <a href="#skills">Skills</a> · <a href="#the-check-loop">Check loop</a> · <a href="#tech-stack">Tech stack</a> · <a href="#working-on-this-repo">Working on this repo</a></p>
+<p><a href="#install">Install</a> · <a href="#skills">Skills</a> · <a href="#the-check-loop">Check loop</a> · <a href="#guard-rails">Guard rails</a> · <a href="#tech-stack">Tech stack</a> · <a href="#working-on-this-repo">Working on this repo</a></p>
 
 </div>
 
-<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="The skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /incident hands its fix to /ticket, which feeds /analyze-task; the 4 hooks guard every edit in /develop-feature; /verify then runs /review-code" width="100%"></a></p>
+<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="The skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /incident hands its fix to /ticket, which feeds /analyze-task; the 5 hooks guard every edit in /develop-feature; /verify then runs /review-code" width="100%"></a></p>
 <p align="center"><sub>The skill map. Click it to open the full-size SVG and zoom in your browser.</sub></p>
 
 Every change ends in the same loop: seven gates, then a review, then a report. Strict
@@ -71,9 +71,26 @@ starts again at lint. Projects from `code-skeleton` have them all.
 | `test:stories` | Every story in Chromium, light and dark: render errors, failing `play`, a11y violations |
 | `test:pages` | Every page of the built site: SEO metadata, security headers and CSP, console errors, broken links, image alt and size, JS/CSS budget |
 
-Four hooks run on their own: `turn-snapshot` (prompt sent), `post-edit-lint` (ESLint, anti-slop
-and Prettier on each edited file), `protect-branches` (blocks pushes to `dev`, `stag`, `prod`) and
+Five hooks run on their own: `turn-snapshot` (prompt sent), `post-edit-lint` (ESLint, anti-slop
+and Prettier on each edited file), `protect-branches` (blocks pushes to `main`, `dev`, `stag`,
+`prod`), `protect-files` (keeps Claude out of `.env` and keys, and off generated files) and
 `task-checklist` (checklist of tasks, files and gates at the end of a turn).
+
+## Guard rails
+
+| Rule | Enforced by |
+|------|-------------|
+| No pushes to `main` / `dev` / `stag` / `prod` | The `protect-branches` hook; protect the branches on GitLab too |
+| No reading or editing `.env`, `.env.*`, private keys and keystores | The `protect-files` hook; skills ask the user for values. Only the first `cp .env.example .env` is allowed |
+| No hand edits to generated files (`.astro/`, `dist/`, `node_modules/`, `pnpm-lock.yaml`, `*.gen.ts`) | The `protect-files` hook: run the tool that writes them instead |
+| Every edited file passes ESLint, anti-slop and Prettier | The `post-edit-lint` hook, then Husky on commit and push |
+| No skipped gates: no `--no-verify`, no lowered coverage, no `!test` story, no switched-off rule | `CLAUDE.md` and every skill; `review-code` flags it; Husky runs the gates on commit and push |
+| No code before an accepted plan on `high-risk` work (auth, data loss, public contracts) | `analyze-task` stops for the user to confirm scope |
+| Nothing reported done without evidence | The `## Result` block and the criterion → test table; the `task-checklist` hook shows which gates really ran after the last edit |
+| No new dependency without asking | `CLAUDE.md` and every skill (a rule, not a hook) |
+
+The hooks stop mistakes, not someone determined to get around them. Protect the shared branches on
+GitLab as well.
 
 ## Tech stack
 
@@ -130,7 +147,7 @@ A commit runs ESLint and Prettier on staged files; a push runs lint, format and 
 | Where | What |
 |-------|------|
 | `skills/<name>/` | `SKILL.md` and its `references/` (and `code-skeleton/assets/anti-slop/`, vendored) |
-| `commands/`, `hooks/` | `/verify`; the four hooks and `hooks.json` |
+| `commands/`, `hooks/` | `/verify`; the five hooks and `hooks.json` |
 | `bin/` | The `npx … init` / `update` installer |
 | `spec.md`, `DESIGN.md`, `CLAUDE.md` | Intent; design decisions and why; the contract for projects using the skills |
 | `docs/skill-map.svg` | The animated skill map in this README, exported from the guide's interactive map |
