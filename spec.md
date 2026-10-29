@@ -40,7 +40,8 @@ that starts with written acceptance criteria.
 
 ## Non-goals
 
-- Backend or oRPC server code, deployment pipelines, CI.
+- Backend or oRPC server code. The deploy workflow is a template; the host's own setup (servers,
+  registries, DNS) is the team's.
 - Project-specific rules (for example kitchen's `variantTheme` or the `[#issue]` commit format).
   Those live in each project's own `CLAUDE.md`.
 - Supporting Astro 7 or Effect 4. Their APIs differ, so the skills stop and say so.
@@ -52,6 +53,8 @@ that starts with written acceptance criteria.
 | `analyze-task` | ticket, design (image/Figma) or loose request | kind, lane, ACs, edge cases, open questions, plan; `docs/tickets/<id>/{intent,spec,plan}.md` for normal and high-risk | every AC has a Given, every unknown is a question, the plan names files, the files pass the contract check |
 | `ticket` | ticket id + ticket text, file or link; or a file / folder of several tickets | `docs/tickets/<id>/{intent,spec,plan}.md` committed on `docs/ticket-<id>` and pushed | contract check passes, only the three files committed, branch pushed |
 | `incident` | description of what broke, logs, files; optional incident id | `docs/incidents/<id>/{report,rca,actions}.md` committed on `docs/incident-<id>` and pushed; no code changed | contract check passes, every cause has evidence or is a hypothesis, nothing secret copied from the logs, only the three files committed |
+| `release-setup` | where it deploys, URLs, release managers | `.github/workflows/deploy.yml`, `.claude/release.json`, `CHANGELOG.md`, `docs/release-plan.md`, a checklist of GitHub rulesets and environments | each environment branch deploys through the workflow, the gate is registered, every GitHub setting is done or assigned to a person |
+| `release` | a version, or where the release stands | `Stage <version>` PR into stag, staging checks, `Release <version>` PR into prod, tag `v<version>`, back-merge into dev | each step merged only after its approval, staging checked before prod, the tag on the released merge commit, nothing approved by Claude |
 | `code-skeleton` | project name, API URL (both defaulted in an empty directory) | runnable project, `src/libs/orpcClient.ts`, `DESIGN.md`, `CLAUDE.md`, Storybook, starter UI (shared layout, reusable `common/` components, welcome + 404 pages) with tests and stories | 4 gates green, Storybook builds, URL only in env, `DESIGN.md` matches `global.css` |
 | `integrate-api` | procedures | `src/types/<name>.ts`, `src/services/<name>.ts` returning `Effect` with typed errors and retry | service tests cover success, decode error, API error, retry |
 | `develop-feature` | ticket or design | Astro page + React island with shadcn, loading/empty/error states, a story per state for each component, tests | one test per AC, a story per state, 4 gates green |
