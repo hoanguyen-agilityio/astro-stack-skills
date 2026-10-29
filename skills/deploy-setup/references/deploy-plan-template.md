@@ -1,4 +1,4 @@
-# docs/release-plan.md
+# docs/deploy-plan.md
 
 Write this file in Phase 2, before anything changes, and keep it current. A follow-up run reads
 it first. It is in English, like the code. It contains no values, only names.
@@ -7,7 +7,7 @@ it first. It is in English, like the code. It contains no values, only names.
 # Release plan
 
 How this app goes from dev to stag to prod. Releases run through `/release`, and setup changes
-through `/release-setup`.
+through `/deploy-setup`.
 
 ## Branches and environments
 

@@ -39,7 +39,7 @@ who can create the tag.
 
 The gate allows Claude to push `v<version>` only on the merge commit of an approved release. If
 the dev who runs `/release` is not on the bypass list, GitHub refuses the push, and a release
-manager creates the tag instead (`../release/references/ship.md` → Without gh).
+manager creates the tag instead (`../release/references/merge-tag-rollback.md` → Without gh).
 
 ## 3. Environments
 

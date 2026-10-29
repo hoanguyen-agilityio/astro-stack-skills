@@ -1,6 +1,6 @@
 ---
 name: release
-description: Moves a version from dev to stag to prod behind the release gate. It drafts the CHANGELOG and picks the version, runs the gates, and opens a release/VERSION pull request into stag. Once a release manager approves it, it merges and checks staging. It then opens the "Release VERSION" pull request from stag into prod and, after a second approval, merges it so GitHub Actions deploys production. Last, it tags vVERSION and brings the version back to dev. Use it when someone says "release", "release day", "ship to production", "promote to staging", "prepare release 1.4.0", "hotfix" or "the release PR got approved", or asks for release notes. Needs release-setup done first.
+description: Move a version from dev to stag to prod: CHANGELOG and version, a pull request into stag, staging checks, a pull request into prod and the v tag, each step only after a release manager approves.
 argument-hint: "[version, or what happened: \"the stage PR got approved\"]"
 disable-model-invocation: true
 ---
@@ -25,10 +25,13 @@ reason and stop. Never approve a pull request or a deployment. Never work around
 `--admin`, no auto-merge, no direct push, no tag on another commit, no deploy command by hand.
 The approval is a person's decision. This skill prepares it and carries it out.
 
+The gate is a hook in `hooks/`, not part of this skill, on purpose: it has to hold in every
+session, also when someone asks Claude to merge or tag without running `/release`.
+
 **Talking to GitHub.** `gh` when it is signed in, the GitHub MCP server, or Claude in Chrome: use
 whichever is there to open pull requests and read their state. None of them is required. Without
 `gh`, the gate cannot read approvals, so it denies the merge and tag steps; give the dev the
-exact action to take on GitHub instead (`references/ship.md` → Without gh).
+exact action to take on GitHub instead (`references/merge-tag-rollback.md` → Without gh).
 
 Never open `.env` files. Staging and production values live in the GitHub environments; check
 their names only.
@@ -46,7 +49,7 @@ and what the gate says about merging each), `staging.runs` and `next`.
 
 | `next` | Go to |
 |---|---|
-| `setup` (exit 3) | Stop: run `/release-setup` first |
+| `setup` (exit 3) | Stop: run `/deploy-setup` first |
 | `stage` | Phase 1 |
 | `await-stage-approval` | Say who still has to approve the stage PR (or which change request is open) and stop |
 | `merge-stage` | Phase 5 |
@@ -57,12 +60,12 @@ and what the gate says about merging each), `staging.runs` and `next`.
 | `back-merge` | Phase 9, step 2 |
 | `nothing-to-release` | Say so and stop |
 
-A hotfix request starts at Phase 1 from `prod` (`references/ship.md` → Hotfix).
+A hotfix request starts at Phase 1 from `prod` (`references/merge-tag-rollback.md` → Hotfix).
 
 ## Phase 1: What is in this release
 
 From `changes.toStaging`, list what users will notice, grouped as Added, Changed and Fixed, with
-ticket ids. Read `references/notes.md`, draft the `CHANGELOG.md` section and show it. The dev owns
+ticket ids. Read `references/changelog.md`, draft the `CHANGELOG.md` section and show it. The dev owns
 the wording: change what they ask, then go on.
 
 ## Phase 2: Version
@@ -89,7 +92,7 @@ to decide.
 
 ## Phase 4: The stage pull request (dev → stag)
 
-Read `references/pr-template.md`. Then:
+Read `references/pull-requests.md`. Then:
 
 1. Create `release/<version>` from `origin/dev`.
 2. Change only `package.json` → `version` and `CHANGELOG.md`.
@@ -114,7 +117,7 @@ Actions then deploys staging; follow the run until it finishes (`gh run watch`, 
 
 ## Phase 6: Check staging
 
-Follow `references/staging.md`:
+Follow `references/staging-checks.md`:
 
 1. Check the headers, `robots.txt`, the 404 page and the changed pages on the staging URL.
 2. Walk through the smoke flow for the release's changes, with Claude in Chrome when it is there.
@@ -126,7 +129,7 @@ A failure is fixed on dev, then the release goes through Phase 4 again.
 
 Open it only once staging has deployed the head of `stag` and Phase 6 has passed. Open a pull
 request from `stag` into `prod` titled `Release <version>`. Write its body from
-`references/pr-template.md`, with the staging results. Request review and **stop**: a release
+`references/pull-requests.md`, with the staging results. Request review and **stop**: a release
 manager approves it on GitHub.
 
 ## Phase 8: Ship
@@ -134,7 +137,7 @@ manager approves it on GitHub.
 Run Phase 0 again. When the release PR's gate says `allow`, merge it with a merge commit. GitHub
 Actions deploys production. If the `production` environment has required reviewers, the run waits
 for a person to approve the deployment on GitHub. Say so, and never approve it yourself. Follow
-the run to the end (`references/ship.md`). A failed deploy: production still runs the last good
+the run to the end (`references/merge-tag-rollback.md`). A failed deploy: production still runs the last good
 release. Read the log and fix it on dev; the fix is a new version.
 
 ## Phase 9: Lock and hand off
@@ -146,7 +149,7 @@ release. Read the log and fix it on dev; the fix is a new version.
 3. **Hand off**, briefly:
    - what shipped (version, commit, links to the run and the deployment);
    - what is left to people (the back-merge, watching production);
-   - how to roll back (`references/ship.md` → Rolling back);
+   - how to roll back (`references/merge-tag-rollback.md` → Rolling back);
    - what was not verified, listed and not hidden.
 
 ## Principles
@@ -163,7 +166,7 @@ release. Read the log and fix it on dev; the fix is a new version.
 
 | File | Use |
 |------|-----|
-| `references/notes.md` | Where the changes come from; the CHANGELOG section |
-| `references/pr-template.md` | Bodies of the stage, release and back-merge pull requests |
-| `references/staging.md` | Checks against staging, and what a person confirms |
-| `references/ship.md` | Merging, following the deploy, tagging, without gh, hotfix, rolling back |
+| `references/changelog.md` | Where the changes come from; the CHANGELOG section |
+| `references/pull-requests.md` | Bodies of the stage, release and back-merge pull requests |
+| `references/staging-checks.md` | Checks against staging, and what a person confirms |
+| `references/merge-tag-rollback.md` | Merging, following the deploy, tagging, without gh, hotfix, rolling back |

@@ -1,18 +1,18 @@
 ---
-name: release-setup
-description: Sets up a project once for releases from dev to stag to prod on GitHub. It creates the environment branches and a GitHub Actions workflow that runs the gates and deploys each branch to its environment, with production waiting for approval. It writes the .claude/release.json the release gate reads and a CHANGELOG, plus docs/release-plan.md and a checklist of the GitHub rulesets and environments a person turns on. Use it when someone wants to set up releases, staging, deploys, environments, GitHub Actions for deploy, or the release gate, or before the first /release.
+name: deploy-setup
+description: Set up a project once so that dev, stag and prod each deploy through GitHub Actions, with the release gate's config and a checklist of the GitHub rulesets and environments to turn on.
 argument-hint: "[where it deploys, URLs, release managers]"
 disable-model-invocation: true
 ---
 
-# Release setup: dev → stag → prod on GitHub
+# Deploy setup: dev → stag → prod on GitHub
 
 Goal: when it is done, a push to `dev`, `stag` or `prod` deploys that branch to its environment
 through GitHub Actions. Only pull requests change those branches, and approvals guard `stag` and
-`prod`. The release gate knows the branches and the release managers. `docs/release-plan.md`
+`prod`. The release gate knows the branches and the release managers. `docs/deploy-plan.md`
 says what is set up, what a person still has to turn on, and how to release (`/release`).
 
-Talk to the dev in their language. The text after `/release-setup` is their request: use what it
+Talk to the dev in their language. The text after `/deploy-setup` is their request: use what it
 gives (host, URLs, names) and ask only for what it leaves out.
 
 **Secrets never pass through the conversation.** Never open `.env`. Staging and production
@@ -20,7 +20,7 @@ values go into the GitHub environments, where the dev or an admin enters them (`
 <NAME> --env <env>` prompts for the value in their own terminal). Here you handle names only.
 
 **Settings on GitHub are a person's.** Rulesets, environments, reviewers and secrets belong to
-the repository's admins. Give them the checklist (`references/github-setup.md`), and read back
+the repository's admins. Give them the checklist (`references/github-settings.md`), and read back
 what you can to confirm it. Change a setting only when the dev asks you to and `gh` is signed in
 as an admin, and show each command before you run it.
 
@@ -31,11 +31,11 @@ node "<skill-dir>/../release/scripts/release-status.mjs" <project-dir>
 ```
 
 Read `setup`: the branches on origin, the deploy workflow, `.claude/release.json`, `CHANGELOG.md`,
-`docs/release-plan.md`, whether the release gate is registered, and `gh`. Then read
+`docs/deploy-plan.md`, whether the release gate is registered, and `gh`. Then read
 `package.json` (the Astro adapter, the `build` and any `deploy` scripts), `astro.config.*` and
 any existing `.github/workflows/`.
 
-- **`docs/release-plan.md` exists**: this is a follow-up run, such as a new host, a new approver
+- **`docs/deploy-plan.md` exists**: this is a follow-up run, such as a new host, a new approver
   or a new environment. Read the plan, confirm what changed, and do only that part.
 - **A deploy workflow already exists**: adapt it to the three branches. Never replace it without
   the dev's yes, and keep its deploy steps.
@@ -60,7 +60,7 @@ One `AskUserQuestion` round, at most four questions:
 
 ## Phase 2: Plan, then the dev's approval
 
-Write `docs/release-plan.md` from `references/plan-template.md`. It covers:
+Write `docs/deploy-plan.md` from `references/deploy-plan-template.md`. It covers:
 
 - branches and environments, with the URLs;
 - the workflow and its deploy step;
@@ -74,7 +74,7 @@ changes before a yes.
 
 ## Phase 3: Files in the repository
 
-1. **`.github/workflows/deploy.yml`** from `references/workflow.md`, with the deploy step for the
+1. **`.github/workflows/deploy.yml`** from `references/deploy-workflow.md`, with the deploy step for the
    host chosen in Phase 1. Leave it as a failing placeholder when the host is not decided.
 2. **`.claude/release.json`**:
 
@@ -105,7 +105,7 @@ Run the seven gates the project has (`/verify`), since the workflow runs the sam
 
 ## Phase 4: Settings on GitHub
 
-Read `references/github-setup.md` and go through it with the dev:
+Read `references/github-settings.md` and go through it with the dev:
 
 - branch rulesets on `dev`, `stag` and `prod`;
 - the tag ruleset on `v*`;
@@ -121,7 +121,7 @@ an admin.
 1. **Prove the workflow**: offer *Open a small pull request into dev and watch it deploy
    development (Recommended)* or *Leave it for the first release*. A workflow that never ran is
    reported as "set up, not proven by a run".
-2. Update `docs/release-plan.md`, and tell the dev briefly:
+2. Update `docs/deploy-plan.md`, and tell the dev briefly:
    - what is set up;
    - what is left on GitHub, and who does it;
    - that releases go through `/release`, whose gate requires these settings.
@@ -139,6 +139,6 @@ an admin.
 
 | File | Use |
 |------|-----|
-| `references/plan-template.md` | `docs/release-plan.md` |
-| `references/workflow.md` | `.github/workflows/deploy.yml` and the deploy steps per host |
-| `references/github-setup.md` | Rulesets, environments, reviewers: what to turn on and how to read it back |
+| `references/deploy-plan-template.md` | `docs/deploy-plan.md` |
+| `references/deploy-workflow.md` | `.github/workflows/deploy.yml` and the deploy steps per host |
+| `references/github-settings.md` | Rulesets, environments, reviewers: what to turn on and how to read it back |

@@ -21,7 +21,7 @@
 
 </div>
 
-<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="The skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /incident hands its fix to /ticket, which feeds /analyze-task; the 6 hooks guard every edit in /develop-feature; /verify then runs /review-code; /release-setup prepares /release, which takes reviewed code from dev to stag to prod" width="100%"></a></p>
+<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="The skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /incident hands its fix to /ticket, which feeds /analyze-task; the 6 hooks guard every edit in /develop-feature; /verify then runs /review-code; /deploy-setup prepares /release, which takes reviewed code from dev to stag to prod" width="100%"></a></p>
 <p align="center"><sub>The skill map. Click it to open the full-size SVG and zoom in your browser.</sub></p>
 
 Every change ends in the same loop: seven gates, then a review, then a report. Strict
@@ -55,7 +55,7 @@ either to see the changes first. `init --plugin` installs a plugin instead (skil
 | `review-code` | Find duplicates, broken conventions and unproven criteria; fix and review again, ≤ 3 rounds | `/review-code` |
 | `web-quality` | Audit and fix performance, Core Web Vitals, accessibility, SEO and security headers. The WCAG review uses the external [`accessibility`](https://github.com/addyosmani/web-quality-skills) skill when it is installed | `/web-quality Audit /orders` |
 | `incident` | Write up a production incident (report, root cause, actions) and push it for review | `/incident INC-7 /orders 500s since 09:10` |
-| `release-setup` | Set up releases once on GitHub: `dev`/`stag`/`prod` deploy workflow, the gate's config, the rulesets and environments to turn on | `/release-setup Docker on our VPS, stag.shop.vn` |
+| `deploy-setup` | Set up releases once on GitHub: `dev`/`stag`/`prod` deploy workflow, the gate's config, the rulesets and environments to turn on | `/deploy-setup Docker on our VPS, stag.shop.vn` |
 | `release` | Move a version dev → stag → prod: CHANGELOG, version, gates, a pull request into `stag`, staging checks, a pull request into `prod`, tag | `/release 1.4.0` |
 
 `/verify` is a command, not a skill: it runs the seven gates in a loop, then `review-code`. Each
@@ -73,7 +73,9 @@ starts again at lint. Projects from `code-skeleton` have them all.
 | `test:stories` | Every story in Chromium, light and dark: render errors, failing `play`, a11y violations |
 | `test:pages` | Every page of the built site: SEO metadata, security headers and CSP, console errors, broken links, image alt and size, JS/CSS budget |
 
-Six hooks run on their own: `turn-snapshot` (prompt sent), `post-edit-lint` (ESLint, anti-slop
+A hook is a script Claude Code runs by itself before or after Claude's actions, so a rule holds
+even when Claude forgets it. `hooks/hooks.json` lists them, in the format Claude Code plugins use;
+the installer copies that list into the project's `.claude/settings.json`. Six hooks run on their own: `turn-snapshot` (prompt sent), `post-edit-lint` (ESLint, anti-slop
 and Prettier on each edited file), `protect-branches` (blocks pushes to `main`, `dev`, `stag`,
 `prod`), `protect-files` (keeps Claude out of `.env` and keys, and off generated files),
 `release-gate` (merges into `stag` and `prod` and `v*` tags only after a release manager's
@@ -92,11 +94,11 @@ a turn).
 | No code before an accepted plan on `high-risk` work (auth, data loss, public contracts) | `analyze-task` stops for the user to confirm scope |
 | Nothing reported done without evidence | The `## Result` block and the criterion → test table; the `task-checklist` hook shows which gates really ran after the last edit |
 | No new dependency without asking | `CLAUDE.md` and every skill (a rule, not a hook) |
-| Code reaches `stag`, then `prod`, only through a pull request a release manager approved on its head commit; `prod` only from `stag` after staging deployed it | The `release-gate` hook (reads approvals with `gh`; without it, a person merges); branch rulesets and environments on GitHub (`release-setup`) |
+| Code reaches `stag`, then `prod`, only through a pull request a release manager approved on its head commit; `prod` only from `stag` after staging deployed it | The `release-gate` hook (reads approvals with `gh`; without it, a person merges); branch rulesets and environments on GitHub (`deploy-setup`) |
 | Claude never approves a pull request or a deployment, and never tags a version that was not released | The `release-gate` hook, for `gh`, the API and the GitHub MCP server; the tag ruleset on GitHub |
 
 The hooks stop mistakes, not someone determined to get around them. Protect the shared branches on
-GitHub or GitLab as well (`release-setup` lists the GitHub settings).
+GitHub or GitLab as well (`deploy-setup` lists the GitHub settings).
 
 ## Tech stack
 

@@ -1,5 +1,6 @@
 # The deploy workflow
 
+This is the project's CI/CD file: a GitHub Actions workflow, not a step of the skills.
 `.github/workflows/deploy.yml`: a pull request into `dev`, `stag` or `prod` runs the seven gates
 (the required status check). A push to one of them, which only a merged pull request can make,
 runs the gates again on the merge commit, builds and deploys to the matching environment. Pushes come only from merged pull requests (the
@@ -76,7 +77,7 @@ jobs:
           # secrets.<NAME> for secret ones.
       - name: Deploy
         run: |
-          echo "No deploy step yet: release-setup Phase 1 picks the host." >&2
+          echo "No deploy step yet: deploy-setup Phase 1 picks the host." >&2
           exit 1
 ```
 
@@ -84,7 +85,7 @@ jobs:
   commit, so keep the deploy in this workflow and its name in `.claude/release.json` → `workflow`.
 - The branch names come from `.claude/release.json`. When they differ, change `on.push.branches`
   and the `environment.name` expression together.
-- The `production` environment allows only `prod` and `v*` tags (`references/github-setup.md`),
+- The `production` environment allows only `prod` and `v*` tags (`references/github-settings.md`),
   so a dispatch of another ref to production fails on GitHub, not just in the gate.
 - `pnpm/action-setup` reads the pnpm version from `packageManager` in `package.json`.
 - `test:stories` and `test:pages` need Chromium; the install step provides it.

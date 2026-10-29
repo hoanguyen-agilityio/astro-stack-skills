@@ -68,7 +68,7 @@ const status = () => {
   return { code: result.status, json: JSON.parse(result.stdout) };
 };
 
-test('asks for release-setup when the environment branches or the workflow are missing', () => {
+test('asks for deploy-setup when the environment branches or the workflow are missing', () => {
   rmSync(join(dir, '.github'), { recursive: true });
   const { code, json } = status();
   assert.equal(code, 3);

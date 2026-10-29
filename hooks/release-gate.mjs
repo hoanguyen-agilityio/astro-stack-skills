@@ -23,7 +23,7 @@
 // that needs one is denied and a person does it on GitHub instead. An approval counts when it is
 // on the PR's head commit, from someone other than its author (and in `approvers`, when set),
 // with no change request left. Like the other hooks, it stops mistakes in this session; the real
-// protection is the rulesets and environments on GitHub (`release-setup` lists them).
+// protection is the rulesets and environments on GitHub (`deploy-setup` lists them).
 // The answer is printed as JSON (`permissionDecision`), so it can ask as well as deny.
 
 import { execFileSync } from 'node:child_process';

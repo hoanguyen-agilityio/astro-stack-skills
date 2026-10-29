@@ -6,7 +6,7 @@
 //
 // Reports:
 //   setup     .claude/release.json (or the defaults), the deploy workflow, CHANGELOG.md,
-//             docs/release-plan.md, whether the release gate is registered, and what is missing
+//             docs/deploy-plan.md, whether the release gate is registered, and what is missing
 //   gh        whether the GitHub CLI is installed and signed in (optional: without it the gate
 //             denies the steps that need an approval, and a person does them on GitHub)
 //   git       current branch, clean or not, the head of origin/<branch> for each environment, the
@@ -20,7 +20,7 @@
 // Never opens .env files.
 //
 // Exit codes: 0 done · 1 error · 3 not set up (no environment branches or no deploy workflow:
-// run /release-setup first)
+// run /deploy-setup first)
 
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -104,7 +104,7 @@ const setup = {
     ? `.github/workflows/${config.workflow}`
     : null,
   changelog: existsSync(join(dir, 'CHANGELOG.md')),
-  plan: existsSync(join(dir, 'docs', 'release-plan.md')),
+  plan: existsSync(join(dir, 'docs', 'deploy-plan.md')),
   gateRegistered: /release-gate\.mjs|web-dev-stack@/.test(settings),
   approvers: config.approvers,
   urls: config.urls ?? {},
