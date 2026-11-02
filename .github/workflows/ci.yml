@@ -21,7 +21,7 @@ jobs:
       # manifests in sync, argument-hint and "Use when", every referenced path, hooks wired and tested, versions
       - run: node scripts/check-plugin.mjs
       - run: npx -y @anthropic-ai/claude-code@2 plugin validate .
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version: '1.23'
       - run: go install github.com/agent-ecosystem/skill-validator/cmd/skill-validator@latest
