@@ -62,6 +62,14 @@ layers.
    - pnpm ≥ 10 skips dependency build scripts unless allowed, and Astro needs `esbuild` and
      `sharp`. Allow exactly those two (pnpm 11: `allowBuilds:` map; pnpm 10:
      `onlyBuiltDependencies:` list). Say so in the report.
+   - Guard rules: permission rules in `.claude/settings.json` that deny pushes to `main`, `dev`,
+     `stag` and `prod`, force pushes and `--no-verify`, deny reading or editing `.env` and keys
+     and editing generated files, and ask before a shell command that names a secret file. A
+     plugin cannot ship them, so with the plugin installed write them with
+     `node "${CLAUDE_PLUGIN_ROOT}/bin/guard-rules.mjs" --write <project dir>`; it keeps every
+     other setting and can run again. With the skills copied by the installer (`.claude/skills/`
+     exists, no `${CLAUDE_PLUGIN_ROOT}`), `init` already wrote them: check that
+     `permissions.deny` in `.claude/settings.json` has `Bash(git push * main)`.
 2. **Astro with React islands (SSR).** Write `astro.config.mjs` (with `site` and the strict
    `experimental.csp`), `src/middleware.ts` (security headers) and the `robots.txt` and
    `sitemap.xml` routes; swap `@astrojs/node` for the
@@ -85,8 +93,9 @@ layers.
    pnpm add tailwindcss@^4 @tailwindcss/vite@^4
    ```
 
-5. **Effect and oRPC.** Write `src/libs/orpcClient.ts` and `.env.example`, then copy it to
-   `.env`. Store the base URL without `/rpc`.
+5. **Effect and oRPC.** Write `src/libs/orpcClient.ts` and `.env.example`, then create `.env`
+   with `cp .env.example .env` (the guard rules ask the user before any command that names
+   `.env`, so they approve this copy; after that `.env` is the user's to edit). Store the base URL without `/rpc`.
 
    ```bash
    pnpm add effect@^3 @orpc/client@^1

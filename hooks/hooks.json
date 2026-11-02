@@ -1,5 +1,5 @@
 {
-  "description": "Record the working tree at each prompt; block git pushes to dev, stag and prod; lint each edited file and feed problems back to Claude; after a turn that changed files, a checklist of changed files and gates, plus a success signal",
+  "description": "Record the working tree at each prompt; gate releases from dev to stag to prod on an approved pull request, and never approve one; lint each edited file and feed problems back to Claude; after a turn that changed files, a checklist of changed files and gates, plus a success signal",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -14,12 +14,12 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|mcp__.*github.*",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/protect-branches.mjs\"",
-            "timeout": 10
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/release-gate.mjs\"",
+            "timeout": 30
           }
         ]
       }

@@ -24,13 +24,17 @@ function frontmatter(file) {
     err(file, 'missing YAML frontmatter');
     return {};
   }
-  return Object.fromEntries(
-    m[1]
-      .split('\n')
-      .map((l) => /^([a-z_-]+):\s*(.*)$/.exec(l))
-      .filter(Boolean)
-      .map(([, k, v]) => [k, v.trim().replace(/^(["'])(.*)\1$/, '$2')]),
-  );
+  const fields = m[1]
+    .split('\n')
+    .map((l) => /^([a-z_-]+):\s*(.*)$/.exec(l))
+    .filter(Boolean)
+    .map(([, k, v]) => [k, v.trim()]);
+  // YAML reads an unquoted ": " as a second key, so the whole frontmatter fails to parse
+  // ("mapping values are not allowed"); quote the value.
+  for (const [k, v] of fields)
+    if (!/^["'[{]/.test(v) && /:(\s|$)/.test(v))
+      err(file, `${k}: quote the value, it contains ": "`);
+  return Object.fromEntries(fields.map(([k, v]) => [k, v.replace(/^(["'])(.*)\1$/, '$2')]));
 }
 
 // manifests: plugin.json, the marketplace entry and package.json describe the same plugin

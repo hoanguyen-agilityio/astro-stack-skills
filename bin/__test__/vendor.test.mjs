@@ -10,6 +10,8 @@ import process from 'node:process';
 import { afterEach, beforeEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { guardRules } from '../guard-rules.mjs';
+
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'cli.mjs');
 const HOOKS_JSON = {
   hooks: {
@@ -89,9 +91,41 @@ test('init keeps existing settings and hooks', () => {
   );
   assert.equal(cli('init').status, 0);
   const settings = JSON.parse(read('settings.json'));
-  assert.deepEqual(settings.permissions, { allow: ['Bash(pnpm test)'] });
+  assert.deepEqual(settings.permissions.allow, ['Bash(pnpm test)']);
   const commands = settings.hooks.Stop.flatMap((group) => group.hooks.map((h) => h.command));
   assert.deepEqual(commands, ['echo mine', OUR_STOP]);
+});
+
+test("init writes the guard rules next to the project's own", () => {
+  write(
+    project,
+    '.claude/settings.json',
+    JSON.stringify({ permissions: { deny: ['Bash(rm -rf *)'] } }),
+  );
+  assert.equal(cli('init').status, 0);
+  const { permissions } = JSON.parse(read('settings.json'));
+  const rules = guardRules();
+  assert.deepEqual(permissions.deny, ['Bash(rm -rf *)', ...rules.deny]);
+  assert.deepEqual(permissions.ask, rules.ask);
+  assert.ok(permissions.deny.includes('Bash(git push * main)'));
+  assert.ok(permissions.deny.includes('Read(**/.env)'));
+});
+
+test("update replaces the guard rules it wrote and keeps the project's", () => {
+  cli('init');
+  const settings = JSON.parse(read('settings.json'));
+  settings.permissions.deny.push('Bash(rm -rf *)');
+  // An older install wrote a rule this version no longer has.
+  settings.permissions.deny.push('Bash(git push * old)');
+  write(project, '.claude/settings.json', JSON.stringify(settings));
+  const lock = JSON.parse(read('astro-stack.lock.json'));
+  lock.permissionRules.deny.push('Bash(git push * old)');
+  write(project, '.claude/astro-stack.lock.json', JSON.stringify(lock));
+  assert.equal(cli('update').status, 0);
+  const { deny } = JSON.parse(read('settings.json')).permissions;
+  assert.ok(deny.includes('Bash(rm -rf *)'));
+  assert.ok(!deny.includes('Bash(git push * old)'));
+  assert.equal(deny.filter((rule) => rule === 'Bash(git push * main)').length, 1);
 });
 
 test('update brings in new, changed and deleted files', () => {
