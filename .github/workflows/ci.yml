@@ -27,11 +27,15 @@ jobs:
       - run: go install github.com/agent-ecosystem/skill-validator/cmd/skill-validator@latest
       # Every skill carries Claude Code fields outside the agentskills.io spec (argument-hint, when_to_use,
       # disable-model-invocation), so extra frontmatter is allowed; everything else stays strict.
-      # Check every skill, then fail once, so one run lists every problem.
+      # code-skeleton is checked without --strict: it vendors the anti-slop rules as a folder it copies
+      # whole (assets/anti-slop/, so its files are "unreferenced" and "deeply nested") and carries every
+      # project file as a template (over the token warning). Its errors still fail; its warnings are logged.
+      # Every other skill stays strict. Check every skill, then fail once, so one run lists every problem.
       - run: |
           failed=0
           for s in skills/*/; do
-            "$(go env GOPATH)/bin/skill-validator" check "$s" --strict --allow-extra-frontmatter -o compact || failed=1
+            strict=--strict; [ "$s" = skills/code-skeleton/ ] && strict=
+            "$(go env GOPATH)/bin/skill-validator" check "$s" $strict --allow-extra-frontmatter -o compact || failed=1
           done
           exit $failed
 
