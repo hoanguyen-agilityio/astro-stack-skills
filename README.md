@@ -4,7 +4,7 @@
 
 <p><strong>From a ticket to reviewed, tested code, on one stack.</strong></p>
 
-<p>10 skills · 1 command (<code>/verify</code>) · 6 hooks · 7 gates in a loop</p>
+<p>10 skills · 1 command (<code>/verify</code>) · 4 hooks + guard rules · 7 gates in a loop</p>
 
 <p>
 <img alt="Astro 5" src="https://img.shields.io/badge/Astro-5-bc52ee?style=flat-square">
@@ -21,7 +21,7 @@
 
 </div>
 
-<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="The skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /incident hands its fix to /ticket, which feeds /analyze-task; the 6 hooks guard every edit in /develop-feature; /verify then runs /review-code; /deploy-setup prepares /release, which takes reviewed code from dev to stag to prod" width="100%"></a></p>
+<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="The skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /incident hands its fix to /ticket, which feeds /analyze-task; the 4 hooks guard every edit in /develop-feature; /verify then runs /review-code; /deploy-setup prepares /release, which takes reviewed code from dev to stag to prod" width="100%"></a></p>
 <p align="center"><sub>The skill map. Click it to open the full-size SVG and zoom in your browser.</sub></p>
 
 Every change ends in the same loop: seven gates, then a review, then a report. Strict
@@ -75,20 +75,24 @@ starts again at lint. Projects from `code-skeleton` have them all.
 
 A hook is a script Claude Code runs by itself before or after Claude's actions, so a rule holds
 even when Claude forgets it. `hooks/hooks.json` lists them, in the format Claude Code plugins use;
-the installer copies that list into the project's `.claude/settings.json`. Six hooks run on their own: `turn-snapshot` (prompt sent), `post-edit-lint` (ESLint, anti-slop
-and Prettier on each edited file), `protect-branches` (blocks pushes to `main`, `dev`, `stag`,
-`prod`), `protect-files` (keeps Claude out of `.env` and keys, and off generated files),
-`release-gate` (merges into `stag` and `prod` and `v*` tags only after a release manager's
+the installer copies that list into the project's `.claude/settings.json`. Four hooks run on their own: `turn-snapshot` (prompt sent), `post-edit-lint` (ESLint, anti-slop
+and Prettier on each edited file), `release-gate` (merges into `stag` and `prod` and `v*` tags only after a release manager's
 approval; never approves) and `task-checklist` (checklist of tasks, files and gates at the end of
 a turn).
+
+What a fixed list can block is a permission rule instead: Claude Code checks it before any tool
+runs, with no script to break. `bin/guard-rules.mjs` writes the guard rules into the project's
+`.claude/settings.json` (the installer does it on `init` and `update`; with the plugin,
+`code-skeleton` runs it, since a plugin cannot ship permissions). This repo has its own in
+`.claude/settings.json`, for `main`.
 
 ## Guard rails
 
 | Rule | Enforced by |
 |------|-------------|
-| No pushes to `main` / `dev` / `stag` / `prod` | The `protect-branches` hook; protect the branches on GitLab too |
-| No reading or editing `.env`, `.env.*`, private keys and keystores | The `protect-files` hook; skills ask the user for values. Only the first `cp .env.example .env` is allowed |
-| No hand edits to generated files (`.astro/`, `dist/`, `node_modules/`, `pnpm-lock.yaml`, `*.gen.ts`) | The `protect-files` hook: run the tool that writes them instead |
+| No pushes to `main` / `dev` / `stag` / `prod`, no force push, no push that names no branch, no `--no-verify` | Guard rules (`deny`) in `.claude/settings.json`; protect the branches on GitHub too |
+| No reading or editing `.env`, `.env.local`, `.env.<mode>`, private keys and keystores | Guard rules: `Read` and `Edit` denied, and any shell command that names one asks the user first (so `cp .env.example .env` needs a yes); skills ask the user for values |
+| No hand edits to generated files (`.astro/`, `dist/`, `node_modules/`, `pnpm-lock.yaml`, `*.gen.ts`) | Guard rules: `Edit` denied; run the tool that writes them instead |
 | Every edited file passes ESLint, anti-slop and Prettier | The `post-edit-lint` hook, then Husky on commit and push |
 | No skipped gates: no `--no-verify`, no lowered coverage, no `!test` story, no switched-off rule | `CLAUDE.md` and every skill; `review-code` flags it; Husky runs the gates on commit and push |
 | No code before an accepted plan on `high-risk` work (auth, data loss, public contracts) | `analyze-task` stops for the user to confirm scope |
@@ -97,7 +101,7 @@ a turn).
 | Code reaches `stag`, then `prod`, only through a pull request a release manager approved on its head commit; `prod` only from `stag` after staging deployed it | The `release-gate` hook (reads approvals with `gh`; without it, a person merges); branch rulesets and environments on GitHub (`deploy-setup`) |
 | Claude never approves a pull request or a deployment, and never tags a version that was not released | The `release-gate` hook, for `gh`, the API and the GitHub MCP server; the tag ruleset on GitHub |
 
-The hooks stop mistakes, not someone determined to get around them. Protect the shared branches on
+The hooks and guard rules stop mistakes, not someone determined to get around them. Protect the shared branches on
 GitHub or GitLab as well (`deploy-setup` lists the GitHub settings).
 
 ## Tech stack
@@ -155,7 +159,8 @@ A commit runs ESLint and Prettier on staged files; a push runs lint, format and 
 | Where | What |
 |-------|------|
 | `skills/<name>/` | `SKILL.md` and its `references/` (and `code-skeleton/assets/anti-slop/`, vendored) |
-| `commands/`, `hooks/` | `/verify`; the six hooks and `hooks.json` |
+| `commands/`, `hooks/` | `/verify`; the four hooks and `hooks.json` |
+| `bin/guard-rules.mjs`, `.claude/settings.json` | The guard rules written into projects; this repo's own, for `main` |
 | `bin/` | The `npx … init` / `update` installer |
 | `spec.md`, `DESIGN.md`, `CLAUDE.md` | Intent; design decisions and why; the contract for projects using the skills |
 | `docs/skill-map.svg` | The animated skill map in this README, exported from the guide's interactive map |

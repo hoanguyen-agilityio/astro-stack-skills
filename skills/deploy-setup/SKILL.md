@@ -99,7 +99,7 @@ changes before a yes.
 5. **Branches**: for each of `dev`, `stag` and `prod` missing on origin, ask before creating it.
    Create it from the default branch (`main`) on GitHub, with the dev's yes:
    `gh api repos/{owner}/{repo}/git/refs -f ref=refs/heads/<branch> -f sha=<sha of main>`.
-   `protect-branches` blocks `git push` to them, and that is intended.
+   The guard rules in `.claude/settings.json` deny `git push` to them, and that is intended.
 
 Run the seven gates the project has (`/verify`), since the workflow runs the same ones.
 

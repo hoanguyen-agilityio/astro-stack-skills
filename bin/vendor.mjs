@@ -11,7 +11,8 @@
 //   new in the repo          → added
 //
 // The hooks in hooks/hooks.json are registered in .claude/settings.json with paths into
-// .claude/hooks/, next to whatever hooks the project already has.
+// .claude/hooks/, next to whatever hooks the project already has, and the guard rules
+// (bin/guard-rules.mjs: protected branches, secret and generated files) go into its permissions.
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -27,6 +28,8 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
+
+import { guardRules, mergeRules } from './guard-rules.mjs';
 
 // Repo folders that land in .claude/ under the same name. Claude Code reads skills, rules, agents,
 // commands and output styles from these folders; hooks are scripts the settings point at.
@@ -278,15 +281,18 @@ export const syncProject = ({ projectDir, source, dryRun = false }) => {
     const plan = planSync({ claudeDir, checkout, commit, lock });
     const settings = readJson(settingsPath, {});
     const hooks = mergeHooks(settings, readUpstreamHooks(checkout), lock?.hookCommands);
-    const settingsChanged = JSON.stringify(hooks.settings) !== JSON.stringify(settings);
+    const rules = guardRules();
+    const nextSettings = mergeRules(hooks.settings, rules, lock?.permissionRules);
+    const settingsChanged = JSON.stringify(nextSettings) !== JSON.stringify(settings);
 
     if (!dryRun) {
       applyActions(claudeDir, plan.actions);
-      if (settingsChanged) writeJson(settingsPath, hooks.settings);
+      if (settingsChanged) writeJson(settingsPath, nextSettings);
       writeJson(lockPath, {
         source,
         commit,
         hookCommands: hooks.commands,
+        permissionRules: rules,
         files: plan.files,
       });
     }

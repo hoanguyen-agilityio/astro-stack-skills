@@ -81,5 +81,5 @@ Compare the names with `.env.example`, and list any that are missing per environ
 | prod before staging | denies a PR into prod not from stag, or before staging deployed | `prod` accepts pull requests only; reviewers check the staging line |
 | A tag on the wrong commit | denies | tag ruleset |
 | Deploying production by hand | denies the listed commands; asks before a dispatch | environment branch rules and reviewers |
-| A push straight to dev, stag or prod | `protect-branches` | branch rulesets |
+| A push straight to dev, stag or prod | the guard rules' `deny` in `.claude/settings.json` | branch rulesets |
 | Clicking Approve in a browser | cannot see it | all of the above |
