@@ -1,6 +1,6 @@
 ---
 name: integrate-api
-description: Connect the app to an oRPC backend through Effect services with Schema-decoded responses, typed errors and retry.
+description: Connect the app to an oRPC backend through Effect services with Schema-decoded responses, typed errors and retry. Use when the app must call a backend procedure ("integrate orders.list", "connect to the API") or a service in src/services/ is added or changed.
 argument-hint: "[procedure(s) to integrate, e.g. orders.list and orders.cancel]"
 ---
 

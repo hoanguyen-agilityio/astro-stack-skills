@@ -1,6 +1,6 @@
 ---
 name: develop-feature
-description: "Build a ticket or a design (image, screenshot, Figma link) into a tested page or component: server-loaded Astro page, small React islands, every UI state, stories and tests. A design is analysed with analyze-task first."
+description: "Build a ticket or a design (image, screenshot, Figma link) into a tested page or component: server-loaded Astro page, small React islands, every UI state, stories and tests. A design is analysed with analyze-task first. Use when asked to build, implement or code a page, screen or component from a ticket folder, ticket text or design."
 argument-hint: "[ticket folder (docs/tickets/<id>/), ticket text, or a design plus what to build from it]"
 ---
 
