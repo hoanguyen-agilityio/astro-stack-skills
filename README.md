@@ -75,7 +75,8 @@ starts again at lint. Projects from `code-skeleton` have them all.
 
 A hook is a script Claude Code runs by itself before or after Claude's actions, so a rule holds
 even when Claude forgets it. `hooks/hooks.json` lists them, in the format Claude Code plugins use;
-the installer copies that list into the project's `.claude/settings.json`. Four hooks run on their own: `turn-snapshot` (prompt sent), `post-edit-lint` (ESLint, anti-slop
+the installer copies that list into the project's `.claude/settings.json`. Five hooks run on their own: `ticket-resume` (after a compact, points Claude back at the
+ticket in progress), `turn-snapshot` (prompt sent), `post-edit-lint` (ESLint, anti-slop
 and Prettier on each edited file), `release-gate` (merges into `stag` and `prod` and `v*` tags only after a release manager's
 approval; never approves) and `task-checklist` (checklist of tasks, files and gates at the end of
 a turn).
