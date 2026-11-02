@@ -18,7 +18,7 @@ Copy everything below the line, replace `<project-name>`, and keep the headings.
 
 ---
 
-```markdown
+````markdown
 # DESIGN.md — <project-name>
 
 Design context for AI coding agents. Read this before writing or changing any UI, so generated
@@ -259,4 +259,4 @@ both together.
 
 Core Web Vitals targets, at the 75th percentile of real visits: LCP ≤ 2.5 s, INP ≤ 200 ms,
 CLS ≤ 0.1. The gates cannot measure them; the `web-quality` skill does with a browser trace.
-```
+````

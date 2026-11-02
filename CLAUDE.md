@@ -123,7 +123,13 @@ Skills live in `skills/<name>/` (`SKILL.md` + `references/`). The design of the 
 an empty directory. Real check: run the skill in `astro-stack-playground` (it installs this
 plugin through `.claude/settings.json`), then refresh the generated project and the evidence there.
 
-The repo's own JavaScript (`bin/`, `hooks/`) has gates too: `pnpm install` once sets up Husky.
-A commit runs ESLint and Prettier on staged `.js`/`.mjs`/`.json` files; a push runs `pnpm lint`,
-`pnpm format:check` and `pnpm test` (the hook tests in `hooks/__test__/`). Markdown is not
-formatted: its code blocks are templates copied into projects as written.
+The repo's own JavaScript (`bin/`, `hooks/`) has gates too, run by GitHub Actions
+(`.github/workflows/ci.yml`) on every pull request and every push to `main`: `pnpm lint`,
+`pnpm format:check`, `pnpm check` (`scripts/check-plugin.mjs`), `pnpm test`,
+`claude plugin validate .`, `skill-validator --strict` on each skill, and the installer's
+`init` and `update` in an empty project. A model-invoked skill's description says "Use when …",
+and SKILL.md stays under 200 lines. A pull request that is not a
+draft also gets a Claude review (`claude-code-review.yml`) that must end in `VERDICT: READY`,
+and `@claude` in an issue or a pull request comment runs Claude (`claude.yml`). There are no
+Git hooks: run the same commands locally before pushing. Markdown is not formatted: its code
+blocks are templates copied into projects as written.

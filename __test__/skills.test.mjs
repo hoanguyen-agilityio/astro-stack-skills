@@ -15,8 +15,8 @@ const COMMANDS = join(ROOT, 'commands');
 const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MAX_NAME = 64;
 const MAX_DESCRIPTION = 1024;
-// skill-creator: keep SKILL.md under 500 lines and move detail into references/.
-const MAX_SKILL_LINES = 500;
+// Keep SKILL.md under 200 lines (as the backend-dev plugin does) and move detail into references/.
+const MAX_SKILL_LINES = 200;
 
 const skills = readdirSync(SKILLS, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())

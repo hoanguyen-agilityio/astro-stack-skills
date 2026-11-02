@@ -1,6 +1,6 @@
 ---
 name: web-quality
-description: Audit and fix the pages of an Astro + React islands app for performance, Core Web Vitals, accessibility, SEO and security best practices, with evidence from the project's gates and, when available, a live browser.
+description: Audit and fix the pages of an Astro + React islands app for performance, Core Web Vitals, accessibility, SEO and security best practices, with evidence from the project's gates and, when available, a live browser. Use when asked about page speed, Lighthouse, Core Web Vitals, accessibility, SEO or security headers, or when pnpm test:pages fails.
 argument-hint: "[routes, a branch, or an area: performance, a11y, seo, best-practices; default: every page]"
 ---
 
