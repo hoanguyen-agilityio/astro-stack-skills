@@ -1,6 +1,6 @@
 ---
 name: release
-description: Move a version from dev to stag to prod: CHANGELOG and version, a pull request into stag, staging checks, a pull request into prod and the v tag, each step only after a release manager approves.
+description: "Move a version from dev to stag to prod: CHANGELOG and version, a pull request into stag, staging checks, a pull request into prod and the v tag, each step only after a release manager approves."
 argument-hint: "[version, or what happened: \"the stage PR got approved\"]"
 disable-model-invocation: true
 ---
