@@ -137,9 +137,10 @@ warning from `@storybook-astro/framework` is expected.
 ## Working on this repo
 
 ```bash
-pnpm install     # also sets up the Git hooks
-pnpm lint        # ESLint on bin/ and hooks/
-pnpm test        # skill validation, hook and installer tests
+pnpm install
+pnpm lint        # ESLint on bin/, hooks/ and scripts/
+pnpm check       # manifests, argument-hint and "Use when", referenced paths, hooks, versions
+pnpm test        # skill frontmatter and size, hook and installer tests
 pnpm validate    # claude plugin validate .
 ```
 
@@ -148,7 +149,10 @@ dots at the end for the animation (cards appear in turn, edges flow, a dot runs 
 all off with reduced motion). When a skill is added or renamed, export it again and copy that
 style block and the dots across.
 
-A commit runs ESLint and Prettier on staged files; a push runs lint, format and tests. Merge to
+There are no Git hooks: GitHub Actions runs the gates on every pull request and push to `main`
+(`.github/workflows/ci.yml`: the commands above, `skill-validator --strict` on each skill, and an
+`init` + `update` of the installer into an empty project), and Claude reviews each pull request
+(`claude-code-review.yml`), failing the check unless it ends in `VERDICT: READY`. Merge to
 `main`: `update` reads `main`, and there is no version to bump. Try unpushed changes with
 `update --source <path to your checkout>` or `claude --plugin-dir <this repo>`.
 
@@ -157,6 +161,7 @@ A commit runs ESLint and Prettier on staged files; a push runs lint, format and 
 | `skills/<name>/` | `SKILL.md` and its `references/` (and `code-skeleton/assets/anti-slop/`, vendored) |
 | `commands/`, `hooks/` | `/verify`; the six hooks and `hooks.json` |
 | `bin/` | The `npx … init` / `update` installer |
+| `scripts/check-plugin.mjs`, `.github/workflows/` | The plugin lint; CI, the Claude review and `@claude` |
 | `spec.md`, `DESIGN.md`, `CLAUDE.md` | Intent; design decisions and why; the contract for projects using the skills |
 | `docs/skill-map.svg` | The animated skill map in this README, exported from the guide's interactive map |
 | [`astro-stack-playground`](https://gitlab.asoft-python.com/hoa.nguyen/astro-stack-playground) | A project built with the skills, with the headless run, gate logs and screenshots |
