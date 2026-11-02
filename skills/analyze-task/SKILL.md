@@ -1,6 +1,6 @@
 ---
 name: analyze-task
-description: Turn a ticket, design or loose request into acceptance criteria, open questions and a build plan before any code is written.
+description: Turn a ticket, design or loose request into acceptance criteria, open questions and a build plan before any code is written. Use when a ticket, bug report, design or feature request arrives, before code-skeleton, integrate-api or develop-feature start.
 argument-hint: "[ticket text, file, design image or Figma link]"
 ---
 

@@ -1,0 +1,87 @@
+# The repo's gates run here, not in Git hooks: every pull request and every push to main.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plugin-lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      # manifests in sync, argument-hint and "Use when", every referenced path, hooks wired and tested, versions
+      - run: node scripts/check-plugin.mjs
+      - run: npx -y @anthropic-ai/claude-code@2 plugin validate .
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      - run: go install github.com/agent-ecosystem/skill-validator/cmd/skill-validator@latest
+      # Every skill carries Claude Code fields outside the agentskills.io spec (argument-hint, when_to_use,
+      # disable-model-invocation), so extra frontmatter is allowed; everything else stays strict.
+      # code-skeleton vendors the anti-slop rules as a folder it copies whole, so nesting and orphan files
+      # under assets/anti-slop/ are expected, and it carries every project file as a template, so its
+      # references pass the token warning (10k per file, 25k in all). It is not strict: exit 2 (warnings
+      # only) is logged and passes, exit 1 (errors, including the 25k/50k token limits) fails. Every other
+      # skill stays strict. Check every skill, then fail once, so one run lists every problem.
+      # Exit codes: 0 clean, 1 errors, 2 warnings only, 3 usage error.
+      - run: |
+          failed=0
+          for s in skills/*/; do
+            if [ "$s" = skills/code-skeleton/ ]; then
+              rc=0
+              "$(go env GOPATH)/bin/skill-validator" check "$s" --allow-extra-frontmatter \
+                --allow-nested-paths=assets/anti-slop --skip-orphans -o compact || rc=$?
+              [ "$rc" -eq 0 ] || [ "$rc" -eq 2 ] || failed=1
+            else
+              "$(go env GOPATH)/bin/skill-validator" check "$s" --strict --allow-extra-frontmatter -o compact || failed=1
+            fi
+          done
+          exit $failed
+
+  gates:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      # skill frontmatter and size, hook tests, installer tests
+      - run: pnpm test
+
+  installer:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: init copies every skill, command and hook into a new project
+        run: |
+          repo=$PWD && tmp=$(mktemp -d) && cd "$tmp" && git init -q
+          node "$repo/bin/cli.mjs" init --source "$repo"
+          for s in "$repo"/skills/*/; do test -f ".claude/skills/$(basename "$s")/SKILL.md"; done
+          for c in "$repo"/commands/*.md; do test -f ".claude/commands/$(basename "$c")"; done
+          for h in "$repo"/hooks/*.mjs; do test -f ".claude/hooks/$(basename "$h")"; done
+          test -f .claude/astro-stack.lock.json
+      - name: update right after init changes nothing
+        run: |
+          repo=$PWD && tmp=$(mktemp -d) && cd "$tmp" && git init -q
+          node "$repo/bin/cli.mjs" init --source "$repo"
+          node "$repo/bin/cli.mjs" update --dry-run --source "$repo" | tee out.txt
+          grep -q 'already at' out.txt

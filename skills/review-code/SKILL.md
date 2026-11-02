@@ -1,6 +1,6 @@
 ---
 name: review-code
-description: Review a change for duplicated components and helpers, broken conventions and unproven criteria, then fix and re-review in a loop of at most three rounds.
+description: Review a change for duplicated components and helpers, broken conventions and unproven criteria, then fix and re-review in a loop of at most three rounds. Use when a change is finished and before it is pushed, when asked to review a branch or files, or at the end of develop-feature and integrate-api.
 argument-hint: "[base branch or files to review; default: everything changed since the default branch]"
 ---
 
