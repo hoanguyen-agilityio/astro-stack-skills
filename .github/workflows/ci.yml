@@ -27,10 +27,13 @@ jobs:
       - run: go install github.com/agent-ecosystem/skill-validator/cmd/skill-validator@latest
       # Every skill carries Claude Code fields outside the agentskills.io spec (argument-hint, when_to_use,
       # disable-model-invocation), so extra frontmatter is allowed; everything else stays strict.
+      # Check every skill, then fail once, so one run lists every problem.
       - run: |
+          failed=0
           for s in skills/*/; do
-            "$(go env GOPATH)/bin/skill-validator" check "$s" --strict --allow-extra-frontmatter -o compact
+            "$(go env GOPATH)/bin/skill-validator" check "$s" --strict --allow-extra-frontmatter -o compact || failed=1
           done
+          exit $failed
 
   gates:
     runs-on: ubuntu-24.04

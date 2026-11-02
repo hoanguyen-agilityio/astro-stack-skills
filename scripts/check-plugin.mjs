@@ -94,6 +94,19 @@ for (const file of sources) {
   for (const [ref] of text.matchAll(/references\/[\w.-]+\.md/g))
     if (!skills.some((s) => existsSync(join(SKILLS, s, ref))))
       err(file, `${ref} exists in no skill`);
+  // A fence closes only on a bare fence at least as long as its opener, so a template that holds a
+  // ```astro block must open with ````; otherwise the inner ``` closes it and the rest reads as code.
+  if (file.endsWith('.md')) {
+    let open = null;
+    text.split('\n').forEach((line, i) => {
+      const m = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+      if (!m) return;
+      if (!open) open = { fence: m[1], line: i + 1 };
+      else if (m[1][0] === open.fence[0] && m[1].length >= open.fence.length && !m[2].trim())
+        open = null;
+    });
+    if (open) err(file, `code fence opened at line ${open.line} is never closed`);
+  }
   // links inside code blocks are templates for files the skill writes, not files of this repo
   if (file.endsWith('.md'))
     for (const [, link] of text
