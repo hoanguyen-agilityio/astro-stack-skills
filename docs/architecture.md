@@ -179,6 +179,9 @@ To add `integrate-api` or `develop-feature`:
 - `analyze-task`'s Figma path depends on the Figma MCP being connected, and falls back to
   screenshots.
 - The hooks load only with the plugin; a `--copy` or `.claude/` clone install has none.
+- A `.claude/` clone loads this repo's `AGENTS.md` only while the project has no `CLAUDE.md` or
+  `CLAUDE.local.md`: Claude Code skips `AGENTS.md` when one exists. A project made by
+  `code-skeleton` carries the same rules in its own `AGENTS.md`.
 - The checklist cannot order a Bash file write against the gates, so only `Edit`/`Write` mark a
   gate as run before a later edit (`[~]`). A gate run with `pnpm -s` behind `;` or `|` shows
   `[?]`: pnpm prints nothing that says whether it failed.
