@@ -21,10 +21,14 @@ jobs:
       # manifests in sync, argument-hint and "Use when", every referenced path, hooks wired and tested, versions
       - run: node scripts/check-plugin.mjs
       - run: npx -y @anthropic-ai/claude-code@2 plugin validate .
-      - uses: actions/setup-go@v5
+      # setup-go 7 sets GOTOOLCHAIN=local, so the Go here must be new enough for skill-validator
+      # (1.8.0 needs go >= 1.25.5). There is no go.mod to key a cache on. The validator is pinned so
+      # a new release cannot break CI; Dependabot does not track it, so bump it by hand.
+      - uses: actions/setup-go@v7
         with:
-          go-version: '1.23'
-      - run: go install github.com/agent-ecosystem/skill-validator/cmd/skill-validator@latest
+          go-version: '1.25'
+          cache: false
+      - run: go install github.com/agent-ecosystem/skill-validator/cmd/skill-validator@v1.8.0
       # Every skill carries Claude Code fields outside the agentskills.io spec (argument-hint, when_to_use,
       # disable-model-invocation), so extra frontmatter is allowed; everything else stays strict.
       # code-skeleton vendors the anti-slop rules as a folder it copies whole, so nesting and orphan files

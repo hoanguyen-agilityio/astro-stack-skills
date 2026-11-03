@@ -14,7 +14,9 @@ concurrency:
 
 jobs:
   claude-review:
-    if: github.event.pull_request.draft == false
+    # Dependabot's pull requests only bump a version, CI checks them, and GitHub gives them no access
+    # to Actions secrets, so the review could only fail for want of the token.
+    if: github.event.pull_request.draft == false && github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
