@@ -95,7 +95,7 @@ git push -u origin docs/incident-<id>
 - A new branch starts from the current `HEAD`. If the current branch is a feature branch with
   unpushed commits, ask whether to start from the default branch instead.
 - On an update: `docs(incident): update <id> (<new status>)`.
-- The project's `CLAUDE.md` may set its own commit format. Use it.
+- The project's `AGENTS.md` (or `CLAUDE.md`) may set its own commit format. Use it.
 - A failing Git hook is a real failure: fix the cause and commit again; never skip the hook.
 - The push fails: keep the commit, report the error and the command to retry.
 

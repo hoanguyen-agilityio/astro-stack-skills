@@ -83,7 +83,8 @@ git push -u origin docs/ticket-<id>
 - A new branch starts from the current `HEAD`. If the current branch is a feature branch with
   unpushed commits, ask whether to start from the default branch instead.
 - On an update, the message is `docs(ticket): update <id> intent, spec and plan`.
-- The project's `CLAUDE.md` may set its own commit format (for example `[#412] …`). Use it.
+- The project's `AGENTS.md` (or `CLAUDE.md`) may set its own commit format (for example
+  `[#412] …`). Use it.
 - A failing Git hook is a real failure: fix the cause and commit again; never skip the hook.
 - The push fails (no access, rejected): keep the commit, report the error and the command to
   retry. Do not try another remote or branch.

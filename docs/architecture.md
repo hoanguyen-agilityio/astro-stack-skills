@@ -24,7 +24,7 @@ astro-stack-skills/                 one repo = marketplace "astro-stack" = plugi
 │   ├── release/                    /release: dev → stag → prod, one approved pull request per step, tag
 │   ├── code-skeleton/              part 1 of the brief
 │   │   ├── SKILL.md
-│   │   └── references/{setup-layers,project-files,starter-ui,design-md-template,claude-md-template}.md
+│   │   └── references/{setup-layers,project-files,starter-ui,design-md-template,agents-md-template}.md
 │   ├── integrate-api/  develop-feature/
 │   └── review-code/                last step of every build: review → fix → review loop
 │       ├── SKILL.md
@@ -51,7 +51,7 @@ request ──► analyze-task ──► ground ──► build ──► verify
             plan             neighbours                       test, build    → fix, ≤ 3 ×    + AC → proof
 ```
 
-- **The workflow lives in the contract file, not in the skills.** This repo's `AGENTS.md` and the `CLAUDE.md`
+- **The workflow lives in `AGENTS.md`, not in the skills.** This repo's `AGENTS.md` and the one
   `code-skeleton` writes into each project list the steps (analyze → ground → build → verify →
   report). A skill holds only its own knowledge: scope, inputs, what it produces, done-when,
   failure modes and references. `code-skeleton` takes its inputs from an `analyze-task`
@@ -98,7 +98,7 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | Skeleton has no batching, errors or retry | Those belong to `integrate-api`. The skeleton stays the smallest thing that runs |
 | Project-scope plugin install is the recommended path, not a copy | Claude Code already records it in `.claude/settings.json`, so the team shares one versioned skill set that updates in place. A copy goes stale, and a clone into `.claude/` nests a git repo and a second `DESIGN.md` |
 | `npx git+ssh://… init` wraps that install in one command (`bin/cli.mjs`) | Like ClaudeKit's `ck init`, but with no npm registry or global CLI: npx runs the bin straight from the git repo. It only calls `claude plugin`, so it adds no second install mechanism; `--copy` remains for machines without the `claude` CLI |
-| `code-skeleton` writes the project's `CLAUDE.md` from a template | A plugin does not load this repo's `AGENTS.md`. Writing the contract into the project makes it hold in every later session, whatever the install mode, and lets the project own and extend it |
+| `code-skeleton` writes the project's `AGENTS.md` from a template | A plugin does not load this repo's `AGENTS.md`. Writing the contract into the project makes it hold in every later session, whatever the install mode, and lets the project own and extend it |
 | `code-skeleton` has an init mode for empty directories, layer by layer | `pnpm create astro`, `astro add` and `storybook init` install `latest` and ask questions. Building each layer by hand keeps the verified majors, and with defaults for the name and the API URL an empty directory needs no arguments |
 | `DESIGN.md` generated after shadcn init | Its token, radius and font values are read from the installed theme, so they match the code |
 | Storybook through `@storybook-astro/framework` (Storybook 10) | Renders `.astro` (server, Container API) and React (browser) stories in one Storybook, reading `astro.config.mjs`, so `.astro` components keep their story without a React rewrite. The team's in-house `@storybook/astro` in `space` is Storybook 8 and kitchen's `.astro` stories are excluded from its config. Needs Node ≥ 22.19 |
