@@ -32,11 +32,26 @@ import { dirname, join, relative, sep } from 'node:path';
 import { guardRules, mergeRules } from './guard-rules.mjs';
 
 // Repo folders that land in .claude/ under the same name. Claude Code reads skills, rules, agents,
-// commands and output styles from these folders; hooks are scripts the settings point at.
+// commands and output styles from these folders; hooks are scripts the settings point at, and
+// scripts/ holds the ones skills run (as <skill-dir>/../../scripts/…, the same in a plugin).
 // A folder that does not exist in the repo is skipped, so adding one later needs only this list.
-export const VENDORED_DIRS = ['skills', 'hooks', 'rules', 'agents', 'commands', 'output-styles'];
-// Repo-only files: tests of the repo itself, and the plugin hook manifest (it becomes settings).
-const SKIPPED = ['hooks/__test__', 'hooks/hooks.json'];
+export const VENDORED_DIRS = [
+  'skills',
+  'hooks',
+  'scripts',
+  'rules',
+  'agents',
+  'commands',
+  'output-styles',
+];
+// Repo-only files: tests of the repo itself, the plugin hook manifest (it becomes settings), and
+// the repo's own CI lint.
+const SKIPPED = [
+  'hooks/__test__',
+  'hooks/hooks.json',
+  'scripts/__test__',
+  'scripts/check-plugin.mjs',
+];
 
 export const LOCK_FILE = 'astro-stack.lock.json';
 const PLUGIN_ROOT = '${CLAUDE_PLUGIN_ROOT}';

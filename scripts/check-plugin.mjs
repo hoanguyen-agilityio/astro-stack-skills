@@ -2,8 +2,8 @@
 // Lints this plugin beyond what `claude plugin validate` and the skill tests check: manifests agree with each
 // other and with package.json, every skill and command takes an argument-hint and a model-invoked skill says
 // when to use it, every path a skill points to exists (${CLAUDE_PLUGIN_ROOT}/…, <skill-dir>/…,
-// references/…, relative Markdown links), every hook script exists and is tested, and the tech stack versions
-// in CLAUDE.md match README.md.
+// references/…, relative Markdown links), skills hold Markdown only (code lives in scripts/), every hook script
+// exists and is tested, and the tech stack versions in CLAUDE.md match README.md.
 // Usage: node scripts/check-plugin.mjs   (exit 1 on any problem)
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
@@ -58,6 +58,18 @@ if (pkg.version !== manifest.version)
 // skills and commands
 const SKILLS = join(ROOT, 'skills');
 const skills = readdirSync(SKILLS).filter((d) => statSync(join(SKILLS, d)).isDirectory());
+// A skill holds instructions only: SKILL.md and references/*.md, plus assets/ that it copies into a
+// project as they are. Code the skills run lives in scripts/ (called as <skill-dir>/../../scripts/…),
+// where it is linted, tested and shared, and the installer copies it to .claude/scripts/.
+for (const file of walk(SKILLS)) {
+  const rel = relative(SKILLS, file);
+  if (rel.split('/')[1] === 'assets') continue;
+  if (!file.endsWith('.md'))
+    err(
+      file,
+      'only Markdown belongs in a skill; move code to scripts/ (or into assets/ if copied)',
+    );
+}
 for (const name of skills) {
   const file = join(SKILLS, name, 'SKILL.md');
   if (!existsSync(file)) {

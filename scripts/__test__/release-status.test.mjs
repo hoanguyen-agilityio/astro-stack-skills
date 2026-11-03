@@ -1,4 +1,4 @@
-// Runs the release skill's status script on a scratch repository with dev, stag and prod on a
+// Runs the release status script (scripts/release-status.mjs) on a scratch repository with dev, stag and prod on a
 // local origin, with no GitHub CLI, and checks what it reports and which step comes next.
 
 import assert from 'node:assert/strict';
@@ -10,14 +10,7 @@ import process from 'node:process';
 import { afterEach, beforeEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-const SCRIPT = join(
-  dirname(fileURLToPath(import.meta.url)),
-  '..',
-  'skills',
-  'release',
-  'scripts',
-  'release-status.mjs',
-);
+const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), '..', 'release-status.mjs');
 
 let root;
 let dir;

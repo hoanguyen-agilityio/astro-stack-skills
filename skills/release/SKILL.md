@@ -39,7 +39,7 @@ their names only.
 ## Phase 0: Where the release stands
 
 ```bash
-node "<skill-dir>/scripts/release-status.mjs" <project-dir>
+node "<skill-dir>/../../scripts/release-status.mjs" <project-dir>
 ```
 
 JSON: `setup` (config, workflow, what is missing), `gh`, `git` (heads and `package.json` versions

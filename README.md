@@ -155,10 +155,11 @@ There are no Git hooks: GitHub Actions runs the gates on every pull request and 
 
 | Where | What |
 |-------|------|
-| `skills/<name>/` | `SKILL.md` and its `references/` (and `code-skeleton/assets/anti-slop/`, vendored) |
+| `skills/<name>/` | `SKILL.md` and its `references/`, Markdown only (and `code-skeleton/assets/anti-slop/`, vendored) |
+| `scripts/` | Code the skills run (`release-status.mjs`), with its tests in `scripts/__test__/` |
 | `commands/`, `hooks/` | `/verify`; the five hooks and `hooks.json` |
 | `bin/guard-rules.mjs`, `.claude/settings.json` | The guard rules written into projects; this repo's own, for `main` |
 | `bin/` | The `npx … init` / `update` installer |
-| `scripts/check-plugin.mjs`, `.github/workflows/` | The plugin lint; CI, the Claude review and `@claude` |
+| `scripts/check-plugin.mjs`, `.github/workflows/` | The plugin lint (repo only, not installed); CI, the Claude review and `@claude` |
 | `spec.md`, `DESIGN.md`, `CLAUDE.md` | Intent; design decisions and why; the contract for projects using the skills |
 | [`astro-stack-playground`](https://gitlab.asoft-python.com/hoa.nguyen/astro-stack-playground) | A project built with the skills, with the headless run, gate logs and screenshots |

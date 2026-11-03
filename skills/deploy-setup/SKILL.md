@@ -27,7 +27,7 @@ as an admin, and show each command before you run it.
 ## Phase 0: Inventory
 
 ```bash
-node "<skill-dir>/../release/scripts/release-status.mjs" <project-dir>
+node "<skill-dir>/../../scripts/release-status.mjs" <project-dir>
 ```
 
 Read `setup`: the branches on origin, the deploy workflow, `.claude/release.json`, `CHANGELOG.md`,
