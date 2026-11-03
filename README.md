@@ -4,7 +4,7 @@
 
 <p><strong>From a ticket to reviewed, tested code, on one stack.</strong></p>
 
-<p>10 skills · 1 command (<code>/verify</code>) · 4 hooks + guard rules · 7 gates in a loop</p>
+<p>10 skills · 1 command (<code>/verify</code>) · 5 hooks + guard rules · 7 gates in a loop</p>
 
 <p>
 <img alt="Astro 5" src="https://img.shields.io/badge/Astro-5-bc52ee?style=flat-square">
@@ -21,7 +21,7 @@
 
 </div>
 
-<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="The skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /incident hands its fix to /ticket, which feeds /analyze-task; the 4 hooks guard every edit in /develop-feature; /verify then runs /review-code; /deploy-setup prepares /release, which takes reviewed code from dev to stag to prod" width="100%"></a></p>
+<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="The skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /incident hands its fix to /ticket, which feeds /analyze-task; the hooks guard every edit in /develop-feature; /verify then runs /review-code; /deploy-setup prepares /release, which takes reviewed code from dev to stag to prod" width="100%"></a></p>
 <p align="center"><sub>The skill map. Click it to open the full-size SVG and zoom in your browser.</sub></p>
 
 Every change ends in the same loop: seven gates, then a review, then a report. Strict
@@ -75,7 +75,8 @@ starts again at lint. Projects from `code-skeleton` have them all.
 
 A hook is a script Claude Code runs by itself before or after Claude's actions, so a rule holds
 even when Claude forgets it. `hooks/hooks.json` lists them, in the format Claude Code plugins use;
-the installer copies that list into the project's `.claude/settings.json`. Four hooks run on their own: `turn-snapshot` (prompt sent), `post-edit-lint` (ESLint, anti-slop
+the installer copies that list into the project's `.claude/settings.json`. Five hooks run on their own: `ticket-resume` (after a compact, points Claude back at the
+ticket in progress), `turn-snapshot` (prompt sent), `post-edit-lint` (ESLint, anti-slop
 and Prettier on each edited file), `release-gate` (merges into `stag` and `prod` and `v*` tags only after a release manager's
 approval; never approves) and `task-checklist` (checklist of tasks, files and gates at the end of
 a turn).
@@ -163,7 +164,7 @@ There are no Git hooks: GitHub Actions runs the gates on every pull request and 
 | Where | What |
 |-------|------|
 | `skills/<name>/` | `SKILL.md` and its `references/` (and `code-skeleton/assets/anti-slop/`, vendored) |
-| `commands/`, `hooks/` | `/verify`; the four hooks and `hooks.json` |
+| `commands/`, `hooks/` | `/verify`; the five hooks and `hooks.json` |
 | `bin/guard-rules.mjs`, `.claude/settings.json` | The guard rules written into projects; this repo's own, for `main` |
 | `bin/` | The `npx … init` / `update` installer |
 | `scripts/check-plugin.mjs`, `.github/workflows/` | The plugin lint; CI, the Claude review and `@claude` |

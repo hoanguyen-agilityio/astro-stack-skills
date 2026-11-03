@@ -1,6 +1,18 @@
 {
-  "description": "Record the working tree at each prompt; gate releases from dev to stag to prod on an approved pull request, and never approve one; lint each edited file and feed problems back to Claude; after a turn that changed files, a checklist of changed files and gates, plus a success signal",
+  "description": "After a compact, point Claude back at the ticket in progress; record the working tree at each prompt; gate releases from dev to stag to prod on an approved pull request, and never approve one; lint each edited file and feed problems back to Claude; after a turn that changed files, a checklist of changed files and gates, plus a success signal",
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/ticket-resume.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [
