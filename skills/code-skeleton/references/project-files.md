@@ -330,7 +330,7 @@ export default defineConfig({
 });
 ```
 
-- `pnpm lint` runs `eslint . && oxlint`; the pre-commit hook and the `post-edit-lint` hook run
+- `pnpm lint` runs `eslint . && oxlint`; the pre-commit hook and the `lint-on-edit` hook run
   both on each file, so Claude fixes a finding while it writes the code.
 - How to satisfy the usual findings:
 

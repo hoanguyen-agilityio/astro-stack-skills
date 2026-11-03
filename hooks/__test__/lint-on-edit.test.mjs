@@ -10,12 +10,12 @@ import process from 'node:process';
 import { afterEach, beforeEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-const HOOK = join(dirname(fileURLToPath(import.meta.url)), '..', 'post-edit-lint.mjs');
+const HOOK = join(dirname(fileURLToPath(import.meta.url)), '..', 'lint-on-edit.mjs');
 
 let dir;
 
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), 'post-edit-lint-'));
+  dir = mkdtempSync(join(tmpdir(), 'lint-on-edit-'));
   writeFileSync(join(dir, 'package.json'), '{}');
   mkdirSync(join(dir, 'src'));
 });

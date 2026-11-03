@@ -18,9 +18,9 @@ let transcriptDir;
 let id = 0;
 
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), 'task-checklist-'));
+  dir = mkdtempSync(join(tmpdir(), 'checklist-on-stop-'));
   // Outside the repository, or the snapshot would count the transcript as a changed file.
-  transcriptDir = mkdtempSync(join(tmpdir(), 'task-checklist-transcript-'));
+  transcriptDir = mkdtempSync(join(tmpdir(), 'checklist-on-stop-transcript-'));
   const scripts = Object.fromEntries(GATES.map((gate) => [gate, 'x']));
   writeFileSync(join(dir, 'package.json'), JSON.stringify({ scripts }));
   spawnSync('mkdir', ['src'], { cwd: dir });
@@ -85,7 +85,7 @@ const checklist = (entries, { bashWrite = false, snapshot = true, lastMessage } 
     session_id: snapshot ? session : 'none',
     last_assistant_message: lastMessage,
   };
-  const out = spawnSync(process.execPath, [join(HOOKS, 'task-checklist.mjs')], {
+  const out = spawnSync(process.execPath, [join(HOOKS, 'checklist-on-stop.mjs')], {
     input: JSON.stringify(input),
     encoding: 'utf8',
     // No notify-send or osascript on PATH: tests never pop a desktop notification.

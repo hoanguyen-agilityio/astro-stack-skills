@@ -73,9 +73,9 @@ starts again at lint. Projects from `code-skeleton` have them all.
 A hook is a script Claude Code runs by itself before or after Claude's actions, so a rule holds
 even when Claude forgets it. `hooks/hooks.json` lists them, in the format Claude Code plugins use;
 the installer copies that list into the project's `.claude/settings.json`. Five hooks run on their own: `ticket-resume` (after a compact, points Claude back at the
-ticket in progress), `turn-snapshot` (prompt sent), `post-edit-lint` (ESLint, anti-slop
+ticket in progress), `turn-snapshot` (prompt sent), `lint-on-edit` (ESLint, anti-slop
 and Prettier on each edited file), `release-gate` (merges into `stag` and `prod` and `v*` tags only after a release manager's
-approval; never approves) and `task-checklist` (checklist of tasks, files and gates at the end of
+approval; never approves) and `checklist-on-stop` (checklist of tasks, files and gates at the end of
 a turn).
 
 What a fixed list can block is a permission rule instead: Claude Code checks it before any tool
@@ -91,10 +91,10 @@ runs, with no script to break. `bin/guard-rules.mjs` writes the guard rules into
 | No pushes to `main` / `dev` / `stag` / `prod`, no force push, no push that names no branch, no `--no-verify` | Guard rules (`deny`) in `.claude/settings.json`; protect the branches on GitHub too |
 | No reading or editing `.env`, `.env.local`, `.env.<mode>`, private keys and keystores | Guard rules: `Read` and `Edit` denied, and any shell command that names one asks the user first (so `cp .env.example .env` needs a yes); skills ask the user for values |
 | No hand edits to generated files (`.astro/`, `dist/`, `node_modules/`, `pnpm-lock.yaml`, `*.gen.ts`) | Guard rules: `Edit` denied; run the tool that writes them instead |
-| Every edited file passes ESLint, anti-slop and Prettier | The `post-edit-lint` hook, then Husky on commit and push |
+| Every edited file passes ESLint, anti-slop and Prettier | The `lint-on-edit` hook, then Husky on commit and push |
 | No skipped gates: no `--no-verify`, no lowered coverage, no `!test` story, no switched-off rule | `AGENTS.md` and every skill; `review-code` flags it; Husky runs the gates on commit and push |
 | No code before an accepted plan on `high-risk` work (auth, data loss, public contracts) | `analyze-task` stops for the user to confirm scope |
-| Nothing reported done without evidence | The `## Result` block and the criterion → test table; the `task-checklist` hook shows which gates really ran after the last edit |
+| Nothing reported done without evidence | The `## Result` block and the criterion → test table; the `checklist-on-stop` hook shows which gates really ran after the last edit |
 | No new dependency without asking | `AGENTS.md` and every skill (a rule, not a hook) |
 | Code reaches `stag`, then `prod`, only through a pull request a release manager approved on its head commit; `prod` only from `stag` after staging deployed it | The `release-gate` hook (reads approvals with `gh`; without it, a person merges); branch rulesets and environments on GitHub (`deploy-setup`) |
 | Claude never approves a pull request or a deployment, and never tags a version that was not released | The `release-gate` hook, for `gh`, the API and the GitHub MCP server; the tag ruleset on GitHub |

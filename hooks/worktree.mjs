@@ -1,4 +1,4 @@
-// Working-tree snapshots shared by the turn-snapshot and task-checklist hooks.
+// Working-tree snapshots shared by the turn-snapshot and checklist-on-stop hooks.
 //
 // A snapshot maps every file git sees as changed (modified, added, deleted, untracked) to a hash
 // of its content. Comparing the snapshot taken when the user sends a prompt with the one taken

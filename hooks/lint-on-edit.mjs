@@ -96,5 +96,5 @@ try {
   main();
 } catch (error) {
   // A broken lint hook must never break the session.
-  process.stderr.write(`post-edit-lint: ${error.message}\n`);
+  process.stderr.write(`lint-on-edit: ${error.message}\n`);
 }

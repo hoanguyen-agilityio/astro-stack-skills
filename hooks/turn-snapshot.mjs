@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // UserPromptSubmit hook: record the working tree when a turn starts.
 //
-// The Stop hook (task-checklist.mjs) compares it with the tree at the end of the turn, so files
+// The Stop hook (checklist-on-stop.mjs) compares it with the tree at the end of the turn, so files
 // changed by Bash commands are listed too. Prints nothing: stdout from this event would be
 // added to Claude's context.
 
