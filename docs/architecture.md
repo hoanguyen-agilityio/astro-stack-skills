@@ -11,7 +11,7 @@ astro-stack-skills/                 one repo = marketplace "astro-stack" = plugi
 ├── .claude-plugin/
 │   ├── marketplace.json            lists the plugin at "./"
 │   └── plugin.json
-├── CLAUDE.md                       contract, loaded when the repo is cloned as .claude/
+├── AGENTS.md                       contract, loaded when the repo is cloned as .claude/
 ├── scripts/                        code the skills run (release-status.mjs), called as <skill-dir>/../../scripts/…; check-plugin.mjs (CI only)
 ├── hooks/                          turn snapshot; PreToolUse release gate for stag/prod/v* tags; PostToolUse lint per edit; Stop checklist + success signal
 ├── skills/
@@ -51,7 +51,7 @@ request ──► analyze-task ──► ground ──► build ──► verify
             plan             neighbours                       test, build    → fix, ≤ 3 ×    + AC → proof
 ```
 
-- **The workflow lives in `CLAUDE.md`, not in the skills.** This repo's `CLAUDE.md` and the one
+- **The workflow lives in the contract file, not in the skills.** This repo's `AGENTS.md` and the `CLAUDE.md`
   `code-skeleton` writes into each project list the steps (analyze → ground → build → verify →
   report). A skill holds only its own knowledge: scope, inputs, what it produces, done-when,
   failure modes and references. `code-skeleton` takes its inputs from an `analyze-task`
@@ -98,7 +98,7 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | Skeleton has no batching, errors or retry | Those belong to `integrate-api`. The skeleton stays the smallest thing that runs |
 | Project-scope plugin install is the recommended path, not a copy | Claude Code already records it in `.claude/settings.json`, so the team shares one versioned skill set that updates in place. A copy goes stale, and a clone into `.claude/` nests a git repo and a second `DESIGN.md` |
 | `npx git+ssh://… init` wraps that install in one command (`bin/cli.mjs`) | Like ClaudeKit's `ck init`, but with no npm registry or global CLI: npx runs the bin straight from the git repo. It only calls `claude plugin`, so it adds no second install mechanism; `--copy` remains for machines without the `claude` CLI |
-| `code-skeleton` writes the project's `CLAUDE.md` from a template | A plugin does not load this repo's `CLAUDE.md`. Writing the contract into the project makes it hold in every later session, whatever the install mode, and lets the project own and extend it |
+| `code-skeleton` writes the project's `CLAUDE.md` from a template | A plugin does not load this repo's `AGENTS.md`. Writing the contract into the project makes it hold in every later session, whatever the install mode, and lets the project own and extend it |
 | `code-skeleton` has an init mode for empty directories, layer by layer | `pnpm create astro`, `astro add` and `storybook init` install `latest` and ask questions. Building each layer by hand keeps the verified majors, and with defaults for the name and the API URL an empty directory needs no arguments |
 | `DESIGN.md` generated after shadcn init | Its token, radius and font values are read from the installed theme, so they match the code |
 | Storybook through `@storybook-astro/framework` (Storybook 10) | Renders `.astro` (server, Container API) and React (browser) stories in one Storybook, reading `astro.config.mjs`, so `.astro` components keep their story without a React rewrite. The team's in-house `@storybook/astro` in `space` is Storybook 8 and kitchen's `.astro` stories are excluded from its config. Needs Node ≥ 22.19 |
@@ -167,7 +167,7 @@ To add `integrate-api` or `develop-feature`:
 1. Create `skills/<name>/SKILL.md` with `## 0. Analyze the request first`, invoking
    `analyze-task` in the same way `code-skeleton` does, then ground → build → verify → report.
 2. Put examples in `references/`, and keep the shared `orders` example running across skills.
-3. Add the hand-off to the table above, a row to `spec.md`, and a line to `CLAUDE.md`'s workflow.
+3. Add the hand-off to the table above, a row to `spec.md`, and a line to `AGENTS.md`'s workflow.
 4. Run it headless in the playground repo and save the evidence there.
 
 ## Known limitations
