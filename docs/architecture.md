@@ -2,7 +2,7 @@
 
 How the skill set is built and why. For what it is for, see `spec.md`. This repo has no
 `DESIGN.md` of its own: that name belongs to the UI design file `code-skeleton` writes into each
-project, copied from `skills/code-skeleton/references/design-md-template.md`.
+project from `skills/code-skeleton/references/design-md-template.md`.
 
 ## Shape
 

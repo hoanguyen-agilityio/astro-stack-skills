@@ -162,5 +162,5 @@ There are no Git hooks: GitHub Actions runs the gates on every pull request and 
 | `bin/` | The `npx … init` / `update` installer |
 | `scripts/check-plugin.mjs`, `.github/workflows/` | The plugin lint (repo only, not installed); CI, the Claude review and `@claude` |
 | `spec.md`, `docs/architecture.md`, `CLAUDE.md` | Intent; design decisions and why; the contract for projects using the skills |
-| `skills/code-skeleton/references/design-md-template.md` | The template every project's `DESIGN.md` is copied from |
+| `skills/code-skeleton/references/design-md-template.md` | The template `code-skeleton` writes every project's `DESIGN.md` from |
 | [`astro-stack-playground`](https://gitlab.asoft-python.com/hoa.nguyen/astro-stack-playground) | A project built with the skills, with the headless run, gate logs and screenshots |
