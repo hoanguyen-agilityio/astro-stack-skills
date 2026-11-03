@@ -42,7 +42,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/post-edit-lint.mjs\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/lint-on-edit.mjs\"",
             "timeout": 60
           }
         ]
@@ -53,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/task-checklist.mjs\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/checklist-on-stop.mjs\"",
             "timeout": 15
           }
         ]

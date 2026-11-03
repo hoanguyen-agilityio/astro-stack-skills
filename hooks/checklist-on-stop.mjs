@@ -324,5 +324,5 @@ try {
   main();
 } catch (error) {
   // A broken checklist must never break the session.
-  process.stderr.write(`task-checklist: ${error.message}\n`);
+  process.stderr.write(`checklist-on-stop: ${error.message}\n`);
 }
