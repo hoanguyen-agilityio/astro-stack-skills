@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       # manifests in sync, argument-hint and "Use when", every referenced path, hooks wired and tested, versions
@@ -58,7 +58,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           version: 10
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: init copies every skill, command and hook into a new project
