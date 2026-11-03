@@ -35,8 +35,8 @@ skill hands back to it.
 
 1. Read the request in full. If it points at a file, image or link, open it. If it cannot be
    opened, **stop and say so**. Never analyze a design you could not see.
-2. Read the target project: `package.json`, `CLAUDE.md` / `README.md`, `DESIGN.md`, `docs/`, and
-   the folders the request touches. An empty directory is a valid answer (a new project).
+2. Read the target project: `package.json`, `AGENTS.md` or `CLAUDE.md`, `README.md`,
+   `DESIGN.md`, `docs/`, and the folders the request touches. An empty directory is a valid answer (a new project).
 3. Search before planning anything new. List what already exists and can be reused.
 
 ## 1. Classify

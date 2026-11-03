@@ -25,7 +25,8 @@ change ─► inventory ─► checks ─► review (fresh agent) ─► finding
 ## Scope
 
 Handles: duplicated components, helpers, services and types; the project's conventions
-(`CLAUDE.md`, `DESIGN.md`); proof for each acceptance criterion; bugs visible in the diff.
+(`AGENTS.md` or `CLAUDE.md`, `DESIGN.md`); proof for each acceptance criterion; bugs visible
+in the diff.
 Does NOT handle: new features, refactors outside the change, dependency upgrades.
 
 ## Security

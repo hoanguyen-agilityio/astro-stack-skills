@@ -60,8 +60,9 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
   welcome and 404 pages, a story per component, island and page tests → `references/starter-ui.md`
 - **Guard rules** in `.claude/settings.json` (protected branches, secret and generated files)
   → `references/setup-layers.md`, layer 1
-- **`CLAUDE.md`** (the project's working contract and workflow) and **`DESIGN.md`** (written after
-  shadcn, from the installed theme) → the two templates
+- **`AGENTS.md`** (the project's working contract and workflow, with a one-line `CLAUDE.md` that
+  imports it) and **`DESIGN.md`** (written after shadcn, from the installed theme) → the two
+  templates
 
 ## Reuse rule
 
@@ -94,7 +95,8 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
 - `PUBLIC_API_URL` saved with `/rpc` → requests go to `/rpc/rpc`
 - `lint-staged@latest` (17) on Node < 22.22.1: the pre-commit hook fails to start
 - Husky run before `git init`, or in a package that is not the repository root: no hooks installed
-- `pnpm format` skipped after writing the files: `format:check` fails on `global.css`, `CLAUDE.md`, `DESIGN.md`
+- `pnpm format` skipped after writing the files: `format:check` fails on `global.css`,
+  `AGENTS.md`, `DESIGN.md`
 - Layout or common pieces inlined into the welcome page, leaving nothing to reuse
 - `@vitest/coverage-v8` on another major than `vitest`: `test:coverage` fails to start
 - `oxlint` and `@oxlint/plugins` on different versions, or installed with `^`: Oxlint fails to
@@ -116,5 +118,5 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
 | `references/project-files.md` | Every config and plumbing file |
 | `references/starter-ui.md` | Folder layout, reuse rules, layouts, `common/` and `layout/` components, welcome + 404 pages, stories, tests |
 | `references/design-md-template.md` | The project's `DESIGN.md` |
-| `references/claude-md-template.md` | The project's `CLAUDE.md`, including the workflow every task follows |
+| `references/agents-md-template.md` | The project's `AGENTS.md`, including the workflow every task follows |
 | `assets/anti-slop/` | The anti-slop Oxlint rules (MIT, vendored), copied to `tools/oxlint/anti-slop/` |

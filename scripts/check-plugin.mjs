@@ -3,7 +3,7 @@
 // other and with package.json, every skill and command takes an argument-hint and a model-invoked skill says
 // when to use it, every path a skill points to exists (${CLAUDE_PLUGIN_ROOT}/…, <skill-dir>/…,
 // references/…, relative Markdown links), skills hold Markdown only (code lives in scripts/), every hook script
-// exists and is tested, and the tech stack versions in CLAUDE.md match README.md.
+// exists and is tested, and the tech stack versions in AGENTS.md match README.md.
 // Usage: node scripts/check-plugin.mjs   (exit 1 on any problem)
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
@@ -156,7 +156,7 @@ for (const f of hookFiles) {
     err(join(ROOT, 'hooks', f), 'no test in hooks/__test__/ names it');
 }
 
-// tech stack: every package in CLAUDE.md's tables has the same version in README.md's
+// tech stack: every package in AGENTS.md's tables has the same version in README.md's
 function versions(file, heading) {
   const found = new Map();
   const section =
@@ -181,13 +181,13 @@ function versions(file, heading) {
   }
   return found;
 }
-const contract = versions(join(ROOT, 'CLAUDE.md'), 'Tech stack versions');
+const contract = versions(join(ROOT, 'AGENTS.md'), 'Tech stack versions');
 const readme = versions(join(ROOT, 'README.md'), 'Tech stack');
 for (const [name, v] of contract)
   if (readme.has(name) && readme.get(name) !== v)
-    err(join(ROOT, 'README.md'), `${name} is ${readme.get(name)}, CLAUDE.md says ${v}`);
+    err(join(ROOT, 'README.md'), `${name} is ${readme.get(name)}, AGENTS.md says ${v}`);
   else if (!readme.has(name))
-    err(join(ROOT, 'README.md'), `${name} (CLAUDE.md: ${v}) is not in the tech stack table`);
+    err(join(ROOT, 'README.md'), `${name} (AGENTS.md: ${v}) is not in the tech stack table`);
 
 if (problems.length) {
   console.error(`✖ ${problems.length} problem(s)\n  ${problems.join('\n  ')}`);

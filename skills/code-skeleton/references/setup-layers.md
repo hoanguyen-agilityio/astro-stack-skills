@@ -55,8 +55,8 @@ Each layer installs its packages, then writes its files. Gates run once at the e
 layers.
 
 1. **Repository and package.** `git init` if there is no `.git/` (do not commit). Write
-   `package.json`, `.nvmrc`, `.gitignore`, `CLAUDE.md` (from `claude-md-template.md`) and, on
-   pnpm ≥ 10, `pnpm-workspace.yaml`.
+   `package.json`, `.nvmrc`, `.gitignore`, `AGENTS.md` (from `agents-md-template.md`) with its
+   one-line `CLAUDE.md` (`@AGENTS.md`) and, on pnpm ≥ 10, `pnpm-workspace.yaml`.
    - Write `package.json` yourself: on pnpm 11, `pnpm init` adds a `devEngines` block that
      makes the next `pnpm add` fail.
    - pnpm ≥ 10 skips dependency build scripts unless allowed, and Astro needs `esbuild` and
@@ -164,7 +164,7 @@ layers.
     `design-md-template.md` now, after shadcn, so its values match `global.css`.
 12. **Starter UI**: everything in `starter-ui.md`.
 13. **Format once**: `pnpm format`. It formats the shadcn theme block in `global.css` and the
-    written `CLAUDE.md` and `DESIGN.md`, so `pnpm format:check` passes from the first commit.
+    written `AGENTS.md` and `DESIGN.md`, so `pnpm format:check` passes from the first commit.
 
 ## Retrofit mode
 
@@ -197,7 +197,7 @@ existing files instead of overwriting them.
   first (shared descriptions, missing headers, inline scripts the CSP blocks): do not loosen
   the CSP or add paths to `IGNORED_PATHS`; leave `test:pages` out of `pre-push`, report the
   problems, and offer the `web-quality` skill to fix them.
-- No root `CLAUDE.md`: write it from the template. One exists: leave it, and list in the report
-  the template rules it does not cover.
+- No root `AGENTS.md` or `CLAUDE.md`: write `AGENTS.md` from the template, with its one-line
+  `CLAUDE.md`. One exists: leave it, and list in the report the template rules it does not cover.
 - Starter UI: add `AppLayout`, `config/site.ts` and the `common/` components only where the repo
   has no equivalent. Never replace the repo's existing pages.

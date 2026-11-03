@@ -65,7 +65,7 @@ jobs:
             PR NUMBER: ${{ github.event.pull_request.number }}
             Review the whole pull request as it stands now (gh pr diff), not only the last commit.
             This repo holds the web-dev-stack Claude Code plugin (skills for Astro + React islands + TypeScript +
-            Effect + oRPC + shadcn/ui). Read CLAUDE.md first and check the change against every rule in it. Then
+            Effect + oRPC + shadcn/ui). Read AGENTS.md first and check the change against every rule in it. Then
             review each changed file by its kind.
 
             Code (hooks/*.mjs, bin/*.mjs, scripts/*.mjs, .github/workflows/*, and the TypeScript, Astro and config templates
@@ -74,15 +74,15 @@ jobs:
             - Security: shell input not quoted, secrets printed or logged, a write outside the repo, a token in a URL.
             - Hooks never stop the user's work on their own failure, and each changed hook behaviour has a test in
               hooks/__test__/.
-            - Templates follow the conventions table in CLAUDE.md (Effect Schema at the boundary, no any, tokens
+            - Templates follow the conventions table in AGENTS.md (Effect Schema at the boundary, no any, tokens
               from DESIGN.md, one folder per component with stories and tests).
 
-            Instructions (skills/**, references, commands/, README.md, CLAUDE.md, docs/architecture.md): another Claude
+            Instructions (skills/**, references, commands/, README.md, AGENTS.md, docs/architecture.md): another Claude
             follows these, so review them as instructions.
             - Every skill, file, script, command or tool they refer to exists in this repo or is a standard Claude
               Code tool. A reference to something that only exists in another open pull request is blocking.
             - No two skills or references contradict each other, or the tech stack versions and conventions in
-              CLAUDE.md.
+              AGENTS.md.
             - No skill tells Claude to read .env or key files, push to main/dev/stag/prod, use --no-verify, force
               push, hand-edit generated files, or deploy outside /release.
             - Anything a skill relies on that may be missing (a CLI login, a branch, a config file) has a stated

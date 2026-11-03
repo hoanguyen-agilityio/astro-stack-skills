@@ -43,7 +43,7 @@ that starts with written acceptance criteria.
 - Backend or oRPC server code. The deploy workflow is a template; the host's own setup (servers,
   registries, DNS) is the team's.
 - Project-specific rules (for example kitchen's `variantTheme` or the `[#issue]` commit format).
-  Those live in each project's own `CLAUDE.md`.
+  Those live in each project's own `AGENTS.md`.
 - Supporting Astro 7 or Effect 4. Their APIs differ, so the skills stop and say so.
 
 ## Skills
@@ -55,7 +55,7 @@ that starts with written acceptance criteria.
 | `incident` | description of what broke, logs, files; optional incident id | `docs/incidents/<id>/{report,rca,actions}.md` committed on `docs/incident-<id>` and pushed; no code changed | contract check passes, every cause has evidence or is a hypothesis, nothing secret copied from the logs, only the three files committed |
 | `deploy-setup` | where it deploys, URLs, release managers | `.github/workflows/deploy.yml`, `.claude/release.json`, `CHANGELOG.md`, `docs/deploy-plan.md`, a checklist of GitHub rulesets and environments | each environment branch deploys through the workflow, the gate is registered, every GitHub setting is done or assigned to a person |
 | `release` | a version, or where the release stands | `Stage <version>` PR into stag, staging checks, `Release <version>` PR into prod, tag `v<version>`, back-merge into dev | each step merged only after its approval, staging checked before prod, the tag on the released merge commit, nothing approved by Claude |
-| `code-skeleton` | project name, API URL (both defaulted in an empty directory) | runnable project, `src/libs/orpcClient.ts`, `DESIGN.md`, `CLAUDE.md`, Storybook, starter UI (shared layout, reusable `common/` components, welcome + 404 pages) with tests and stories | 4 gates green, Storybook builds, URL only in env, `DESIGN.md` matches `global.css` |
+| `code-skeleton` | project name, API URL (both defaulted in an empty directory) | runnable project, `src/libs/orpcClient.ts`, `DESIGN.md`, `AGENTS.md`, Storybook, starter UI (shared layout, reusable `common/` components, welcome + 404 pages) with tests and stories | 4 gates green, Storybook builds, URL only in env, `DESIGN.md` matches `global.css` |
 | `integrate-api` | procedures | `src/types/<name>.ts`, `src/services/<name>.ts` returning `Effect` with typed errors and retry | service tests cover success, decode error, API error, retry |
 | `develop-feature` | ticket or design | Astro page + React island with shadcn, loading/empty/error states, a story per state for each component, tests | one test per AC, a story per state, 4 gates green |
 | `review-code` | a change (branch, diff or files), its criteria | findings by severity, fixed in a loop of at most 3 rounds; a review table for the report | no `blocker` or `should` left (or listed as left), `pnpm dup` clean, gates green |
@@ -85,6 +85,6 @@ via `src/services/<name>.ts`.
 
 - `docs/architecture.md`: how the skill set is built and why
 - `skills/code-skeleton/references/design-md-template.md`: the `DESIGN.md` each project gets
-- `CLAUDE.md`: the always-on contract for projects using the skills
+- `AGENTS.md`: the always-on contract for projects using the skills
 - `astro-stack-playground` (separate repo): installs the plugin via `.claude/settings.json`;
   holds the project `code-skeleton` generated, gate logs, the headless transcript, screenshots

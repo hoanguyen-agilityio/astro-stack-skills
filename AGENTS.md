@@ -5,7 +5,7 @@ strict TypeScript + Effect 3 (Schema) + oRPC 1 + shadcn/ui on Tailwind v4.
 
 This file loads automatically when this repo is cloned as a project's `.claude/` folder. It
 does not load when the skills are installed as a plugin; the skills carry their own
-instructions either way. Project-specific facts belong in the project's own `CLAUDE.md` and
+instructions either way. Project-specific facts belong in the project's own `AGENTS.md` and
 `DESIGN.md`, and those win over this file.
 
 ## Tech stack versions

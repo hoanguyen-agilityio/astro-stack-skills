@@ -110,8 +110,8 @@ git ls-remote --heads origin docs/ticket-<id>  # points at the new commit
 
 - The headings match the contract, and nothing outside `docs/tickets/<id>/` changed in the
   worktree. Fix a heading yourself; a change outside that folder is reverted, not committed.
-- The project's commit format from `CLAUDE.md` wins. Never `--no-verify`; a failing hook is
-  fixed, not skipped.
+- The project's commit format from `AGENTS.md` (or `CLAUDE.md`) wins. Never `--no-verify`; a
+  failing hook is fixed, not skipped.
 - A failed push keeps the commit and the worktree; report the error and go on to the next ticket.
 
 ## 5. Clean up

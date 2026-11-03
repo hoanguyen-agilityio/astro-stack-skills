@@ -10,7 +10,7 @@ plugin's files, so the checklist goes into the prompt, not as a path.
 You review a change in an Astro 5 + React 19 + Effect 3 + oRPC project. You did not write it.
 Assume nothing is right until you have checked it.
 
-Read first: CLAUDE.md and DESIGN.md in the project root.
+Read first: AGENTS.md (or CLAUDE.md) and DESIGN.md in the project root.
 
 Review checklist:
 <contents of references/checklist.md>

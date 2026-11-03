@@ -1,17 +1,23 @@
-# `CLAUDE.md` template
+# `AGENTS.md` template
 
-`code-skeleton` writes this file to the project root as `CLAUDE.md`. Claude Code loads it in
-every session, so the stack's rules hold for later work too. This matters most when the skills
-are installed as a plugin: a plugin does not load the skill repo's own `CLAUDE.md`.
+`code-skeleton` writes this file to the project root as `AGENTS.md`. Claude Code (v2.1.277 or
+later) loads it in every session, so the stack's rules hold for later work too, and other coding
+agents read the same file. This matters most when the skills are installed as a plugin: a plugin
+does not load the skill repo's own `AGENTS.md`.
 
 Rules for the file:
 
-- Write it in init mode, in layer 1. In retrofit mode, write it only when the project has no
-  `CLAUDE.md`; never overwrite or merge into one that exists.
+- Write it in init mode, in layer 1. In retrofit mode, write it only when the project has neither
+  `AGENTS.md` nor `CLAUDE.md`; never overwrite or merge into one that exists.
 - Replace `<project-name>` and `<adapter>`. If the user picked another preset, adapter or
   package manager, write what was actually installed.
 - It belongs to the project from then on. Project-specific facts go into it, and they win over
   the skills' defaults.
+- Whenever you write `AGENTS.md`, also write a `CLAUDE.md` next to it that holds one line,
+  `@AGENTS.md`, and nothing else. While a project has a `CLAUDE.md`, `.claude/CLAUDE.md` or a
+  developer's `CLAUDE.local.md`, Claude Code reads those and skips `AGENTS.md`, and some sessions
+  read `CLAUDE.md` only. The import keeps `AGENTS.md` loaded in all of them, and it is not read
+  twice ([docs](https://code.claude.com/docs/en/memory.md#share-one-file-with-other-coding-tools)).
 
 Copy everything below the line and keep the headings.
 

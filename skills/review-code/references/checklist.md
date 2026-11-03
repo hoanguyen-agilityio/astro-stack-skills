@@ -24,10 +24,10 @@ added optional prop.
 | Look for | Rule (source) |
 |----------|---------------|
 | Raw hex, `rgb()`, `[15px]`, Tailwind colours outside the tokens | `DESIGN.md` tokens only |
-| A page without `AppLayout` → `Container` → `PageHeader` | `CLAUDE.md` Conventions |
+| A page without `AppLayout` → `Container` → `PageHeader` | `AGENTS.md` Conventions |
 | A whole section as an island, `client:load` without a reason, functions or secrets in island props | island boundary (`develop-feature` Rules) |
-| A component without a story per state, a React story without `parameters: { renderer: 'react' }` | `CLAUDE.md` Conventions |
-| A component outside its own folder, a test outside `__test__/` | `CLAUDE.md` Conventions |
+| A component without a story per state, a React story without `parameters: { renderer: 'react' }` | `AGENTS.md` Conventions |
+| A component outside its own folder, a test outside `__test__/` | `AGENTS.md` Conventions |
 | Hand-written markup where shadcn has a primitive | `DESIGN.md` |
 | API data used without `Schema` decoding, `as` on API data | `integrate-api` Rules |
 | A page or island calling the client or building Effect chains | `integrate-api` Rules |

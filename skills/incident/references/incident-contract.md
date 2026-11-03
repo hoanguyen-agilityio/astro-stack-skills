@@ -53,7 +53,7 @@ shape is fixed. A file that breaks the contract is fixed before it is committed.
 | `SEV2` | one major feature down or wrong for many users, no workaround |
 | `SEV3` | partial or minor impact, or a workaround exists |
 
-A project's `CLAUDE.md` may define its own severities; then use those.
+A project's `AGENTS.md` (or `CLAUDE.md`) may define its own severities; then use those.
 
 ## `report.md`
 

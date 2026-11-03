@@ -1332,7 +1332,7 @@ pnpm typecheck && pnpm test:coverage && pnpm test:stories && pnpm test:pages
   console error or a page over budget, fails.
 - The config needs no `eslint-config-prettier`: `typescript-eslint` strict and
   `eslint-plugin-astro` recommended carry no formatting rules.
-- `prettier --write .` also formats the `CLAUDE.md` and `DESIGN.md` the skill writes, and the
+- `prettier --write .` also formats the `AGENTS.md` and `DESIGN.md` the skill writes, and the
   4-space theme block `shadcn init` puts in `global.css`. That is expected.
 - Husky installs hooks into the git repository that contains `package.json`. When the project is
   not the repository root (a monorepo package), stop and ask: the hooks belong at the root.

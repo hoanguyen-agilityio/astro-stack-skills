@@ -11,7 +11,7 @@ astro-stack-skills/                 one repo = marketplace "astro-stack" = plugi
 ├── .claude-plugin/
 │   ├── marketplace.json            lists the plugin at "./"
 │   └── plugin.json
-├── CLAUDE.md                       contract, loaded when the repo is cloned as .claude/
+├── AGENTS.md                       contract, loaded when the repo is cloned as .claude/
 ├── scripts/                        code the skills run (release-status.mjs), called as <skill-dir>/../../scripts/…; check-plugin.mjs (CI only)
 ├── hooks/                          turn snapshot; PreToolUse release gate for stag/prod/v* tags; PostToolUse lint per edit; Stop checklist + success signal
 ├── skills/
@@ -24,7 +24,7 @@ astro-stack-skills/                 one repo = marketplace "astro-stack" = plugi
 │   ├── release/                    /release: dev → stag → prod, one approved pull request per step, tag
 │   ├── code-skeleton/              part 1 of the brief
 │   │   ├── SKILL.md
-│   │   └── references/{setup-layers,project-files,starter-ui,design-md-template,claude-md-template}.md
+│   │   └── references/{setup-layers,project-files,starter-ui,design-md-template,agents-md-template}.md
 │   ├── integrate-api/  develop-feature/
 │   └── review-code/                last step of every build: review → fix → review loop
 │       ├── SKILL.md
@@ -51,7 +51,7 @@ request ──► analyze-task ──► ground ──► build ──► verify
             plan             neighbours                       test, build    → fix, ≤ 3 ×    + AC → proof
 ```
 
-- **The workflow lives in `CLAUDE.md`, not in the skills.** This repo's `CLAUDE.md` and the one
+- **The workflow lives in `AGENTS.md`, not in the skills.** This repo's `AGENTS.md` and the one
   `code-skeleton` writes into each project list the steps (analyze → ground → build → verify →
   report). A skill holds only its own knowledge: scope, inputs, what it produces, done-when,
   failure modes and references. `code-skeleton` takes its inputs from an `analyze-task`
@@ -98,7 +98,7 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | Skeleton has no batching, errors or retry | Those belong to `integrate-api`. The skeleton stays the smallest thing that runs |
 | Project-scope plugin install is the recommended path, not a copy | Claude Code already records it in `.claude/settings.json`, so the team shares one versioned skill set that updates in place. A copy goes stale, and a clone into `.claude/` nests a git repo and a second `DESIGN.md` |
 | `npx git+ssh://… init` wraps that install in one command (`bin/cli.mjs`) | Like ClaudeKit's `ck init`, but with no npm registry or global CLI: npx runs the bin straight from the git repo. It only calls `claude plugin`, so it adds no second install mechanism; `--copy` remains for machines without the `claude` CLI |
-| `code-skeleton` writes the project's `CLAUDE.md` from a template | A plugin does not load this repo's `CLAUDE.md`. Writing the contract into the project makes it hold in every later session, whatever the install mode, and lets the project own and extend it |
+| `code-skeleton` writes the project's `AGENTS.md` from a template | A plugin does not load this repo's `AGENTS.md`. Writing the contract into the project makes it hold in every later session, whatever the install mode, and lets the project own and extend it |
 | `code-skeleton` has an init mode for empty directories, layer by layer | `pnpm create astro`, `astro add` and `storybook init` install `latest` and ask questions. Building each layer by hand keeps the verified majors, and with defaults for the name and the API URL an empty directory needs no arguments |
 | `DESIGN.md` generated after shadcn init | Its token, radius and font values are read from the installed theme, so they match the code |
 | Storybook through `@storybook-astro/framework` (Storybook 10) | Renders `.astro` (server, Container API) and React (browser) stories in one Storybook, reading `astro.config.mjs`, so `.astro` components keep their story without a React rewrite. The team's in-house `@storybook/astro` in `space` is Storybook 8 and kitchen's `.astro` stories are excluded from its config. Needs Node ≥ 22.19 |
@@ -125,7 +125,7 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | At most 3 review rounds | Enough for a fix to be checked twice; a finding that survives that needs a human, so it is reported instead of looped on |
 | The skill repo's own gates (ESLint, Prettier, Node tests, `claude plugin validate`) run in GitHub Actions, not in Husky | The repo started as Markdown only, so nothing ran on commit; Husky then ran lint on commit and the tests on push. Local hooks can be skipped and only cover what one machine has installed; a run on every pull request and on `main` is the one record reviewers see. Same majors as the skeleton (ESLint 9, Prettier 3). `printWidth` is 100, the width the existing code was written at. Markdown is left out: Prettier would rewrite the templates inside skill code blocks. Generated projects keep Husky: that is the skills' contract, not this repo's |
 | A skill holds Markdown only; the code skills run lives in `scripts/` at the plugin root and is called as `<skill-dir>/../../scripts/<name>.mjs` | As in the backend-dev plugin, where skills call `scripts/` at the plugin root. A script inside one skill (`release/scripts/release-status.mjs`) was reached from another skill through `../release/scripts/`, so moving or renaming a skill broke its neighbour; at the root it is one shared place with its tests beside it (`scripts/__test__/`). The relative path resolves the same way in both installs: `<root>/skills/<name>/../../scripts` in a plugin and `.claude/skills/<name>/../../scripts` after the installer, which copies `scripts/` (not `check-plugin.mjs`, the repo's CI lint). `${CLAUDE_PLUGIN_ROOT}` would not work after the installer, which rewrites it only in `hooks.json`. `check-plugin.mjs` fails on any non-Markdown file in a skill outside `assets/` (files a skill copies into a project as they are) |
-| `scripts/check-plugin.mjs`, `skill-validator --strict` and an installer run in CI, beside the Node tests | Taken from the backend-dev plugin's CI. The tests check each file alone; the plugin lint checks what ties files together: `plugin.json`, the marketplace entry and `package.json` agree, every `${CLAUDE_PLUGIN_ROOT}/…`, `<skill-dir>/…`, `references/…` and Markdown link resolves, every hook script is wired and named by a test, and the tech stack majors in `CLAUDE.md` match `README.md`. A model-invoked skill must say "Use when …" (the agentskills.io form) because its description is all Claude sees when choosing. SKILL.md is capped at 200 lines, as there. `skill-validator` allows extra frontmatter because every skill has `argument-hint`, and checks `code-skeleton` with `--allow-nested-paths=assets/anti-slop --skip-orphans` and without `--strict`: it vendors the anti-slop rules as a folder it copies whole, and it carries every project file as a template, so its references pass the token warning (10k per file, 25k in all) without cutting what the skill writes. Exit 2 (warnings only) passes and is logged; exit 1 (errors, including the 25k/50k token limits) fails. The installer job is this repo's version of their template gate: `init` into an empty project copies everything and `update` right after changes nothing |
+| `scripts/check-plugin.mjs`, `skill-validator --strict` and an installer run in CI, beside the Node tests | Taken from the backend-dev plugin's CI. The tests check each file alone; the plugin lint checks what ties files together: `plugin.json`, the marketplace entry and `package.json` agree, every `${CLAUDE_PLUGIN_ROOT}/…`, `<skill-dir>/…`, `references/…` and Markdown link resolves, every hook script is wired and named by a test, and the tech stack majors in `AGENTS.md` match `README.md`. A model-invoked skill must say "Use when …" (the agentskills.io form) because its description is all Claude sees when choosing. SKILL.md is capped at 200 lines, as there. `skill-validator` allows extra frontmatter because every skill has `argument-hint`, and checks `code-skeleton` with `--allow-nested-paths=assets/anti-slop --skip-orphans` and without `--strict`: it vendors the anti-slop rules as a folder it copies whole, and it carries every project file as a template, so its references pass the token warning (10k per file, 25k in all) without cutting what the skill writes. Exit 2 (warnings only) passes and is logged; exit 1 (errors, including the 25k/50k token limits) fails. The installer job is this repo's version of their template gate: `init` into an empty project copies everything and `update` right after changes nothing |
 | Each pull request gets a Claude review in CI that fails the pipeline unless it ends in `VERDICT: READY` | Taken from the team's backend-dev plugin (`claude-code-action`), along with the rebase skip and the `@claude` workflow. Skills are instructions another Claude follows, so most mistakes (a reference to a missing file, two skills that disagree) are invisible to lint and tests. One sticky comment per pull request, updated on each push, and an inline comment per blocking item. A review that did not run fails too, so a missing token cannot pass silently |
 | Plain `name` + `description` frontmatter | Matches the team's plugins on `feat/claude-shared-plugins`. Descriptions list trigger phrases and the sibling relationship |
 
@@ -167,7 +167,7 @@ To add `integrate-api` or `develop-feature`:
 1. Create `skills/<name>/SKILL.md` with `## 0. Analyze the request first`, invoking
    `analyze-task` in the same way `code-skeleton` does, then ground → build → verify → report.
 2. Put examples in `references/`, and keep the shared `orders` example running across skills.
-3. Add the hand-off to the table above, a row to `spec.md`, and a line to `CLAUDE.md`'s workflow.
+3. Add the hand-off to the table above, a row to `spec.md`, and a line to `AGENTS.md`'s workflow.
 4. Run it headless in the playground repo and save the evidence there.
 
 ## Known limitations
@@ -179,6 +179,9 @@ To add `integrate-api` or `develop-feature`:
 - `analyze-task`'s Figma path depends on the Figma MCP being connected, and falls back to
   screenshots.
 - The hooks load only with the plugin; a `--copy` or `.claude/` clone install has none.
+- A `.claude/` clone loads this repo's `AGENTS.md` only while the project has no `CLAUDE.md` or
+  `CLAUDE.local.md`: Claude Code skips `AGENTS.md` when one exists. A project made by
+  `code-skeleton` carries the same rules in its own `AGENTS.md`.
 - The checklist cannot order a Bash file write against the gates, so only `Edit`/`Write` mark a
   gate as run before a later edit (`[~]`). A gate run with `pnpm -s` behind `;` or `|` shows
   `[?]`: pnpm prints nothing that says whether it failed.
