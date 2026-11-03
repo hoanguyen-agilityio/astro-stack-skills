@@ -13,6 +13,11 @@ Rules for the file:
   package manager, write what was actually installed.
 - It belongs to the project from then on. Project-specific facts go into it, and they win over
   the skills' defaults.
+- Whenever you write `AGENTS.md`, also write a `CLAUDE.md` next to it that holds one line,
+  `@AGENTS.md`, and nothing else. While a project has a `CLAUDE.md`, `.claude/CLAUDE.md` or a
+  developer's `CLAUDE.local.md`, Claude Code reads those and skips `AGENTS.md`, and some sessions
+  read `CLAUDE.md` only. The import keeps `AGENTS.md` loaded in all of them, and it is not read
+  twice ([docs](https://code.claude.com/docs/en/memory.md#share-one-file-with-other-coding-tools)).
 
 Copy everything below the line and keep the headings.
 

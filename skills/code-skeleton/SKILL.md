@@ -60,8 +60,9 @@ With these defaults, `/code-skeleton` in an empty directory needs no questions.
   welcome and 404 pages, a story per component, island and page tests → `references/starter-ui.md`
 - **Guard rules** in `.claude/settings.json` (protected branches, secret and generated files)
   → `references/setup-layers.md`, layer 1
-- **`AGENTS.md`** (the project's working contract and workflow) and **`DESIGN.md`** (written after
-  shadcn, from the installed theme) → the two templates
+- **`AGENTS.md`** (the project's working contract and workflow, with a one-line `CLAUDE.md` that
+  imports it) and **`DESIGN.md`** (written after shadcn, from the installed theme) → the two
+  templates
 
 ## Reuse rule
 
