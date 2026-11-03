@@ -120,8 +120,10 @@ confirm scope after the analysis. Open questions are asked, never guessed.
 
 Skills live in `skills/<name>/` (`SKILL.md` + `references/`, Markdown only); code they run lives in
 `scripts/`, called as `<skill-dir>/../../scripts/<name>.mjs`. The design of the skill set is in
-`DESIGN.md`, and its intent is in `spec.md`. Quick check: `claude --plugin-dir <this repo>` in
-an empty directory. Real check: run the skill in `astro-stack-playground` (it installs this
+`docs/architecture.md`, and its intent is in `spec.md`. This repo has no `DESIGN.md`:
+`code-skeleton` writes one into each project from
+`skills/code-skeleton/references/design-md-template.md`. Quick check:
+`claude --plugin-dir <this repo>` in an empty directory. Real check: run the skill in `astro-stack-playground` (it installs this
 plugin through `.claude/settings.json`), then refresh the generated project and the evidence there.
 
 The repo's own JavaScript (`bin/`, `hooks/`) has gates too, run by GitHub Actions
