@@ -21,9 +21,6 @@
 
 </div>
 
-<p align="center"><a href="docs/skill-map.svg"><img src="docs/skill-map.svg" alt="The skill map: /analyze-task, /code-skeleton, /integrate-api, /develop-feature and /review-code in order, then /web-quality; /incident hands its fix to /ticket, which feeds /analyze-task; the hooks guard every edit in /develop-feature; /verify then runs /review-code; /deploy-setup prepares /release, which takes reviewed code from dev to stag to prod" width="100%"></a></p>
-<p align="center"><sub>The skill map. Click it to open the full-size SVG and zoom in your browser.</sub></p>
-
 Every change ends in the same loop: seven gates, then a review, then a report. Strict
 **TypeScript**, **Effect** Schema for API data, **oRPC** through Effect services, **shadcn/ui**
 components, and a story and tests for every state.
@@ -149,11 +146,6 @@ pnpm test        # skill frontmatter and size, hook and installer tests
 pnpm validate    # claude plugin validate .
 ```
 
-The README map is `docs/skill-map.svg`, the guide map's Export → SVG plus a `<style>` block and
-dots at the end for the animation (cards appear in turn, edges flow, a dot runs along each edge;
-all off with reduced motion). When a skill is added or renamed, export it again and copy that
-style block and the dots across.
-
 There are no Git hooks: GitHub Actions runs the gates on every pull request and push to `main`
 (`.github/workflows/ci.yml`: the commands above, `skill-validator --strict` on each skill, and an
 `init` + `update` of the installer into an empty project), and Claude reviews each pull request
@@ -169,5 +161,4 @@ There are no Git hooks: GitHub Actions runs the gates on every pull request and 
 | `bin/` | The `npx … init` / `update` installer |
 | `scripts/check-plugin.mjs`, `.github/workflows/` | The plugin lint; CI, the Claude review and `@claude` |
 | `spec.md`, `DESIGN.md`, `CLAUDE.md` | Intent; design decisions and why; the contract for projects using the skills |
-| `docs/skill-map.svg` | The animated skill map in this README, exported from the guide's interactive map |
 | [`astro-stack-playground`](https://gitlab.asoft-python.com/hoa.nguyen/astro-stack-playground) | A project built with the skills, with the headless run, gate logs and screenshots |
