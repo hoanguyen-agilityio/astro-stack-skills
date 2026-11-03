@@ -83,7 +83,8 @@ via `src/services/<name>.ts`.
 
 ## References
 
-- `DESIGN.md`: how the skill set is built and why
+- `docs/architecture.md`: how the skill set is built and why
+- `skills/code-skeleton/references/design-md-template.md`: the `DESIGN.md` each project gets
 - `CLAUDE.md`: the always-on contract for projects using the skills
 - `astro-stack-playground` (separate repo): installs the plugin via `.claude/settings.json`;
   holds the project `code-skeleton` generated, gate logs, the headless transcript, screenshots

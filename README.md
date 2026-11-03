@@ -56,7 +56,7 @@ either to see the changes first. `init --plugin` installs a plugin instead (skil
 | `release` | Move a version dev → stag → prod: CHANGELOG, version, gates, a pull request into `stag`, staging checks, a pull request into `prod`, tag | `/release 1.4.0` |
 
 `/verify` is a command, not a skill: it runs the seven gates in a loop, then `review-code`. Each
-skill's `SKILL.md` holds its full steps; `DESIGN.md` explains why it works that way.
+skill's `SKILL.md` holds its full steps; `docs/architecture.md` explains why it works that way.
 
 ## The check loop
 
@@ -161,5 +161,6 @@ There are no Git hooks: GitHub Actions runs the gates on every pull request and 
 | `bin/guard-rules.mjs`, `.claude/settings.json` | The guard rules written into projects; this repo's own, for `main` |
 | `bin/` | The `npx … init` / `update` installer |
 | `scripts/check-plugin.mjs`, `.github/workflows/` | The plugin lint (repo only, not installed); CI, the Claude review and `@claude` |
-| `spec.md`, `DESIGN.md`, `CLAUDE.md` | Intent; design decisions and why; the contract for projects using the skills |
+| `spec.md`, `docs/architecture.md`, `CLAUDE.md` | Intent; design decisions and why; the contract for projects using the skills |
+| `skills/code-skeleton/references/design-md-template.md` | The template every project's `DESIGN.md` is copied from |
 | [`astro-stack-playground`](https://gitlab.asoft-python.com/hoa.nguyen/astro-stack-playground) | A project built with the skills, with the headless run, gate logs and screenshots |
