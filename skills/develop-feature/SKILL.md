@@ -55,8 +55,8 @@ code or deployment.
 
 1. **Criteria.** Build one feature per run, from one source:
    - **A ticket folder** (`docs/tickets/<id>/`, named by the user, or existing for the ticket):
-     build exactly what its `spec.md` criteria and `plan.md` say, and ask before going beyond
-     them. Its blocked criteria stay out of scope.
+     read its `spec.md` and `plan.md` before the first edit, then build exactly what they say,
+     and ask before going beyond them. Its blocked criteria stay out of scope.
    - **No folder, but this conversation holds analyses from `analyze-task`:** exactly one, use
      it and name it in the report; two or more, list them and ask which one. Never build
      several features in one run, and never pick one by guessing.

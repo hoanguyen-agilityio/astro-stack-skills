@@ -38,6 +38,8 @@ tokens are in `DESIGN.md`.
    design (image, screenshot or Figma link).
 2. **Ground**: read `package.json`, `DESIGN.md` and the neighbouring code before writing.
    Existing patterns win over defaults.
+   For a ticket, read its approved plan, `docs/tickets/<id>/plan.md`, before the first edit:
+   no file changes for a ticket whose plan you have not read.
 3. **Build**: `integrate-api` for API services, `develop-feature` for pages and islands.
 4. **Verify**: run `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm test:coverage`
    (≥ 80%), `pnpm build`, `pnpm test:stories` (every story in light and dark, a11y clean) and
