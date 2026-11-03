@@ -11,8 +11,11 @@
     "bin/",
     "skills/",
     "hooks/",
+    "scripts/",
     "!hooks/__test__/",
     "!bin/__test__/",
+    "!scripts/__test__/",
+    "!scripts/check-plugin.mjs",
     ".claude-plugin/"
   ],
   "engines": {
@@ -23,7 +26,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "node scripts/check-plugin.mjs",
-    "test": "node --test \"__test__/*.test.mjs\" \"hooks/__test__/*.test.mjs\" \"bin/__test__/*.test.mjs\"",
+    "test": "node --test \"__test__/*.test.mjs\" \"hooks/__test__/*.test.mjs\" \"bin/__test__/*.test.mjs\" \"scripts/__test__/*.test.mjs\"",
     "validate": "claude plugin validate ."
   },
   "devDependencies": {

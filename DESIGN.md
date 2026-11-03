@@ -12,6 +12,7 @@ astro-stack-skills/                 one repo = marketplace "astro-stack" = plugi
 │   ├── marketplace.json            lists the plugin at "./"
 │   └── plugin.json
 ├── CLAUDE.md                       contract, loaded when the repo is cloned as .claude/
+├── scripts/                        code the skills run (release-status.mjs), called as <skill-dir>/../../scripts/…; check-plugin.mjs (CI only)
 ├── hooks/                          turn snapshot; PreToolUse release gate for stag/prod/v* tags; PostToolUse lint per edit; Stop checklist + success signal
 ├── skills/
 │   ├── analyze-task/               step 0 of every workflow
@@ -21,7 +22,6 @@ astro-stack-skills/                 one repo = marketplace "astro-stack" = plugi
 │   ├── incident/                   /incident: read-only investigation + incident contract + push on docs/incident-<id>
 │   ├── deploy-setup/               /deploy-setup: deploy workflow, .claude/release.json, GitHub settings checklist
 │   ├── release/                    /release: dev → stag → prod, one approved pull request per step, tag
-│   │   └── scripts/release-status.mjs
 │   ├── code-skeleton/              part 1 of the brief
 │   │   ├── SKILL.md
 │   │   └── references/{setup-layers,project-files,starter-ui,design-md-template,claude-md-template}.md
@@ -37,7 +37,7 @@ The repo root has the same layout as a `.claude/` folder, so it works two ways:
 |---------|-----|-------------|
 | Plugin, project scope (recommended) | `claude plugin marketplace add <repo> --scope project`, then `claude plugin install web-dev-stack@astro-stack --scope project`; both land in the project's `.claude/settings.json` | `/web-dev-stack:code-skeleton` |
 | Plugin, user scope | the same two commands without `--scope project` | `/web-dev-stack:code-skeleton` |
-| Project folder (fallback) | clone into `.claude/`, or copy `skills/` into `.claude/skills/` | `/code-skeleton` |
+| Project folder (fallback) | clone into `.claude/`, or copy `skills/` and `scripts/` into `.claude/` | `/code-skeleton` |
 | Development | `claude --plugin-dir <repo>` in an empty directory | `/web-dev-stack:code-skeleton` |
 
 ## Workflow
@@ -124,6 +124,7 @@ request ──► analyze-task ──► ground ──► build ──► verify
 | `jscpd` 4 with `.astro` mapped to `markup` | Without `formatsExts` it skips `.astro` files. Version 5 releases every few days, so the skeleton stays on 4 |
 | At most 3 review rounds | Enough for a fix to be checked twice; a finding that survives that needs a human, so it is reported instead of looped on |
 | The skill repo's own gates (ESLint, Prettier, Node tests, `claude plugin validate`) run in GitHub Actions, not in Husky | The repo started as Markdown only, so nothing ran on commit; Husky then ran lint on commit and the tests on push. Local hooks can be skipped and only cover what one machine has installed; a run on every pull request and on `main` is the one record reviewers see. Same majors as the skeleton (ESLint 9, Prettier 3). `printWidth` is 100, the width the existing code was written at. Markdown is left out: Prettier would rewrite the templates inside skill code blocks. Generated projects keep Husky: that is the skills' contract, not this repo's |
+| A skill holds Markdown only; the code skills run lives in `scripts/` at the plugin root and is called as `<skill-dir>/../../scripts/<name>.mjs` | As in the backend-dev plugin, where skills call `scripts/` at the plugin root. A script inside one skill (`release/scripts/release-status.mjs`) was reached from another skill through `../release/scripts/`, so moving or renaming a skill broke its neighbour; at the root it is one shared place with its tests beside it (`scripts/__test__/`). The relative path resolves the same way in both installs: `<root>/skills/<name>/../../scripts` in a plugin and `.claude/skills/<name>/../../scripts` after the installer, which copies `scripts/` (not `check-plugin.mjs`, the repo's CI lint). `${CLAUDE_PLUGIN_ROOT}` would not work after the installer, which rewrites it only in `hooks.json`. `check-plugin.mjs` fails on any non-Markdown file in a skill outside `assets/` (files a skill copies into a project as they are) |
 | `scripts/check-plugin.mjs`, `skill-validator --strict` and an installer run in CI, beside the Node tests | Taken from the backend-dev plugin's CI. The tests check each file alone; the plugin lint checks what ties files together: `plugin.json`, the marketplace entry and `package.json` agree, every `${CLAUDE_PLUGIN_ROOT}/…`, `<skill-dir>/…`, `references/…` and Markdown link resolves, every hook script is wired and named by a test, and the tech stack majors in `CLAUDE.md` match `README.md`. A model-invoked skill must say "Use when …" (the agentskills.io form) because its description is all Claude sees when choosing. SKILL.md is capped at 200 lines, as there. `skill-validator` allows extra frontmatter because every skill has `argument-hint`, and checks `code-skeleton` with `--allow-nested-paths=assets/anti-slop --skip-orphans` and without `--strict`: it vendors the anti-slop rules as a folder it copies whole, and it carries every project file as a template, so its references pass the token warning (10k per file, 25k in all) without cutting what the skill writes. Exit 2 (warnings only) passes and is logged; exit 1 (errors, including the 25k/50k token limits) fails. The installer job is this repo's version of their template gate: `init` into an empty project copies everything and `update` right after changes nothing |
 | Each pull request gets a Claude review in CI that fails the pipeline unless it ends in `VERDICT: READY` | Taken from the team's backend-dev plugin (`claude-code-action`), along with the rebase skip and the `@claude` workflow. Skills are instructions another Claude follows, so most mistakes (a reference to a missing file, two skills that disagree) are invisible to lint and tests. One sticky comment per pull request, updated on each push, and an inline comment per blocking item. A review that did not run fails too, so a missing token cannot pass silently |
 | Plain `name` + `description` frontmatter | Matches the team's plugins on `feat/claude-shared-plugins`. Descriptions list trigger phrases and the sibling relationship |

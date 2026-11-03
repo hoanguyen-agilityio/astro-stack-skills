@@ -80,6 +80,17 @@ test('init copies the vendored folders and registers the hooks', () => {
   assert.equal(Object.keys(lock.files).length, 3);
 });
 
+test("init copies the scripts skills run, not the repo's own CI lint or tests", () => {
+  write(upstream, 'scripts/status.mjs', 'console.log("status");\n');
+  write(upstream, 'scripts/check-plugin.mjs', 'repo only\n');
+  write(upstream, 'scripts/__test__/status.test.mjs', 'test\n');
+  commit('scripts');
+  assert.equal(cli('init').status, 0);
+  assert.equal(read('scripts/status.mjs'), 'console.log("status");\n');
+  assert.ok(!has('scripts/check-plugin.mjs'));
+  assert.ok(!has('scripts/__test__/status.test.mjs'));
+});
+
 test('init keeps existing settings and hooks', () => {
   write(
     project,
